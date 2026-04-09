@@ -114,6 +114,13 @@ export default async function ActivityLogPage({
         />
       </div>
 
+      <ActivityLogPagination
+        currentPage={page}
+        totalPages={totalPages}
+        tableFilter={tableFilter}
+        actionFilter={actionFilter}
+      />
+
       <ActivityLogTable logs={logs} profileNameMap={profileNameMap} />
 
       <ActivityLogPagination

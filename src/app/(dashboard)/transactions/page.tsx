@@ -184,6 +184,8 @@ export default async function TransactionsPage({
         }}
       />
 
+      <TransactionsPagination currentPage={page} totalPages={totalPages} />
+
       <TransactionsTable transactions={transactions} profileNameMap={profileNameMap} />
 
       <TransactionsPagination currentPage={page} totalPages={totalPages} />
