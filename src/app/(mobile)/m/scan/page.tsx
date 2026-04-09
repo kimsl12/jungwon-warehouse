@@ -8,8 +8,7 @@ type SearchParams = Promise<{ q?: string }>;
 /**
  * Step 1 of mobile flow: pick a product.
  *
- * Uses a debounced search box (client side) → Server Component re-fetches
- * via URL param. Tap a row to advance to /m/transaction?product_id=...
+ * Search-first mode: no query → prompt to search. With query → RPC results.
  */
 export default async function MobileScanPage({
   searchParams,
@@ -21,12 +20,24 @@ export default async function MobileScanPage({
 
   const supabase = await createClient();
 
-  // Uses search_products RPC to search product name + aliases
-  const { data } = await supabase
-    .rpc("search_products", { p_query: q || undefined, p_category: undefined })
-    .select("id, name, category, unit, quantity, min_quantity, location")
-    .limit(50);
-  const products = data ?? [];
+  // Only fetch when there's a search query (search-first for 3800+ items)
+  let products: {
+    id: string;
+    name: string;
+    category: string | null;
+    unit: string | null;
+    quantity: number;
+    min_quantity: number;
+    location: string | null;
+  }[] = [];
+
+  if (q.length > 0) {
+    const { data } = await supabase
+      .rpc("search_products", { p_query: q, p_category: undefined })
+      .select("id, name, category, unit, quantity, min_quantity, location")
+      .limit(50);
+    products = data ?? [];
+  }
 
   return (
     <div className="space-y-4">
@@ -40,9 +51,13 @@ export default async function MobileScanPage({
       <MobileProductSearch initialQuery={q} />
 
       <div className="space-y-2">
-        {products.length === 0 ? (
+        {q.length === 0 ? (
           <p className="rounded-md border bg-background p-6 text-center text-sm text-muted-foreground">
-            {q ? "검색 결과가 없습니다." : "품목이 없습니다."}
+            제품명 또는 별칭을 입력하면 품목이 표시됩니다.
+          </p>
+        ) : products.length === 0 ? (
+          <p className="rounded-md border bg-background p-6 text-center text-sm text-muted-foreground">
+            검색 결과가 없습니다.
           </p>
         ) : (
           products.map((p) => {
