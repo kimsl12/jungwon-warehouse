@@ -1,0 +1,166 @@
+"use client";
+
+import { useState, useTransition } from "react";
+
+import {
+  processTransaction,
+  type ProcessTransactionState,
+} from "@/app/(dashboard)/inventory/transaction-actions";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import type { Database } from "@/lib/database.types";
+
+type Product = Database["public"]["Tables"]["products"]["Row"];
+
+export function ProcessTransactionDialog({
+  product,
+  open,
+  onOpenChange,
+}: {
+  product: Product;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [type, setType] = useState<"in" | "out">("in");
+  const [state, setState] = useState<ProcessTransactionState>(null);
+  const [isPending, startTransition] = useTransition();
+
+  function handleSubmit(formData: FormData) {
+    setState(null);
+    formData.set("type", type);
+    startTransition(async () => {
+      const result = await processTransaction(null, formData);
+      setState(result);
+      // Keep the dialog open on success briefly so user sees the new quantity
+      // before next action — close on explicit dismiss.
+      if (result?.success) {
+        // Auto-close after a short delay so the success state is visible
+        setTimeout(() => {
+          onOpenChange(false);
+          setState(null);
+        }, 1500);
+      }
+    });
+  }
+
+  function handleOpenChange(next: boolean) {
+    onOpenChange(next);
+    if (!next) {
+      setState(null);
+      setType("in");
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>입출고 처리</DialogTitle>
+          <DialogDescription>
+            <span className="font-medium text-foreground">{product.name}</span> · 현재{" "}
+            {product.quantity.toLocaleString("ko-KR")}
+            {product.unit ? ` ${product.unit}` : ""}
+          </DialogDescription>
+        </DialogHeader>
+        <form action={handleSubmit}>
+          <input type="hidden" name="product_id" value={product.id} />
+
+          <div className="grid gap-4">
+            <div className="space-y-1.5">
+              <Label>구분</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setType("in")}
+                  disabled={isPending}
+                  className={cn(
+                    "rounded-lg border px-4 py-3 text-sm font-medium transition",
+                    type === "in"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-input text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  입고
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setType("out")}
+                  disabled={isPending}
+                  className={cn(
+                    "rounded-lg border px-4 py-3 text-sm font-medium transition",
+                    type === "out"
+                      ? "border-destructive bg-destructive/10 text-destructive"
+                      : "border-input text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  출고
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="quantity">
+                수량 <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="quantity"
+                name="quantity"
+                type="number"
+                min={1}
+                required
+                disabled={isPending}
+                aria-invalid={state?.fieldErrors?.quantity ? true : undefined}
+              />
+              {state?.fieldErrors?.quantity?.[0] && (
+                <p className="text-xs text-destructive">{state.fieldErrors.quantity[0]}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="note">메모 (선택)</Label>
+              <Input id="note" name="note" type="text" maxLength={500} disabled={isPending} />
+            </div>
+          </div>
+
+          {state?.error && (
+            <p className="mt-3 text-sm text-destructive" role="alert">
+              {state.error}
+            </p>
+          )}
+
+          {state?.success && (
+            <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm dark:border-emerald-900 dark:bg-emerald-950">
+              <p className="font-medium text-emerald-700 dark:text-emerald-300">
+                처리 완료 · 새 수량 {state.newQuantity?.toLocaleString("ko-KR")}
+              </p>
+              {state.lowStock && (
+                <p className="mt-1 text-xs text-destructive">
+                  ⚠ 최소 재고 이하입니다. 추가 입고가 필요합니다.
+                </p>
+              )}
+            </div>
+          )}
+
+          <DialogFooter className="mt-6">
+            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+              닫기
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "처리 중..." : "처리"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

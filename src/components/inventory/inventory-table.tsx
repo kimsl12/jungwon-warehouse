@@ -37,7 +37,7 @@ export function InventoryTable({
             <TableHead className="text-right">수량</TableHead>
             <TableHead className="text-right">최소수량</TableHead>
             <TableHead>위치</TableHead>
-            {isAdmin && <TableHead className="w-24 text-right">작업</TableHead>}
+            <TableHead className="w-40 text-right">작업</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -63,11 +63,9 @@ export function InventoryTable({
                 {product.min_quantity.toLocaleString("ko-KR")}
               </TableCell>
               <TableCell className="text-muted-foreground">{product.location ?? "-"}</TableCell>
-              {isAdmin && (
-                <TableCell className="text-right">
-                  <ProductRowActions product={product} />
-                </TableCell>
-              )}
+              <TableCell className="text-right">
+                <ProductRowActions product={product} isAdmin={isAdmin} />
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
