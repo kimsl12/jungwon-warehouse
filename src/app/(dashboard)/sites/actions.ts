@@ -21,7 +21,7 @@ const siteUpdateSchema = siteCreateSchema.extend({
 
 const siteToggleSchema = z.object({
   id: z.string().uuid(),
-  active: z.coerce.boolean(),
+  active: z.string().transform((v) => v === "true"),
 });
 
 const siteDeleteSchema = z.object({
