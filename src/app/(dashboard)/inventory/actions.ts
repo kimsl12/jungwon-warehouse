@@ -11,18 +11,18 @@ import { createClient } from "@/lib/supabase/server";
 const productCreateSchema = z.object({
   name: z.string().trim().min(1, "제품명을 입력해주세요."),
   category: z.string().trim().optional().or(z.literal("")),
+  subcategory: z.string().trim().optional().or(z.literal("")),
   unit: z.string().trim().optional().or(z.literal("")),
   quantity: z.coerce.number().int().min(0, "수량은 0 이상이어야 합니다."),
   min_quantity: z.coerce.number().int().min(0, "최소수량은 0 이상이어야 합니다."),
   location: z.string().trim().optional().or(z.literal("")),
 });
 
-// On update, quantity is intentionally NOT included — quantity changes must
-// go through the process_transaction RPC (Phase 5), per CLAUDE.md.
 const productUpdateSchema = z.object({
   id: z.string().uuid(),
   name: z.string().trim().min(1, "제품명을 입력해주세요."),
   category: z.string().trim().optional().or(z.literal("")),
+  subcategory: z.string().trim().optional().or(z.literal("")),
   unit: z.string().trim().optional().or(z.literal("")),
   min_quantity: z.coerce.number().int().min(0, "최소수량은 0 이상이어야 합니다."),
   location: z.string().trim().optional().or(z.literal("")),
@@ -81,6 +81,7 @@ export async function createProduct(
   const parsed = productCreateSchema.safeParse({
     name: formData.get("name"),
     category: formData.get("category"),
+    subcategory: formData.get("subcategory"),
     unit: formData.get("unit"),
     quantity: formData.get("quantity"),
     min_quantity: formData.get("min_quantity"),
@@ -97,6 +98,7 @@ export async function createProduct(
   const { error } = await auth.supabase.from("products").insert({
     name: parsed.data.name,
     category: emptyToNull(parsed.data.category ?? null),
+    subcategory: emptyToNull(parsed.data.subcategory ?? null),
     unit: emptyToNull(parsed.data.unit ?? null),
     quantity: parsed.data.quantity,
     min_quantity: parsed.data.min_quantity,
@@ -125,6 +127,7 @@ export async function updateProduct(
     id: formData.get("id"),
     name: formData.get("name"),
     category: formData.get("category"),
+    subcategory: formData.get("subcategory"),
     unit: formData.get("unit"),
     min_quantity: formData.get("min_quantity"),
     location: formData.get("location"),
@@ -142,6 +145,7 @@ export async function updateProduct(
     .update({
       name: parsed.data.name,
       category: emptyToNull(parsed.data.category ?? null),
+      subcategory: emptyToNull(parsed.data.subcategory ?? null),
       unit: emptyToNull(parsed.data.unit ?? null),
       min_quantity: parsed.data.min_quantity,
       location: emptyToNull(parsed.data.location ?? null),

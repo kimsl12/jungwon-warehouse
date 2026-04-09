@@ -142,6 +142,7 @@ export async function commitImport(formData: FormData): Promise<ImportResult> {
         p_products: newRows.map((r) => ({
           name: r.name,
           category: r.category,
+          subcategory: r.subcategory,
           unit: r.unit,
           quantity: r.quantity,
           min_quantity: r.min_quantity,
@@ -168,6 +169,7 @@ export async function commitImport(formData: FormData): Promise<ImportResult> {
         .from("products")
         .update({
           category: r.category,
+          subcategory: r.subcategory,
           unit: r.unit,
           location: r.location,
           min_quantity: r.min_quantity,
@@ -182,6 +184,7 @@ export async function commitImport(formData: FormData): Promise<ImportResult> {
         p_products: toInsert.map((r) => ({
           name: r.name,
           category: r.category,
+          subcategory: r.subcategory,
           unit: r.unit,
           quantity: r.quantity,
           min_quantity: r.min_quantity,

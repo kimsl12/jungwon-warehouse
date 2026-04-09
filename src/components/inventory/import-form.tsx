@@ -117,6 +117,7 @@ function PreviewSection({
               <th className="px-2 py-1.5 text-left font-medium">행</th>
               <th className="px-2 py-1.5 text-left font-medium">제품명</th>
               <th className="px-2 py-1.5 text-left font-medium">분류</th>
+              <th className="px-2 py-1.5 text-left font-medium">소분류</th>
               <th className="px-2 py-1.5 text-left font-medium">단위</th>
               <th className="px-2 py-1.5 text-right font-medium">수량</th>
               <th className="px-2 py-1.5 text-right font-medium">최소</th>
@@ -133,6 +134,7 @@ function PreviewSection({
                   <td className="px-2 py-1 text-muted-foreground">{r.lineNumber}</td>
                   <td className="px-2 py-1 font-medium">{r.name}</td>
                   <td className="px-2 py-1 text-muted-foreground">{r.category ?? "—"}</td>
+                  <td className="px-2 py-1 text-muted-foreground">{r.subcategory ?? "—"}</td>
                   <td className="px-2 py-1 text-muted-foreground">{r.unit ?? "—"}</td>
                   <td className="px-2 py-1 text-right tabular-nums">{r.quantity}</td>
                   <td className="px-2 py-1 text-right tabular-nums text-muted-foreground">

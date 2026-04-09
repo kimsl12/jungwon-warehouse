@@ -8,6 +8,7 @@ type FieldErrors = Record<string, string[] | undefined>;
 export type ProductFormDefaults = {
   name?: string;
   category?: string | null;
+  subcategory?: string | null;
   unit?: string | null;
   quantity?: number;
   min_quantity?: number;
@@ -42,21 +43,29 @@ export function ProductFormFields({
       <div className="grid grid-cols-2 gap-4">
         <Field
           id="category"
-          label="분류"
+          label="대분류"
           defaultValue={defaults?.category ?? ""}
           error={fieldErrors?.category}
           disabled={disabled}
-          placeholder="예: 전자부품"
+          placeholder="예: 강제전선관"
         />
         <Field
-          id="unit"
-          label="단위"
-          defaultValue={defaults?.unit ?? ""}
-          error={fieldErrors?.unit}
+          id="subcategory"
+          label="소분류"
+          defaultValue={defaults?.subcategory ?? ""}
+          error={fieldErrors?.subcategory}
           disabled={disabled}
-          placeholder="예: 개, 박스, kg"
+          placeholder="예: ST (강제전선관)"
         />
       </div>
+      <Field
+        id="unit"
+        label="단위"
+        defaultValue={defaults?.unit ?? ""}
+        error={fieldErrors?.unit}
+        disabled={disabled}
+        placeholder="예: 개, 박스, kg"
+      />
       <div className="grid grid-cols-2 gap-4">
         {includeQuantity && (
           <Field

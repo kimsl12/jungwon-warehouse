@@ -18,6 +18,7 @@ export type ParsedProductRow = {
   lineNumber: number;
   name: string;
   category: string | null;
+  subcategory: string | null;
   unit: string | null;
   quantity: number;
   min_quantity: number;
@@ -38,7 +39,7 @@ export type ParseResult =
     };
 
 const REQUIRED = ["제품명", "수량", "위치"] as const;
-const OPTIONAL = ["분류", "단위", "최소수량", "별칭"] as const;
+const OPTIONAL = ["분류", "소분류", "단위", "최소수량", "별칭"] as const;
 const ALL_HEADERS = [...REQUIRED, ...OPTIONAL];
 
 /**
@@ -129,6 +130,7 @@ export function parseProductsCsv(csvText: string): ParseResult {
       lineNumber,
       name,
       category: emptyToNull(raw["분류"]),
+      subcategory: emptyToNull(raw["소분류"]),
       unit: emptyToNull(raw["단위"]),
       quantity,
       min_quantity: minQuantity,

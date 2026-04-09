@@ -36,17 +36,21 @@ export function InventoryTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>제품명</TableHead>
-            <TableHead>분류</TableHead>
+            <TableHead>대분류</TableHead>
+            <TableHead>소분류</TableHead>
+            <TableHead>품목명</TableHead>
             <TableHead className="text-right">수량</TableHead>
             <TableHead className="text-right">최소수량</TableHead>
-            <TableHead>위치</TableHead>
             <TableHead className="w-40 text-right">작업</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {products.map((product) => (
             <TableRow key={product.id}>
+              <TableCell className="text-muted-foreground">{product.category ?? "-"}</TableCell>
+              <TableCell className="text-muted-foreground text-xs">
+                {product.subcategory ?? "-"}
+              </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{product.name}</span>
@@ -56,7 +60,6 @@ export function InventoryTable({
                   />
                 </div>
               </TableCell>
-              <TableCell className="text-muted-foreground">{product.category ?? "-"}</TableCell>
               <TableCell className="text-right tabular-nums">
                 {product.quantity.toLocaleString("ko-KR")}
                 {product.unit && (
@@ -66,7 +69,6 @@ export function InventoryTable({
               <TableCell className="text-right tabular-nums text-muted-foreground">
                 {product.min_quantity.toLocaleString("ko-KR")}
               </TableCell>
-              <TableCell className="text-muted-foreground">{product.location ?? "-"}</TableCell>
               <TableCell className="text-right">
                 <ProductRowActions product={product} isAdmin={isAdmin} sites={sites} />
               </TableCell>

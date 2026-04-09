@@ -82,6 +82,7 @@ export type Database = {
           min_quantity: number
           name: string
           quantity: number
+          subcategory: string | null
           unit: string | null
           updated_at: string
         }
@@ -93,6 +94,7 @@ export type Database = {
           min_quantity?: number
           name: string
           quantity?: number
+          subcategory?: string | null
           unit?: string | null
           updated_at?: string
         }
@@ -104,6 +106,7 @@ export type Database = {
           min_quantity?: number
           name?: string
           quantity?: number
+          subcategory?: string | null
           unit?: string | null
           updated_at?: string
         }
@@ -293,6 +296,7 @@ export type Database = {
           min_quantity: number
           name: string
           quantity: number
+          subcategory: string | null
           unit: string | null
           updated_at: string
         }[]
@@ -305,6 +309,7 @@ export type Database = {
       }
       get_products_summary: { Args: never; Returns: Json }
       is_admin: { Args: never; Returns: boolean }
+      natural_sort_key: { Args: { input: string }; Returns: string }
       process_transaction: {
         Args: {
           p_note: string
@@ -326,6 +331,7 @@ export type Database = {
           min_quantity: number
           name: string
           quantity: number
+          subcategory: string | null
           unit: string | null
           updated_at: string
         }[]
