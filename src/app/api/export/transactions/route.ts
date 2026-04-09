@@ -27,7 +27,7 @@ const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
  *
  *   type, product_id, user_id, category, from, to
  *
- * Filename: 정원창고_입출고내역_YYYYMMDD.csv
+ * Filename: 정원전기_입출고내역_YYYYMMDD.csv
  */
 export async function GET(req: Request) {
   const supabase = await createClient();
@@ -102,7 +102,7 @@ export async function GET(req: Request) {
   ]);
 
   const csv = rowsToCsv(headers, rows);
-  const filename = `정원창고_입출고내역_${formatYmdCompact()}.csv`;
+  const filename = `정원전기_입출고내역_${formatYmdCompact()}.csv`;
 
   return new NextResponse(csv, {
     status: 200,

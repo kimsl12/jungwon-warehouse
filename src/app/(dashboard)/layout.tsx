@@ -31,7 +31,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-semibold">정원창고</h1>
+              <h1 className="text-base font-semibold">정원전기 재고관리</h1>
             </div>
             <DashboardNav isAdmin={isAdmin} />
           </div>

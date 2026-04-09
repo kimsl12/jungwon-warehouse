@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "정원창고 재고관리",
+  title: "정원전기 재고관리",
   description: "사내 재고 관리 시스템",
 };
 

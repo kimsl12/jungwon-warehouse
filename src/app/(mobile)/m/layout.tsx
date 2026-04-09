@@ -32,7 +32,7 @@ export default async function MobileLayout({ children }: { children: ReactNode }
       <header className="sticky top-0 z-10 border-b bg-background">
         <div className="mx-auto flex h-14 max-w-md items-center justify-between px-4">
           <Link href="/m/scan" className="text-base font-semibold">
-            정원창고
+            정원전기 재고관리
           </Link>
           <div className="flex items-center gap-2 text-xs">
             <span className="text-muted-foreground">{profile?.name ?? user.email}</span>

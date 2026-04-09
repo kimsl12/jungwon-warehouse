@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
  * Streams the full product catalog as a CSV download. RLS lets any
  * authenticated user read products, so no extra role check is needed.
  *
- * Filename: 정원창고_재고목록_YYYYMMDD.csv
+ * Filename: 정원전기_재고목록_YYYYMMDD.csv
  */
 export async function GET() {
   const supabase = await createClient();
@@ -49,7 +49,7 @@ export async function GET() {
   ]);
 
   const csv = rowsToCsv(headers, rows);
-  const filename = `정원창고_재고목록_${formatYmdCompact()}.csv`;
+  const filename = `정원전기_재고목록_${formatYmdCompact()}.csv`;
 
   return new NextResponse(csv, {
     status: 200,
