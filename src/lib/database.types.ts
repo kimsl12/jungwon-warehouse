@@ -283,6 +283,26 @@ export type Database = {
         Args: { p_products: Json; p_user_id: string }
         Returns: Json
       }
+      get_low_stock_products: {
+        Args: never
+        Returns: {
+          category: string | null
+          created_at: string
+          id: string
+          location: string | null
+          min_quantity: number
+          name: string
+          quantity: number
+          unit: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "products"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       is_admin: { Args: never; Returns: boolean }
       process_transaction: {
         Args: {

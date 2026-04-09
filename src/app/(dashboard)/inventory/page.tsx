@@ -21,23 +21,23 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
+  const hasFilter = search.length > 0 || category.length > 0;
+
   const supabase = await createClient();
 
-  // Build the products query — uses search_products RPC to search name + aliases
-  const productsQuery = supabase
-    .rpc(
-      "search_products",
-      {
-        p_query: search || undefined,
-        p_category: category || undefined,
-      },
-      { count: "exact" },
-    )
-    .range(from, to);
+  // Search-first mode: no filter → show low-stock only; with filter → RPC search
+  const productsResult = hasFilter
+    ? await supabase
+        .rpc(
+          "search_products",
+          { p_query: search || undefined, p_category: category || undefined },
+          { count: "exact" },
+        )
+        .range(from, to)
+    : await supabase.rpc("get_low_stock_products", undefined, { count: "exact" }).range(from, to);
 
-  // Distinct categories for the filter dropdown — fetched once per request
-  const [productsResult, categoriesResult, profileResult, sitesResult] = await Promise.all([
-    productsQuery,
+  // Distinct categories for the filter dropdown
+  const [categoriesResult, profileResult, sitesResult] = await Promise.all([
     supabase.from("products").select("category").not("category", "is", null),
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return null;
@@ -80,8 +80,20 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
       )}
       <InventoryHeader isAdmin={isAdmin} totalCount={totalCount} />
       <InventorySearch categories={categories} initialSearch={search} initialCategory={category} />
+
+      {!hasFilter && (
+        <div className="rounded-md border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+          제품명, 별칭, 또는 분류를 선택하면 품목이 표시됩니다.
+          {totalCount > 0 && (
+            <span className="ml-1 font-medium text-destructive">
+              현재 재고 부족 품목 {totalCount.toLocaleString("ko-KR")}건을 표시 중입니다.
+            </span>
+          )}
+        </div>
+      )}
+
       <InventoryTable products={products} isAdmin={isAdmin} sites={sitesResult.data ?? []} />
-      <InventoryPagination currentPage={page} totalPages={totalPages} />
+      {hasFilter && <InventoryPagination currentPage={page} totalPages={totalPages} />}
     </div>
   );
 }

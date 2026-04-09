@@ -14,7 +14,7 @@ export default async function OverviewPage() {
   const [productsAggResult, dailySummaryResult, lowStockResult, recentTxResult] =
     await Promise.all([
       supabase.from("products").select("id, quantity, min_quantity"),
-      supabase.from("daily_transaction_summary").select("day, type, total_quantity"),
+      supabase.from("daily_transaction_summary").select("day, type, total_quantity, transaction_count"),
       supabase
         .from("products")
         .select("id, name, quantity, min_quantity, unit, location")

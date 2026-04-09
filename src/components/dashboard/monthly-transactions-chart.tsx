@@ -1,10 +1,11 @@
 "use client";
 
 import {
+  Bar,
   CartesianGrid,
+  ComposedChart,
   Legend,
   Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -13,26 +14,50 @@ import {
 
 import type { MonthlyChartPoint } from "@/lib/summary-normalizers";
 
+const COLORS = {
+  inBar: "#93CFC1",
+  outBar: "#F0A898",
+  inLine: "#4DA697",
+  outLine: "#D4705A",
+};
+
+const LABEL: Record<string, string> = {
+  inCount: "입고 건수",
+  outCount: "출고 건수",
+  in: "입고 수량",
+  out: "출고 수량",
+};
+
 /**
- * Last 12 months in/out trend line chart.
- * Server-side pre-normalized: every month in the window has a row.
+ * 12-month combo chart: bars for count (left Y), lines for quantity (right Y).
  */
 export function MonthlyTransactionsChart({ data }: { data: MonthlyChartPoint[] }) {
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={data} margin={{ top: 8, right: 16, left: -16, bottom: 0 }}>
+    <ResponsiveContainer width="100%" height={320}>
+      <ComposedChart data={data} margin={{ top: 8, right: 12, left: -8, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
         <XAxis
           dataKey="label"
-          tick={{ fontSize: 12 }}
+          tick={{ fontSize: 11 }}
           tickLine={false}
           axisLine={{ stroke: "hsl(var(--border))" }}
         />
         <YAxis
-          tick={{ fontSize: 12 }}
+          yAxisId="left"
+          tick={{ fontSize: 11 }}
           tickLine={false}
-          axisLine={{ stroke: "hsl(var(--border))" }}
+          axisLine={false}
           allowDecimals={false}
+          label={{ value: "건수", angle: -90, position: "insideLeft", fontSize: 11, fill: "#999", offset: 16 }}
+        />
+        <YAxis
+          yAxisId="right"
+          orientation="right"
+          tick={{ fontSize: 11 }}
+          tickLine={false}
+          axisLine={false}
+          allowDecimals={false}
+          label={{ value: "수량", angle: 90, position: "insideRight", fontSize: 11, fill: "#999", offset: 16 }}
         />
         <Tooltip
           contentStyle={{
@@ -43,30 +68,18 @@ export function MonthlyTransactionsChart({ data }: { data: MonthlyChartPoint[] }
           }}
           formatter={(value, name) => [
             Number(value ?? 0).toLocaleString("ko-KR"),
-            name === "in" ? "입고" : "출고",
+            LABEL[name as string] ?? name,
           ]}
         />
         <Legend
-          formatter={(value) => (value === "in" ? "입고" : "출고")}
-          wrapperStyle={{ fontSize: 12 }}
+          formatter={(value) => LABEL[value as string] ?? value}
+          wrapperStyle={{ fontSize: 11 }}
         />
-        <Line
-          type="monotone"
-          dataKey="in"
-          stroke="#10b981"
-          strokeWidth={2}
-          dot={{ r: 3 }}
-          activeDot={{ r: 5 }}
-        />
-        <Line
-          type="monotone"
-          dataKey="out"
-          stroke="#f59e0b"
-          strokeWidth={2}
-          dot={{ r: 3 }}
-          activeDot={{ r: 5 }}
-        />
-      </LineChart>
+        <Bar yAxisId="left" dataKey="inCount" fill={COLORS.inBar} radius={[3, 3, 0, 0]} barSize={14} />
+        <Bar yAxisId="left" dataKey="outCount" fill={COLORS.outBar} radius={[3, 3, 0, 0]} barSize={14} />
+        <Line yAxisId="right" type="monotone" dataKey="in" stroke={COLORS.inLine} strokeWidth={2} dot={{ r: 2.5 }} />
+        <Line yAxisId="right" type="monotone" dataKey="out" stroke={COLORS.outLine} strokeWidth={2} dot={{ r: 2.5 }} />
+      </ComposedChart>
     </ResponsiveContainer>
   );
 }

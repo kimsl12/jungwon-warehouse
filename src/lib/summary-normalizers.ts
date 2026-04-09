@@ -14,6 +14,8 @@ export type DailyChartPoint = {
   label: string;
   in: number;
   out: number;
+  inCount: number;
+  outCount: number;
 };
 
 export type MonthlyChartPoint = {
@@ -23,18 +25,22 @@ export type MonthlyChartPoint = {
   label: string;
   in: number;
   out: number;
+  inCount: number;
+  outCount: number;
 };
 
 type DailyRow = {
   day: string | null;
   type: string | null;
   total_quantity: number | null;
+  transaction_count: number | null;
 };
 
 type MonthlyRow = {
   month: string | null;
   type: string | null;
   total_quantity: number | null;
+  transaction_count: number | null;
 };
 
 /**
@@ -45,7 +51,7 @@ export function normalizeDailySummary(
   rows: DailyRow[],
   referenceDate: Date = new Date(),
 ): DailyChartPoint[] {
-  const map = new Map<string, { in: number; out: number }>();
+  const map = new Map<string, { in: number; out: number; inCount: number; outCount: number }>();
 
   const today = new Date(referenceDate);
   today.setHours(0, 0, 0, 0);
@@ -53,7 +59,7 @@ export function normalizeDailySummary(
     const d = new Date(today);
     d.setDate(today.getDate() - i);
     const key = formatYmd(d);
-    map.set(key, { in: 0, out: 0 });
+    map.set(key, { in: 0, out: 0, inCount: 0, outCount: 0 });
   }
 
   for (const row of rows) {
@@ -61,8 +67,14 @@ export function normalizeDailySummary(
     const key = row.day.slice(0, 10);
     const entry = map.get(key);
     if (!entry) continue;
-    if (row.type === "in") entry.in = Number(row.total_quantity ?? 0);
-    if (row.type === "out") entry.out = Number(row.total_quantity ?? 0);
+    if (row.type === "in") {
+      entry.in = Number(row.total_quantity ?? 0);
+      entry.inCount = Number(row.transaction_count ?? 0);
+    }
+    if (row.type === "out") {
+      entry.out = Number(row.total_quantity ?? 0);
+      entry.outCount = Number(row.transaction_count ?? 0);
+    }
   }
 
   return Array.from(map.entries()).map(([day, v]) => {
@@ -72,6 +84,8 @@ export function normalizeDailySummary(
       label: `${m}/${d}`,
       in: v.in,
       out: v.out,
+      inCount: v.inCount,
+      outCount: v.outCount,
     };
   });
 }
@@ -83,12 +97,12 @@ export function normalizeMonthlySummary(
   rows: MonthlyRow[],
   referenceDate: Date = new Date(),
 ): MonthlyChartPoint[] {
-  const map = new Map<string, { in: number; out: number }>();
+  const map = new Map<string, { in: number; out: number; inCount: number; outCount: number }>();
 
   for (let i = 11; i >= 0; i--) {
     const d = new Date(referenceDate.getFullYear(), referenceDate.getMonth() - i, 1);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    map.set(key, { in: 0, out: 0 });
+    map.set(key, { in: 0, out: 0, inCount: 0, outCount: 0 });
   }
 
   for (const row of rows) {
@@ -97,8 +111,14 @@ export function normalizeMonthlySummary(
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     const entry = map.get(key);
     if (!entry) continue;
-    if (row.type === "in") entry.in = Number(row.total_quantity ?? 0);
-    if (row.type === "out") entry.out = Number(row.total_quantity ?? 0);
+    if (row.type === "in") {
+      entry.in = Number(row.total_quantity ?? 0);
+      entry.inCount = Number(row.transaction_count ?? 0);
+    }
+    if (row.type === "out") {
+      entry.out = Number(row.total_quantity ?? 0);
+      entry.outCount = Number(row.transaction_count ?? 0);
+    }
   }
 
   return Array.from(map.entries()).map(([key, v]) => ({
@@ -106,6 +126,8 @@ export function normalizeMonthlySummary(
     label: key,
     in: v.in,
     out: v.out,
+    inCount: v.inCount,
+    outCount: v.outCount,
   }));
 }
 

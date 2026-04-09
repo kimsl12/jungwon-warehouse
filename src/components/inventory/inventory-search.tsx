@@ -65,7 +65,7 @@ export function InventorySearch({
         <Input
           id="search"
           type="search"
-          placeholder="제품명으로 검색..."
+          placeholder="제품명 또는 별칭으로 검색..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />

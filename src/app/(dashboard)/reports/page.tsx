@@ -14,7 +14,7 @@ export default async function ReportsPage() {
 
   const [monthlyResult, topOutgoingResult, outByUserResult, outBySiteResult, profilesResult] =
     await Promise.all([
-      supabase.from("monthly_transaction_summary").select("month, type, total_quantity"),
+      supabase.from("monthly_transaction_summary").select("month, type, total_quantity, transaction_count"),
       supabase
         .from("top_products_by_outgoing")
         .select("product_id, name, category, total_outgoing"),
