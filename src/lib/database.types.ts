@@ -82,6 +82,7 @@ export type Database = {
           min_quantity: number
           name: string
           quantity: number
+          sort_order: number | null
           subcategory: string | null
           unit: string | null
           updated_at: string
@@ -94,6 +95,7 @@ export type Database = {
           min_quantity?: number
           name: string
           quantity?: number
+          sort_order?: number | null
           subcategory?: string | null
           unit?: string | null
           updated_at?: string
@@ -106,6 +108,7 @@ export type Database = {
           min_quantity?: number
           name?: string
           quantity?: number
+          sort_order?: number | null
           subcategory?: string | null
           unit?: string | null
           updated_at?: string
@@ -296,6 +299,7 @@ export type Database = {
           min_quantity: number
           name: string
           quantity: number
+          sort_order: number | null
           subcategory: string | null
           unit: string | null
           updated_at: string
@@ -331,6 +335,7 @@ export type Database = {
           min_quantity: number
           name: string
           quantity: number
+          sort_order: number | null
           subcategory: string | null
           unit: string | null
           updated_at: string

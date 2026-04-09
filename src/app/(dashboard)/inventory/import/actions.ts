@@ -147,6 +147,7 @@ export async function commitImport(formData: FormData): Promise<ImportResult> {
           quantity: r.quantity,
           min_quantity: r.min_quantity,
           location: r.location,
+          sort_order: r.sort_order,
         })),
         p_user_id: user.id,
       });
@@ -189,6 +190,7 @@ export async function commitImport(formData: FormData): Promise<ImportResult> {
           quantity: r.quantity,
           min_quantity: r.min_quantity,
           location: r.location,
+          sort_order: r.sort_order,
         })),
         p_user_id: user.id,
       });

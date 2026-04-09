@@ -23,6 +23,8 @@ export type ParsedProductRow = {
   quantity: number;
   min_quantity: number;
   location: string | null;
+  /** 원본 정렬 순서 (순번) */
+  sort_order: number;
   /** 별칭 목록 (쉼표 구분 시 분리) */
   aliases: string[];
 };
@@ -39,7 +41,7 @@ export type ParseResult =
     };
 
 const REQUIRED = ["제품명", "수량", "위치"] as const;
-const OPTIONAL = ["분류", "소분류", "단위", "최소수량", "별칭"] as const;
+const OPTIONAL = ["분류", "소분류", "단위", "최소수량", "순번", "별칭"] as const;
 const ALL_HEADERS = [...REQUIRED, ...OPTIONAL];
 
 /**
@@ -126,6 +128,9 @@ export function parseProductsCsv(csvText: string): ParseResult {
       ? [...new Set(aliasRaw.split(",").map((a) => a.trim()).filter(Boolean))]
       : [];
 
+    const sortOrderStr = (raw["순번"] ?? "").trim();
+    const sortOrder = sortOrderStr ? (Number.parseInt(sortOrderStr, 10) || 0) : 0;
+
     rows.push({
       lineNumber,
       name,
@@ -135,6 +140,7 @@ export function parseProductsCsv(csvText: string): ParseResult {
       quantity,
       min_quantity: minQuantity,
       location: emptyToNull(raw["위치"]),
+      sort_order: sortOrder || lineNumber,
       aliases,
     });
   });
