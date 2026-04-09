@@ -57,12 +57,12 @@ export default async function InventoryImportPage({
           </div>
           <div>
             <p className="font-medium">선택 컬럼</p>
-            <p className="text-muted-foreground">분류, 단위, 최소수량</p>
+            <p className="text-muted-foreground">분류, 단위, 최소수량, 별칭</p>
           </div>
           <div className="rounded-md bg-muted/40 p-3 font-mono text-xs">
-            <p>제품명,분류,단위,수량,최소수량,위치</p>
-            <p>전선 1.5SQ,전선,롤,20,5,A-1</p>
-            <p>차단기 30A,차단기,개,15,3,B-2</p>
+            <p>제품명,분류,단위,수량,최소수량,위치,별칭</p>
+            <p>전선 1.5SQ,전선,롤,20,5,A-1,1.5 SQ</p>
+            <p>차단기 30A,차단기,개,15,3,B-2,MCCB 30A</p>
           </div>
           <p className="text-xs text-muted-foreground">
             • 파일은 UTF-8 인코딩으로 저장하세요. 엑셀에서 저장 시{" "}

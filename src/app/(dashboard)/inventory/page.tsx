@@ -59,13 +59,14 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
   const categories = Array.from(categorySet).sort((a, b) => a.localeCompare(b, "ko"));
 
   // Surface import results posted via redirect from /inventory/import
-  let importBanner: { inserted: number; updated: number; skipped: number } | null = null;
+  let importBanner: { inserted: number; updated: number; skipped: number; aliases: number } | null = null;
   if (params.import) {
     const sp = new URLSearchParams(params.import);
     importBanner = {
       inserted: Number(sp.get("inserted") ?? 0),
       updated: Number(sp.get("updated") ?? 0),
       skipped: Number(sp.get("skipped") ?? 0),
+      aliases: Number(sp.get("aliases") ?? 0),
     };
   }
 
@@ -76,6 +77,9 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
           CSV 가져오기 완료 — 신규 {importBanner.inserted.toLocaleString("ko-KR")}건, 업데이트{" "}
           {importBanner.updated.toLocaleString("ko-KR")}건, 건너뜀{" "}
           {importBanner.skipped.toLocaleString("ko-KR")}건
+          {importBanner.aliases > 0 && (
+            <>, 별칭 {importBanner.aliases.toLocaleString("ko-KR")}건</>
+          )}
         </div>
       )}
       <InventoryHeader isAdmin={isAdmin} totalCount={totalCount} />

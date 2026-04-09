@@ -121,6 +121,7 @@ function PreviewSection({
               <th className="px-2 py-1.5 text-right font-medium">수량</th>
               <th className="px-2 py-1.5 text-right font-medium">최소</th>
               <th className="px-2 py-1.5 text-left font-medium">위치</th>
+              <th className="px-2 py-1.5 text-left font-medium">별칭</th>
               <th className="px-2 py-1.5 text-left font-medium">상태</th>
             </tr>
           </thead>
@@ -138,6 +139,7 @@ function PreviewSection({
                     {r.min_quantity}
                   </td>
                   <td className="px-2 py-1 text-muted-foreground">{r.location ?? "—"}</td>
+                  <td className="px-2 py-1 text-muted-foreground">{r.aliases.length > 0 ? r.aliases.join(", ") : "—"}</td>
                   <td className="px-2 py-1">
                     {isExisting ? (
                       <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300">

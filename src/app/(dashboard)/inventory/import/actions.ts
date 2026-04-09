@@ -17,7 +17,7 @@ export type ImportPreview =
   | { ok: false; error: string };
 
 export type ImportResult =
-  | { ok: true; inserted: number; updated: number; skipped: number; warnings: string[] }
+  | { ok: true; inserted: number; updated: number; skipped: number; aliasCount: number; warnings: string[] }
   | { ok: false; error: string };
 
 /**
@@ -196,9 +196,40 @@ export async function commitImport(formData: FormData): Promise<ImportResult> {
     }
   }
 
+  // Insert aliases for products that have them
+  const rowsWithAliases = rows.filter((r) => r.aliases.length > 0);
+  let aliasCount = 0;
+  if (rowsWithAliases.length > 0) {
+    // Look up product IDs by name
+    const aliasNames = rowsWithAliases.map((r) => r.name);
+    const { data: productRows } = await supabase
+      .from("products")
+      .select("id, name")
+      .in("name", aliasNames);
+    const nameToId = new Map((productRows ?? []).map((p) => [p.name, p.id]));
+
+    const aliasInserts: { product_id: string; alias: string }[] = [];
+    for (const r of rowsWithAliases) {
+      const productId = nameToId.get(r.name);
+      if (!productId) continue;
+      for (const alias of r.aliases) {
+        aliasInserts.push({ product_id: productId, alias });
+      }
+    }
+
+    if (aliasInserts.length > 0) {
+      // Use upsert to skip duplicates silently
+      const { data: aliasResult } = await supabase
+        .from("product_aliases")
+        .upsert(aliasInserts, { onConflict: "product_id,alias", ignoreDuplicates: true })
+        .select("id");
+      aliasCount = aliasResult?.length ?? 0;
+    }
+  }
+
   revalidatePath("/inventory");
   revalidatePath("/overview");
-  return { ok: true, inserted, updated, skipped, warnings: parsed.warnings };
+  return { ok: true, inserted, updated, skipped, aliasCount, warnings: parsed.warnings };
 }
 
 /**
@@ -216,6 +247,7 @@ export async function commitImportAndRedirect(formData: FormData) {
     inserted: String(result.inserted),
     updated: String(result.updated),
     skipped: String(result.skipped),
+    aliases: String(result.aliasCount),
   });
   redirect(`/inventory?import=${params.toString()}`);
 }
