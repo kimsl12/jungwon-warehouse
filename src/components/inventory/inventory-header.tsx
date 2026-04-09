@@ -1,4 +1,7 @@
+import Link from "next/link";
+
 import { ProductCreateDialog } from "@/components/inventory/product-create-dialog";
+import { buttonVariants } from "@/components/ui/button";
 
 export function InventoryHeader({
   isAdmin,
@@ -15,7 +18,24 @@ export function InventoryHeader({
           전체 {totalCount.toLocaleString("ko-KR")}개 품목
         </p>
       </div>
-      {isAdmin && <ProductCreateDialog />}
+      <div className="flex items-center gap-2">
+        <Link
+          href="/api/export/products"
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+          prefetch={false}
+        >
+          CSV 내보내기
+        </Link>
+        {isAdmin && (
+          <Link
+            href="/inventory/import"
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            CSV 가져오기
+          </Link>
+        )}
+        {isAdmin && <ProductCreateDialog />}
+      </div>
     </div>
   );
 }

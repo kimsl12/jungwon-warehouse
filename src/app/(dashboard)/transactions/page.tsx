@@ -1,6 +1,9 @@
+import Link from "next/link";
+
 import { TransactionsFilters } from "@/components/transactions/transactions-filters";
 import { TransactionsPagination } from "@/components/transactions/transactions-pagination";
 import { TransactionsTable } from "@/components/transactions/transactions-table";
+import { buttonVariants } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 
 const PAGE_SIZE = 30;
@@ -101,13 +104,59 @@ export default async function TransactionsPage({
   }
   const categories = Array.from(categorySet).sort((a, b) => a.localeCompare(b, "ko"));
 
+  // Build the export URL with the same filter params so users export
+  // exactly what's on screen.
+  const exportParams = new URLSearchParams();
+  if (params.type === "in" || params.type === "out") exportParams.set("type", params.type);
+  if (params.product_id) exportParams.set("product_id", params.product_id);
+  if (params.user_id) exportParams.set("user_id", params.user_id);
+  if (params.category) exportParams.set("category", params.category);
+  if (params.from) exportParams.set("from", params.from);
+  if (params.to) exportParams.set("to", params.to);
+  const exportHref = exportParams.toString()
+    ? `/api/export/transactions?${exportParams.toString()}`
+    : "/api/export/transactions";
+
+  // PDF 출고장: only meaningful when filtering 출고. Reuses the same param
+  // set minus `type` (the route forces type=out).
+  const showPdfButton = params.type === "out";
+  const pdfParams = new URLSearchParams();
+  if (params.product_id) pdfParams.set("product_id", params.product_id);
+  if (params.user_id) pdfParams.set("user_id", params.user_id);
+  if (params.category) pdfParams.set("category", params.category);
+  if (params.from) pdfParams.set("from", params.from);
+  if (params.to) pdfParams.set("to", params.to);
+  const pdfHref = pdfParams.toString()
+    ? `/api/pdf/delivery?${pdfParams.toString()}`
+    : "/api/pdf/delivery";
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">입출고 내역</h2>
-        <p className="text-sm text-muted-foreground">
-          전체 {totalCount.toLocaleString("ko-KR")}건
-        </p>
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">입출고 내역</h2>
+          <p className="text-sm text-muted-foreground">
+            전체 {totalCount.toLocaleString("ko-KR")}건
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {showPdfButton && (
+            <Link
+              href={pdfHref}
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+              prefetch={false}
+            >
+              출고장 PDF
+            </Link>
+          )}
+          <Link
+            href={exportHref}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+            prefetch={false}
+          >
+            CSV 내보내기
+          </Link>
+        </div>
       </div>
 
       <TransactionsFilters

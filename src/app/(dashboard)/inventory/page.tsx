@@ -10,6 +10,7 @@ type SearchParams = Promise<{
   q?: string;
   category?: string;
   page?: string;
+  import?: string;
 }>;
 
 export default async function InventoryPage({ searchParams }: { searchParams: SearchParams }) {
@@ -58,8 +59,26 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
   }
   const categories = Array.from(categorySet).sort((a, b) => a.localeCompare(b, "ko"));
 
+  // Surface import results posted via redirect from /inventory/import
+  let importBanner: { inserted: number; updated: number; skipped: number } | null = null;
+  if (params.import) {
+    const sp = new URLSearchParams(params.import);
+    importBanner = {
+      inserted: Number(sp.get("inserted") ?? 0),
+      updated: Number(sp.get("updated") ?? 0),
+      skipped: Number(sp.get("skipped") ?? 0),
+    };
+  }
+
   return (
     <div className="space-y-6">
+      {importBanner && (
+        <div className="rounded-md border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+          CSV 가져오기 완료 — 신규 {importBanner.inserted.toLocaleString("ko-KR")}건, 업데이트{" "}
+          {importBanner.updated.toLocaleString("ko-KR")}건, 건너뜀{" "}
+          {importBanner.skipped.toLocaleString("ko-KR")}건
+        </div>
+      )}
       <InventoryHeader isAdmin={isAdmin} totalCount={totalCount} />
       <InventorySearch categories={categories} initialSearch={search} initialCategory={category} />
       <InventoryTable products={products} isAdmin={isAdmin} />

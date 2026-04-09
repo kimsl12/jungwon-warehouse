@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
@@ -35,6 +36,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
             <DashboardNav isAdmin={isAdmin} />
           </div>
           <div className="flex items-center gap-3 text-sm">
+            <Link
+              href="/m/scan"
+              className="rounded border border-border px-2 py-1 text-xs text-muted-foreground hover:bg-muted"
+            >
+              모바일
+            </Link>
             <span className="text-muted-foreground">
               {profile?.name ?? user.email}
               {isAdmin && (
