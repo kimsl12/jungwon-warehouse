@@ -117,9 +117,11 @@ export default async function TransactionsPage({
     ? `/api/export/transactions?${exportParams.toString()}`
     : "/api/export/transactions";
 
-  // PDF 출고장: only meaningful when filtering 출고. Reuses the same param
-  // set minus `type` (the route forces type=out).
-  const showPdfButton = params.type === "out";
+  // PDF 출고장: always available. The route itself forces type=out, so the
+  // user doesn't need to manually filter to 출고 first — clicking the
+  // button on any view will produce a 출고장 from whatever 출고 rows match
+  // the other filters (product/user/category/date). If no 출고 row matches
+  // the route returns 404 with a friendly message.
   const pdfParams = new URLSearchParams();
   if (params.product_id) pdfParams.set("product_id", params.product_id);
   if (params.user_id) pdfParams.set("user_id", params.user_id);
@@ -140,15 +142,13 @@ export default async function TransactionsPage({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {showPdfButton && (
-            <Link
-              href={pdfHref}
-              className={buttonVariants({ variant: "outline", size: "sm" })}
-              prefetch={false}
-            >
-              출고장 PDF
-            </Link>
-          )}
+          <Link
+            href={pdfHref}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+            prefetch={false}
+          >
+            출고장 PDF
+          </Link>
           <Link
             href={exportHref}
             className={buttonVariants({ variant: "outline", size: "sm" })}
