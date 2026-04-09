@@ -112,18 +112,21 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          email: string | null
           id: string
           name: string | null
           role: string
         }
         Insert: {
           created_at?: string
+          email?: string | null
           id: string
           name?: string | null
           role?: string
         }
         Update: {
           created_at?: string
+          email?: string | null
           id?: string
           name?: string | null
           role?: string
@@ -311,6 +314,10 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      update_user_role: {
+        Args: { p_new_role: string; p_user_id: string }
+        Returns: undefined
       }
     }
     Enums: {
