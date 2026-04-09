@@ -96,6 +96,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
         </div>
       )}
 
+      {hasFilter && <InventoryPagination currentPage={page} totalPages={totalPages} />}
       <InventoryTable products={products} isAdmin={isAdmin} sites={sitesResult.data ?? []} />
       {hasFilter && <InventoryPagination currentPage={page} totalPages={totalPages} />}
     </div>
