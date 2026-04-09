@@ -2,6 +2,8 @@
 
 주식회사 정원전기 사내 재고 관리 시스템 — 재고 CRUD, 입출고 내역 관리, 대시보드(리포트/차트), 출고장 PDF, 재고 부족 알림, 활동 로그, 모바일 간편 모드, CSV 가져오기/내보내기.
 
+🚀 **프로덕션**: https://jungwon-warehouse.vercel.app
+
 자세한 사양과 규칙은 [CLAUDE.md](CLAUDE.md) 참조.
 
 ## Tech Stack
