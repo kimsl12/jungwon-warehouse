@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 
 import { createProduct, type ProductFormState } from "@/app/(dashboard)/inventory/actions";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +21,7 @@ export function ProductCreateDialog() {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<ProductFormState>(null);
   const [isPending, startTransition] = useTransition();
+  const [aliases, setAliases] = useState("");
 
   function handleSubmit(formData: FormData) {
     setState(null);
@@ -35,7 +38,7 @@ export function ProductCreateDialog() {
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
-    if (!next) setState(null);
+    if (!next) { setState(null); setAliases(""); }
   }
 
   return (
@@ -48,6 +51,20 @@ export function ProductCreateDialog() {
         </DialogHeader>
         <form action={handleSubmit}>
           <ProductFormFields fieldErrors={state?.fieldErrors} disabled={isPending} />
+          <div className="mt-4 border-t pt-4 space-y-1.5">
+            <Label htmlFor="aliases">별칭 (검색용)</Label>
+            <Input
+              id="aliases"
+              name="aliases"
+              value={aliases}
+              onChange={(e) => setAliases(e.target.value)}
+              placeholder="쉼표로 구분 (예: ST, 아연도)"
+              disabled={isPending}
+            />
+            <p className="text-xs text-muted-foreground">
+              별칭을 등록하면 재고 검색 시 별칭으로도 품목을 찾을 수 있습니다.
+            </p>
+          </div>
           {state?.error && (
             <p className="mt-3 text-sm text-destructive" role="alert">
               {state.error}

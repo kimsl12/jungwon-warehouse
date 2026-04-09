@@ -95,18 +95,36 @@ export async function createProduct(
     };
   }
 
-  const { error } = await auth.supabase.from("products").insert({
-    name: parsed.data.name,
-    category: emptyToNull(parsed.data.category ?? null),
-    subcategory: emptyToNull(parsed.data.subcategory ?? null),
-    unit: emptyToNull(parsed.data.unit ?? null),
-    quantity: parsed.data.quantity,
-    min_quantity: parsed.data.min_quantity,
-    location: emptyToNull(parsed.data.location ?? null),
-  });
+  const { data: inserted, error } = await auth.supabase
+    .from("products")
+    .insert({
+      name: parsed.data.name,
+      category: emptyToNull(parsed.data.category ?? null),
+      subcategory: emptyToNull(parsed.data.subcategory ?? null),
+      unit: emptyToNull(parsed.data.unit ?? null),
+      quantity: parsed.data.quantity,
+      min_quantity: parsed.data.min_quantity,
+      location: emptyToNull(parsed.data.location ?? null),
+    })
+    .select("id")
+    .single();
 
   if (error) {
     return { error: "등록에 실패했습니다: " + error.message };
+  }
+
+  // Register aliases if provided (comma-separated)
+  const aliasStr = String(formData.get("aliases") ?? "").trim();
+  if (aliasStr && inserted?.id) {
+    const aliases = [...new Set(aliasStr.split(",").map((a) => a.trim()).filter(Boolean))];
+    if (aliases.length > 0) {
+      await auth.supabase
+        .from("product_aliases")
+        .upsert(
+          aliases.map((alias) => ({ product_id: inserted.id, alias })),
+          { onConflict: "product_id,alias", ignoreDuplicates: true },
+        );
+    }
   }
 
   revalidatePath("/inventory");
