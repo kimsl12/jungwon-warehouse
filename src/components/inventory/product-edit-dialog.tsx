@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ProductAliases } from "@/components/inventory/product-aliases";
 import { ProductFormFields } from "@/components/inventory/product-form-fields";
 import type { Database } from "@/lib/database.types";
 
@@ -21,10 +22,12 @@ export function ProductEditDialog({
   product,
   open,
   onOpenChange,
+  isAdmin = false,
 }: {
   product: Product;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  isAdmin?: boolean;
 }) {
   const [state, setState] = useState<ProductFormState>(null);
   const [isPending, startTransition] = useTransition();
@@ -65,6 +68,11 @@ export function ProductEditDialog({
             includeQuantity={false}
             disabled={isPending}
           />
+          {isAdmin && (
+            <div className="mt-4 border-t pt-4">
+              <ProductAliases productId={product.id} />
+            </div>
+          )}
           {state?.error && (
             <p className="mt-3 text-sm text-destructive" role="alert">
               {state.error}

@@ -44,6 +44,35 @@ export type Database = {
         }
         Relationships: []
       }
+      product_aliases: {
+        Row: {
+          alias: string
+          created_at: string
+          id: string
+          product_id: string
+        }
+        Insert: {
+          alias: string
+          created_at?: string
+          id?: string
+          product_id: string
+        }
+        Update: {
+          alias?: string
+          created_at?: string
+          id?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_aliases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category: string | null
@@ -262,6 +291,26 @@ export type Database = {
           p_user_id: string
         }
         Returns: Json
+      }
+      search_products: {
+        Args: { p_category?: string; p_query?: string }
+        Returns: {
+          category: string | null
+          created_at: string
+          id: string
+          location: string | null
+          min_quantity: number
+          name: string
+          quantity: number
+          unit: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "products"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
     }
     Enums: {

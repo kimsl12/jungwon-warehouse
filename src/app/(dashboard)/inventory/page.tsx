@@ -23,19 +23,17 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
 
   const supabase = await createClient();
 
-  // Build the products query
-  let productsQuery = supabase
-    .from("products")
-    .select("*", { count: "exact" })
-    .order("name", { ascending: true })
+  // Build the products query — uses search_products RPC to search name + aliases
+  const productsQuery = supabase
+    .rpc(
+      "search_products",
+      {
+        p_query: search || undefined,
+        p_category: category || undefined,
+      },
+      { count: "exact" },
+    )
     .range(from, to);
-
-  if (search) {
-    productsQuery = productsQuery.ilike("name", `%${search}%`);
-  }
-  if (category) {
-    productsQuery = productsQuery.eq("category", category);
-  }
 
   // Distinct categories for the filter dropdown — fetched once per request
   const [productsResult, categoriesResult, profileResult, sitesResult] = await Promise.all([

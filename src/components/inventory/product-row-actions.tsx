@@ -80,7 +80,7 @@ export function ProductRowActions({
 
       {isAdmin && (
         <>
-          <ProductEditDialog product={product} open={editOpen} onOpenChange={setEditOpen} />
+          <ProductEditDialog product={product} open={editOpen} onOpenChange={setEditOpen} isAdmin={isAdmin} />
 
           <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
             <AlertDialogContent>

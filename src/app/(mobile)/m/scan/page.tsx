@@ -21,17 +21,11 @@ export default async function MobileScanPage({
 
   const supabase = await createClient();
 
-  let query = supabase
-    .from("products")
+  // Uses search_products RPC to search product name + aliases
+  const { data } = await supabase
+    .rpc("search_products", { p_query: q || undefined, p_category: undefined })
     .select("id, name, category, unit, quantity, min_quantity, location")
-    .order("name")
     .limit(50);
-
-  if (q.length > 0) {
-    query = query.ilike("name", `%${q}%`);
-  }
-
-  const { data } = await query;
   const products = data ?? [];
 
   return (
