@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
+import { LowStockBanner } from "@/components/dashboard/low-stock-banner";
 import { DashboardNav } from "@/components/dashboard/nav";
 import { createClient } from "@/lib/supabase/server";
 
@@ -46,6 +47,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           </div>
         </div>
       </header>
+      <LowStockBanner />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
     </div>
   );
