@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
+import { DashboardNav } from "@/components/dashboard/nav";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
@@ -10,7 +11,6 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Defense-in-depth: middleware should already redirect, but verify here too
   if (!user) {
     redirect("/login");
   }
@@ -21,18 +21,22 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     .eq("id", user.id)
     .single();
 
+  const isAdmin = profile?.role === "admin";
+
   return (
     <div className="flex min-h-svh flex-col">
       <header className="border-b bg-background">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <h1 className="text-base font-semibold">정원창고</h1>
-            <span className="text-xs text-muted-foreground">재고관리 시스템</span>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-semibold">정원창고</h1>
+            </div>
+            <DashboardNav isAdmin={isAdmin} />
           </div>
           <div className="flex items-center gap-3 text-sm">
             <span className="text-muted-foreground">
               {profile?.name ?? user.email}
-              {profile?.role === "admin" && (
+              {isAdmin && (
                 <span className="ml-2 rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                   관리자
                 </span>
