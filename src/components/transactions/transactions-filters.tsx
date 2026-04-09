@@ -12,6 +12,7 @@ type Initial = {
   product_id: string;
   user_id: string;
   category: string;
+  site_id: string;
   from: string;
   to: string;
 };
@@ -20,11 +21,13 @@ export function TransactionsFilters({
   products,
   categories,
   profiles,
+  sites,
   initial,
 }: {
   products: Option[];
   categories: string[];
   profiles: Option[];
+  sites: { id: string; name: string }[];
   initial: Initial;
 }) {
   const router = useRouter();
@@ -50,12 +53,12 @@ export function TransactionsFilters({
   }
 
   function handleReset() {
-    setState({ type: "", product_id: "", user_id: "", category: "", from: "", to: "" });
+    setState({ type: "", product_id: "", user_id: "", category: "", site_id: "", from: "", to: "" });
     startTransition(() => router.push("/transactions"));
   }
 
   const hasFilter =
-    state.type || state.product_id || state.user_id || state.category || state.from || state.to;
+    state.type || state.product_id || state.user_id || state.category || state.site_id || state.from || state.to;
 
   const selectClass =
     "h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -123,6 +126,23 @@ export function TransactionsFilters({
             {profiles.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name ?? "(이름 없음)"}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="site-tx">현장</Label>
+          <select
+            id="site-tx"
+            className={selectClass}
+            value={state.site_id}
+            onChange={(e) => update("site_id", e.target.value)}
+          >
+            <option value="">전체</option>
+            {sites.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
               </option>
             ))}
           </select>

@@ -12,12 +12,16 @@ import type { Database } from "@/lib/database.types";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
 
+export type SiteOption = { id: string; name: string };
+
 export function InventoryTable({
   products,
   isAdmin,
+  sites,
 }: {
   products: Product[];
   isAdmin: boolean;
+  sites: SiteOption[];
 }) {
   if (products.length === 0) {
     return (
@@ -64,7 +68,7 @@ export function InventoryTable({
               </TableCell>
               <TableCell className="text-muted-foreground">{product.location ?? "-"}</TableCell>
               <TableCell className="text-right">
-                <ProductRowActions product={product} isAdmin={isAdmin} />
+                <ProductRowActions product={product} isAdmin={isAdmin} sites={sites} />
               </TableCell>
             </TableRow>
           ))}

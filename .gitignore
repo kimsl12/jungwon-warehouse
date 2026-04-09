@@ -40,3 +40,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# User downloads / personal files
+*.pdf
+*.csv
+추가 요청 기능.txt

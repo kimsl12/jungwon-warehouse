@@ -17,6 +17,8 @@ export type ProcessTransactionArgs = {
   p_quantity: number;
   p_note: string | null;
   p_user_id: string | null;
+  /** Required when p_type === "out", optional otherwise */
+  p_site_id: string | null;
 };
 
 export type ProcessTransactionResult = {

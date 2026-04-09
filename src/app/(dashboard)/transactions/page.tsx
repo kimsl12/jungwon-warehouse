@@ -13,6 +13,7 @@ type SearchParams = Promise<{
   product_id?: string;
   user_id?: string;
   category?: string;
+  site_id?: string;
   from?: string;
   to?: string;
   page?: string;
@@ -43,7 +44,9 @@ export default async function TransactionsPage({
       note,
       created_at,
       created_by,
-      products!inner(id, name, category, unit)
+      site_id,
+      products!inner(id, name, category, unit),
+      sites(id, name)
     `,
       { count: "exact" },
     )
@@ -62,6 +65,9 @@ export default async function TransactionsPage({
   if (params.category) {
     query = query.eq("products.category", params.category);
   }
+  if (params.site_id) {
+    query = query.eq("site_id", params.site_id);
+  }
   if (params.from) {
     query = query.gte("created_at", params.from);
   }
@@ -73,12 +79,13 @@ export default async function TransactionsPage({
   }
 
   // Fetch dropdown options in parallel
-  const [transactionsResult, productsResult, categoriesResult, profilesResult] =
+  const [transactionsResult, productsResult, categoriesResult, profilesResult, sitesResult] =
     await Promise.all([
       query,
       supabase.from("products").select("id, name").order("name"),
       supabase.from("products").select("category").not("category", "is", null),
       supabase.from("profiles").select("id, name").order("name"),
+      supabase.from("sites").select("id, name").eq("active", true).order("name"),
     ]);
 
   const transactions = transactionsResult.data ?? [];
@@ -111,6 +118,7 @@ export default async function TransactionsPage({
   if (params.product_id) exportParams.set("product_id", params.product_id);
   if (params.user_id) exportParams.set("user_id", params.user_id);
   if (params.category) exportParams.set("category", params.category);
+  if (params.site_id) exportParams.set("site_id", params.site_id);
   if (params.from) exportParams.set("from", params.from);
   if (params.to) exportParams.set("to", params.to);
   const exportHref = exportParams.toString()
@@ -126,6 +134,7 @@ export default async function TransactionsPage({
   if (params.product_id) pdfParams.set("product_id", params.product_id);
   if (params.user_id) pdfParams.set("user_id", params.user_id);
   if (params.category) pdfParams.set("category", params.category);
+  if (params.site_id) pdfParams.set("site_id", params.site_id);
   if (params.from) pdfParams.set("from", params.from);
   if (params.to) pdfParams.set("to", params.to);
   const pdfHref = pdfParams.toString()
@@ -163,11 +172,13 @@ export default async function TransactionsPage({
         products={productsResult.data ?? []}
         categories={categories}
         profiles={profilesResult.data ?? []}
+        sites={sitesResult.data ?? []}
         initial={{
           type: params.type ?? "",
           product_id: params.product_id ?? "",
           user_id: params.user_id ?? "",
           category: params.category ?? "",
+          site_id: params.site_id ?? "",
           from: params.from ?? "",
           to: params.to ?? "",
         }}

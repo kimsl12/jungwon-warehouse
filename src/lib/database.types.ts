@@ -101,6 +101,39 @@ export type Database = {
         }
         Relationships: []
       }
+      sites: {
+        Row: {
+          active: boolean
+          address: string | null
+          contact: string | null
+          created_at: string
+          id: string
+          name: string
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          address?: string | null
+          contact?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          address?: string | null
+          contact?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           created_at: string
@@ -109,6 +142,7 @@ export type Database = {
           note: string | null
           product_id: string
           quantity: number
+          site_id: string | null
           type: string
         }
         Insert: {
@@ -118,6 +152,7 @@ export type Database = {
           note?: string | null
           product_id: string
           quantity: number
+          site_id?: string | null
           type: string
         }
         Update: {
@@ -127,6 +162,7 @@ export type Database = {
           note?: string | null
           product_id?: string
           quantity?: number
+          site_id?: string | null
           type?: string
         }
         Relationships: [
@@ -135,6 +171,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -156,6 +199,31 @@ export type Database = {
           total_quantity: number | null
           transaction_count: number | null
           type: string | null
+        }
+        Relationships: []
+      }
+      outgoing_by_site: {
+        Row: {
+          site_id: string | null
+          site_name: string | null
+          total_quantity: number | null
+          transaction_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outgoing_by_user: {
+        Row: {
+          total_quantity: number | null
+          transaction_count: number | null
+          user_id: string | null
         }
         Relationships: []
       }
@@ -189,6 +257,7 @@ export type Database = {
           p_note: string
           p_product_id: string
           p_quantity: number
+          p_site_id: string
           p_type: string
           p_user_id: string
         }

@@ -6,6 +6,8 @@ import { useState, useTransition } from "react";
 import { processTransaction } from "@/app/(dashboard)/inventory/transaction-actions";
 import { Button } from "@/components/ui/button";
 
+type SiteOption = { id: string; name: string };
+
 /**
  * Mobile in/out form. Reuses the dashboard's processTransaction server
  * action so logic and validation stay identical.
@@ -18,14 +20,17 @@ export function MobileTransactionForm({
   productName,
   unit,
   currentQuantity,
+  sites,
 }: {
   productId: string;
   productName: string;
   unit: string | null;
   currentQuantity: number;
+  sites: SiteOption[];
 }) {
   const router = useRouter();
   const [type, setType] = useState<"in" | "out">("out");
+  const [siteId, setSiteId] = useState<string>("");
   const [quantity, setQuantity] = useState<string>("");
   const [note, setNote] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -46,12 +51,17 @@ export function MobileTransactionForm({
       );
       return;
     }
+    if (type === "out" && !siteId) {
+      setError("출고는 현장을 선택해주세요.");
+      return;
+    }
 
     const fd = new FormData();
     fd.append("product_id", productId);
     fd.append("type", type);
     fd.append("quantity", String(qtyNum));
     if (note.trim()) fd.append("note", note.trim());
+    if (siteId) fd.append("site_id", siteId);
 
     startTransition(async () => {
       const result = await processTransaction(null, fd);
@@ -116,6 +126,36 @@ export function MobileTransactionForm({
           placeholder="0"
           className="h-12 w-full rounded-md border bg-background px-3 text-2xl font-semibold tabular-nums outline-none focus:ring-2 focus:ring-ring"
         />
+      </div>
+
+      <div>
+        <label htmlFor="site" className="mb-2 block text-sm font-medium">
+          현장{" "}
+          {type === "out" ? (
+            <span className="text-destructive">*</span>
+          ) : (
+            <span className="text-xs text-muted-foreground">(선택)</span>
+          )}
+        </label>
+        <select
+          id="site"
+          value={siteId}
+          onChange={(e) => setSiteId(e.target.value)}
+          required={type === "out"}
+          className="h-12 w-full rounded-md border bg-background px-3 text-base outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option value="">— 선택 —</option>
+          {sites.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+        {sites.length === 0 && (
+          <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+            등록된 현장이 없습니다. 관리자에게 요청하세요.
+          </p>
+        )}
       </div>
 
       <div>

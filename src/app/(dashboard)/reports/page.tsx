@@ -12,12 +12,18 @@ export const dynamic = "force-dynamic";
 export default async function ReportsPage() {
   const supabase = await createClient();
 
-  const [monthlyResult, topOutgoingResult] = await Promise.all([
-    supabase.from("monthly_transaction_summary").select("month, type, total_quantity"),
-    supabase
-      .from("top_products_by_outgoing")
-      .select("product_id, name, category, total_outgoing"),
-  ]);
+  const [monthlyResult, topOutgoingResult, outByUserResult, outBySiteResult, profilesResult] =
+    await Promise.all([
+      supabase.from("monthly_transaction_summary").select("month, type, total_quantity"),
+      supabase
+        .from("top_products_by_outgoing")
+        .select("product_id, name, category, total_outgoing"),
+      supabase.from("outgoing_by_user").select("user_id, transaction_count, total_quantity"),
+      supabase
+        .from("outgoing_by_site")
+        .select("site_id, site_name, transaction_count, total_quantity"),
+      supabase.from("profiles").select("id, name"),
+    ]);
 
   const monthlyData = normalizeMonthlySummary(monthlyResult.data ?? []);
 
@@ -116,6 +122,80 @@ export default async function ReportsPage() {
           )}
         </CardContent>
       </Card>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* 인원별 출고 통계 */}
+        <Card>
+          <CardHeader>
+            <CardTitle>인원별 출고 (최근 12개월)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {(outByUserResult.data ?? []).length === 0 ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                출고 내역이 없습니다.
+              </p>
+            ) : (
+              <div className="divide-y">
+                {(outByUserResult.data ?? []).map((row) => {
+                  const profileRow = (profilesResult.data ?? []).find(
+                    (p) => p.id === row.user_id,
+                  );
+                  const name = profileRow?.name ?? (row.user_id ? "알 수 없음" : "시스템");
+                  return (
+                    <div
+                      key={row.user_id ?? "__null"}
+                      className="flex items-center justify-between py-2 text-sm"
+                    >
+                      <span className="font-medium">{name}</span>
+                      <div className="text-right tabular-nums text-muted-foreground">
+                        <span className="font-semibold text-foreground">
+                          {Number(row.total_quantity ?? 0).toLocaleString("ko-KR")}
+                        </span>
+                        <span className="ml-2 text-xs">
+                          ({Number(row.transaction_count ?? 0).toLocaleString("ko-KR")}건)
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* 현장별 출고 통계 */}
+        <Card>
+          <CardHeader>
+            <CardTitle>현장별 출고 (최근 12개월)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {(outBySiteResult.data ?? []).length === 0 ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                출고 내역이 없습니다.
+              </p>
+            ) : (
+              <div className="divide-y">
+                {(outBySiteResult.data ?? []).map((row) => (
+                  <div
+                    key={row.site_id ?? "__null"}
+                    className="flex items-center justify-between py-2 text-sm"
+                  >
+                    <span className="font-medium">{row.site_name ?? "미지정"}</span>
+                    <div className="text-right tabular-nums text-muted-foreground">
+                      <span className="font-semibold text-foreground">
+                        {Number(row.total_quantity ?? 0).toLocaleString("ko-KR")}
+                      </span>
+                      <span className="ml-2 text-xs">
+                        ({Number(row.transaction_count ?? 0).toLocaleString("ko-KR")}건)
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

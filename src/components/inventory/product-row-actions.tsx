@@ -19,13 +19,16 @@ import { ProductEditDialog } from "@/components/inventory/product-edit-dialog";
 import type { Database } from "@/lib/database.types";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
+type SiteOption = { id: string; name: string };
 
 export function ProductRowActions({
   product,
   isAdmin,
+  sites,
 }: {
   product: Product;
   isAdmin: boolean;
+  sites: SiteOption[];
 }) {
   const [transactionOpen, setTransactionOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -72,6 +75,7 @@ export function ProductRowActions({
         product={product}
         open={transactionOpen}
         onOpenChange={setTransactionOpen}
+        sites={sites}
       />
 
       {isAdmin && (

@@ -38,7 +38,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
   }
 
   // Distinct categories for the filter dropdown — fetched once per request
-  const [productsResult, categoriesResult, profileResult] = await Promise.all([
+  const [productsResult, categoriesResult, profileResult, sitesResult] = await Promise.all([
     productsQuery,
     supabase.from("products").select("category").not("category", "is", null),
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -46,6 +46,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
       const { data } = await supabase.from("profiles").select("role").eq("id", user.id).single();
       return data;
     }),
+    supabase.from("sites").select("id, name").eq("active", true).order("name"),
   ]);
 
   const products = productsResult.data ?? [];
@@ -81,7 +82,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
       )}
       <InventoryHeader isAdmin={isAdmin} totalCount={totalCount} />
       <InventorySearch categories={categories} initialSearch={search} initialCategory={category} />
-      <InventoryTable products={products} isAdmin={isAdmin} />
+      <InventoryTable products={products} isAdmin={isAdmin} sites={sitesResult.data ?? []} />
       <InventoryPagination currentPage={page} totalPages={totalPages} />
     </div>
   );

@@ -21,23 +21,28 @@ import { cn } from "@/lib/utils";
 import type { Database } from "@/lib/database.types";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
+type SiteOption = { id: string; name: string };
 
 export function ProcessTransactionDialog({
   product,
   open,
   onOpenChange,
+  sites,
 }: {
   product: Product;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  sites: SiteOption[];
 }) {
   const [type, setType] = useState<"in" | "out">("in");
+  const [siteId, setSiteId] = useState<string>("");
   const [state, setState] = useState<ProcessTransactionState>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(formData: FormData) {
     setState(null);
     formData.set("type", type);
+    formData.set("site_id", siteId);
     startTransition(async () => {
       const result = await processTransaction(null, formData);
       setState(result);
@@ -58,8 +63,12 @@ export function ProcessTransactionDialog({
     if (!next) {
       setState(null);
       setType("in");
+      setSiteId("");
     }
   }
+
+  const selectClass =
+    "h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60";
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -123,6 +132,40 @@ export function ProcessTransactionDialog({
               />
               {state?.fieldErrors?.quantity?.[0] && (
                 <p className="text-xs text-destructive">{state.fieldErrors.quantity[0]}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="site">
+                현장{" "}
+                {type === "out" && <span className="text-destructive">*</span>}
+                {type === "in" && (
+                  <span className="text-xs text-muted-foreground">(선택)</span>
+                )}
+              </Label>
+              <select
+                id="site"
+                className={selectClass}
+                value={siteId}
+                onChange={(e) => setSiteId(e.target.value)}
+                disabled={isPending}
+                required={type === "out"}
+                aria-invalid={state?.fieldErrors?.site_id ? true : undefined}
+              >
+                <option value="">— 선택 —</option>
+                {sites.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+              {state?.fieldErrors?.site_id?.[0] && (
+                <p className="text-xs text-destructive">{state.fieldErrors.site_id[0]}</p>
+              )}
+              {sites.length === 0 && (
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  등록된 현장이 없습니다. 관리자에게 현장 등록을 요청하세요.
+                </p>
               )}
             </div>
 

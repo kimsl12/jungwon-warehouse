@@ -22,13 +22,18 @@ export default async function MobileTransactionPage({
   if (!productId) notFound();
 
   const supabase = await createClient();
-  const { data: product, error } = await supabase
-    .from("products")
-    .select("id, name, category, unit, quantity, min_quantity, location")
-    .eq("id", productId)
-    .single();
+  const [productResult, sitesResult] = await Promise.all([
+    supabase
+      .from("products")
+      .select("id, name, category, unit, quantity, min_quantity, location")
+      .eq("id", productId)
+      .single(),
+    supabase.from("sites").select("id, name").eq("active", true).order("name"),
+  ]);
 
+  const { data: product, error } = productResult;
   if (error || !product) notFound();
+  const sites = sitesResult.data ?? [];
 
   const isLow = product.min_quantity > 0 && product.quantity <= product.min_quantity;
 
@@ -75,6 +80,7 @@ export default async function MobileTransactionPage({
         productName={product.name}
         unit={product.unit}
         currentQuantity={product.quantity}
+        sites={sites}
       />
     </div>
   );

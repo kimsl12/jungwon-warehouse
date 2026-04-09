@@ -15,11 +15,16 @@ type TransactionRow = {
   note: string | null;
   created_at: string;
   created_by: string | null;
+  site_id: string | null;
   products: {
     id: string;
     name: string;
     category: string | null;
     unit: string | null;
+  } | null;
+  sites: {
+    id: string;
+    name: string;
   } | null;
 };
 
@@ -56,6 +61,7 @@ export function TransactionsTable({
             <TableHead>제품명</TableHead>
             <TableHead>분류</TableHead>
             <TableHead className="text-right">수량</TableHead>
+            <TableHead>현장</TableHead>
             <TableHead>담당자</TableHead>
             <TableHead>메모</TableHead>
           </TableRow>
@@ -91,6 +97,9 @@ export function TransactionsTable({
                       {tx.products.unit}
                     </span>
                   )}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {tx.sites?.name ?? "—"}
                 </TableCell>
                 <TableCell className="text-muted-foreground">{userName}</TableCell>
                 <TableCell className="max-w-xs truncate text-muted-foreground">

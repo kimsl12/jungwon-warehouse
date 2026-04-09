@@ -12,6 +12,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/inventory", label: "재고" },
   { href: "/transactions", label: "입출고" },
   { href: "/reports", label: "리포트" },
+  { href: "/sites", label: "현장 관리", adminOnly: true },
   { href: "/activity-log", label: "활동 로그", adminOnly: true },
 ];
 

@@ -37,24 +37,27 @@ export async function GET(req: Request) {
   const productId = url.searchParams.get("product_id");
   const userId = url.searchParams.get("user_id");
   const category = url.searchParams.get("category");
+  const siteId = url.searchParams.get("site_id");
   const from = url.searchParams.get("from");
   const to = url.searchParams.get("to");
-  const recipient = url.searchParams.get("recipient");
+  const recipientOverride = url.searchParams.get("recipient");
   const note = url.searchParams.get("note");
 
   let query = supabase
     .from("transactions")
     .select(
-      `id, type, quantity, note, created_at,
-       products!inner(name, category, unit)`,
+      `id, type, quantity, note, created_at, created_by,
+       products!inner(name, category, unit),
+       sites(id, name, address)`,
     )
     .eq("type", "out")
     .order("created_at", { ascending: true })
-    .limit(100); // safety cap — a single delivery slip rarely has more
+    .limit(100);
 
   if (productId) query = query.eq("product_id", productId);
   if (userId) query = query.eq("created_by", userId);
   if (category) query = query.eq("products.category", category);
+  if (siteId) query = query.eq("site_id", siteId);
   if (from) query = query.gte("created_at", from);
   if (to) {
     const endOfDay = new Date(to);
@@ -72,6 +75,19 @@ export async function GET(req: Request) {
     return new NextResponse("출고 내역이 없습니다.", { status: 404 });
   }
 
+  // Resolve user names for the PDF
+  const userIds = Array.from(
+    new Set(rows.map((r) => r.created_by).filter((id): id is string => Boolean(id))),
+  );
+  const profileNameMap = new Map<string, string | null>();
+  if (userIds.length > 0) {
+    const { data: profileRows } = await supabase
+      .from("profiles")
+      .select("id, name")
+      .in("id", userIds);
+    for (const p of profileRows ?? []) profileNameMap.set(p.id, p.name);
+  }
+
   const items: DeliveryItem[] = rows.map((tx, idx) => ({
     no: idx + 1,
     name: tx.products?.name ?? "—",
@@ -79,7 +95,26 @@ export async function GET(req: Request) {
     unit: tx.products?.unit ?? null,
     quantity: tx.quantity,
     note: tx.note,
+    siteName: tx.sites?.name ?? null,
+    userName: tx.created_by ? (profileNameMap.get(tx.created_by) ?? null) : null,
+    date: new Date(tx.created_at).toISOString().slice(0, 10),
   }));
+
+  // Auto-determine recipient from site info. If all rows share the same
+  // site, use that as the 수신처. Otherwise use "여러 현장" or override.
+  const distinctSites = new Map<string, { name: string; address: string | null }>();
+  for (const row of rows) {
+    if (row.sites?.id) {
+      distinctSites.set(row.sites.id, { name: row.sites.name, address: row.sites.address ?? null });
+    }
+  }
+  let recipient = recipientOverride;
+  if (!recipient && distinctSites.size === 1) {
+    const site = Array.from(distinctSites.values())[0];
+    recipient = site.address ? `${site.name} (${site.address})` : site.name;
+  } else if (!recipient && distinctSites.size > 1) {
+    recipient = `여러 현장 (${distinctSites.size}곳)`;
+  }
 
   const issueDate = new Date().toISOString().slice(0, 10);
   const slipNumber = `${formatYmdCompact()}-${rows[0].id.slice(0, 6).toUpperCase()}`;

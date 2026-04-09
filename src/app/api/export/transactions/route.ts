@@ -46,11 +46,14 @@ export async function GET(req: Request) {
   const from = url.searchParams.get("from");
   const to = url.searchParams.get("to");
 
+  const siteIdParam = url.searchParams.get("site_id");
+
   let query = supabase
     .from("transactions")
     .select(
       `id, type, quantity, note, created_at, created_by,
-       products!inner(name, category, unit)`,
+       products!inner(name, category, unit),
+       sites(name)`,
     )
     .order("created_at", { ascending: false });
 
@@ -58,6 +61,7 @@ export async function GET(req: Request) {
   if (productId) query = query.eq("product_id", productId);
   if (userId) query = query.eq("created_by", userId);
   if (category) query = query.eq("products.category", category);
+  if (siteIdParam) query = query.eq("site_id", siteIdParam);
   if (from) query = query.gte("created_at", from);
   if (to) {
     const endOfDay = new Date(to);
@@ -83,7 +87,7 @@ export async function GET(req: Request) {
     for (const p of profileRows ?? []) profileNameMap.set(p.id, p.name);
   }
 
-  const headers = ["일시", "구분", "제품명", "분류", "단위", "수량", "담당자", "메모"];
+  const headers = ["일시", "구분", "제품명", "분류", "단위", "수량", "현장", "담당자", "메모"];
   const rows = (data ?? []).map((tx) => [
     dateFormatter.format(new Date(tx.created_at)),
     tx.type === "in" ? "입고" : "출고",
@@ -91,6 +95,7 @@ export async function GET(req: Request) {
     tx.products?.category ?? "",
     tx.products?.unit ?? "",
     tx.quantity,
+    tx.sites?.name ?? "",
     tx.created_by ? (profileNameMap.get(tx.created_by) ?? "") : "",
     tx.note ?? "",
   ]);

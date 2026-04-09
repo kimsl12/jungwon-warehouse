@@ -129,12 +129,14 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     minHeight: 22,
   },
-  cellNo: { width: 30, paddingHorizontal: 4, textAlign: "center" },
-  cellName: { flex: 3, paddingHorizontal: 4 },
-  cellCategory: { flex: 1.4, paddingHorizontal: 4 },
-  cellQty: { flex: 1, paddingHorizontal: 4, textAlign: "right" },
-  cellUnit: { flex: 0.8, paddingHorizontal: 4, textAlign: "center" },
-  cellNote: { flex: 2, paddingHorizontal: 4 },
+  cellNo: { width: 24, paddingHorizontal: 3, textAlign: "center" },
+  cellDate: { flex: 1.2, paddingHorizontal: 3 },
+  cellName: { flex: 2.4, paddingHorizontal: 3 },
+  cellSite: { flex: 1.5, paddingHorizontal: 3 },
+  cellQty: { flex: 0.8, paddingHorizontal: 3, textAlign: "right" },
+  cellUnit: { flex: 0.6, paddingHorizontal: 3, textAlign: "center" },
+  cellUser: { flex: 1, paddingHorizontal: 3 },
+  cellNote: { flex: 1.5, paddingHorizontal: 3 },
   totalRow: {
     flexDirection: "row",
     backgroundColor: "#f5f5f5",
@@ -175,6 +177,12 @@ export type DeliveryItem = {
   unit: string | null;
   quantity: number;
   note: string | null;
+  /** 현장명 (출고 시 필수) */
+  siteName?: string | null;
+  /** 담당자명 */
+  userName?: string | null;
+  /** 출고 날짜 (YYYY-MM-DD) */
+  date?: string | null;
 };
 
 export type DeliveryPdfProps = {
@@ -232,30 +240,36 @@ export function DeliveryPdf({
         <View style={styles.table}>
           <View style={styles.tableHeader}>
             <Text style={styles.cellNo}>No</Text>
+            <Text style={styles.cellDate}>날짜</Text>
             <Text style={styles.cellName}>제품명</Text>
-            <Text style={styles.cellCategory}>분류</Text>
+            <Text style={styles.cellSite}>현장</Text>
             <Text style={styles.cellQty}>수량</Text>
             <Text style={styles.cellUnit}>단위</Text>
+            <Text style={styles.cellUser}>담당</Text>
             <Text style={styles.cellNote}>비고</Text>
           </View>
 
           {items.map((item) => (
             <View key={item.no} style={styles.tableRow}>
               <Text style={styles.cellNo}>{item.no}</Text>
+              <Text style={styles.cellDate}>{item.date ?? ""}</Text>
               <Text style={styles.cellName}>{item.name}</Text>
-              <Text style={styles.cellCategory}>{item.category ?? "—"}</Text>
+              <Text style={styles.cellSite}>{item.siteName ?? "—"}</Text>
               <Text style={styles.cellQty}>{item.quantity.toLocaleString("ko-KR")}</Text>
               <Text style={styles.cellUnit}>{item.unit ?? ""}</Text>
+              <Text style={styles.cellUser}>{item.userName ?? ""}</Text>
               <Text style={styles.cellNote}>{item.note ?? ""}</Text>
             </View>
           ))}
 
           <View style={styles.totalRow}>
             <Text style={styles.cellNo}> </Text>
+            <Text style={styles.cellDate}> </Text>
             <Text style={styles.cellName}>합계</Text>
-            <Text style={styles.cellCategory}> </Text>
+            <Text style={styles.cellSite}> </Text>
             <Text style={styles.cellQty}>{totalQty.toLocaleString("ko-KR")}</Text>
             <Text style={styles.cellUnit}> </Text>
+            <Text style={styles.cellUser}> </Text>
             <Text style={styles.cellNote}>{items.length}개 품목</Text>
           </View>
         </View>
