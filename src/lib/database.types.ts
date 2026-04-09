@@ -303,6 +303,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_products_summary: { Args: never; Returns: Json }
       is_admin: { Args: never; Returns: boolean }
       process_transaction: {
         Args: {

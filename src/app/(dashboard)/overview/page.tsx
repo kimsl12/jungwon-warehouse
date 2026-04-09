@@ -11,15 +11,11 @@ export const dynamic = "force-dynamic";
 export default async function OverviewPage() {
   const supabase = await createClient();
 
-  const [productsAggResult, dailySummaryResult, lowStockResult, recentTxResult] =
+  const [summaryResult, dailySummaryResult, lowStockResult, recentTxResult] =
     await Promise.all([
-      supabase.from("products").select("id, quantity, min_quantity"),
+      supabase.rpc("get_products_summary"),
       supabase.from("daily_transaction_summary").select("day, type, total_quantity, transaction_count"),
-      supabase
-        .from("products")
-        .select("id, name, quantity, min_quantity, unit, location")
-        .gt("min_quantity", 0)
-        .order("name"),
+      supabase.rpc("get_low_stock_products").limit(9),
       supabase
         .from("transactions")
         .select("id, type, quantity, created_at, products!inner(name, unit)")
@@ -27,14 +23,16 @@ export default async function OverviewPage() {
         .limit(5),
     ]);
 
-  // Inventory KPIs
-  const allProducts = productsAggResult.data ?? [];
-  const totalProducts = allProducts.length;
-  const totalQuantity = allProducts.reduce((sum, p) => sum + (p.quantity ?? 0), 0);
-  const lowStockProducts = (lowStockResult.data ?? []).filter(
-    (p) => p.quantity <= p.min_quantity,
-  );
-  const lowStockCount = lowStockProducts.length;
+  // Inventory KPIs — from DB aggregate (no 1000-row limit)
+  const summary = (summaryResult.data ?? { total_products: 0, total_quantity: 0, low_stock_count: 0 }) as {
+    total_products: number;
+    total_quantity: number;
+    low_stock_count: number;
+  };
+  const totalProducts = Number(summary.total_products);
+  const totalQuantity = Number(summary.total_quantity);
+  const lowStockCount = Number(summary.low_stock_count);
+  const lowStockProducts = lowStockResult.data ?? [];
 
   // Daily chart data
   const dailyData = normalizeDailySummary(dailySummaryResult.data ?? []);
