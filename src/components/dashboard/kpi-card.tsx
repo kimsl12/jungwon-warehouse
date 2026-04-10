@@ -1,40 +1,64 @@
 import type { ReactNode } from "react";
 
-import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-/**
- * Compact KPI card used on the dashboard overview.
- * Tone changes the accent color (default neutral, warning red, positive green).
- */
 export function KpiCard({
   label,
   value,
   hint,
   tone = "default",
+  icon,
 }: {
   label: string;
   value: ReactNode;
   hint?: ReactNode;
-  tone?: "default" | "warning" | "positive";
+  tone?: "default" | "warning" | "positive" | "critical";
+  icon?: ReactNode;
 }) {
   return (
-    <Card>
-      <CardContent className="space-y-1.5 py-1">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {label}
-        </p>
+    <div
+      className={cn(
+        "rounded bg-card p-5 space-y-2",
+        tone === "critical" && "bg-secondary text-secondary-foreground",
+      )}
+    >
+      <div className="flex items-center justify-between">
         <p
           className={cn(
-            "text-2xl font-semibold tabular-nums",
-            tone === "warning" && "text-destructive",
-            tone === "positive" && "text-emerald-600 dark:text-emerald-400",
+            "text-[10px] font-semibold uppercase tracking-widest",
+            tone === "critical" ? "text-secondary-foreground/70" : "text-muted-foreground",
           )}
         >
-          {value}
+          {label}
         </p>
-        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
-      </CardContent>
-    </Card>
+        {icon && (
+          <span className={cn(
+            tone === "critical" ? "text-secondary-foreground/60" : "text-muted-foreground/40",
+          )}>
+            {icon}
+          </span>
+        )}
+      </div>
+      <p
+        className={cn(
+          "text-3xl font-extrabold tabular-nums tracking-tight",
+          tone === "warning" && "text-destructive",
+          tone === "positive" && "text-emerald-600",
+          tone === "critical" && "text-secondary-foreground",
+        )}
+      >
+        {value}
+      </p>
+      {hint && (
+        <p
+          className={cn(
+            "text-xs",
+            tone === "critical" ? "text-secondary-foreground/70" : "text-muted-foreground",
+          )}
+        >
+          {hint}
+        </p>
+      )}
+    </div>
   );
 }

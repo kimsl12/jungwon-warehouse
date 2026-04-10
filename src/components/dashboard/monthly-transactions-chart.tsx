@@ -15,10 +15,10 @@ import {
 import type { MonthlyChartPoint } from "@/lib/summary-normalizers";
 
 const COLORS = {
-  inBar: "#93CFC1",
-  outBar: "#F0A898",
-  inLine: "#4DA697",
-  outLine: "#D4705A",
+  inBar: "#030813",
+  outBar: "#fea36e",
+  inLine: "#45474c",
+  outLine: "#914b1e",
 };
 
 const LABEL: Record<string, string> = {
@@ -28,42 +28,40 @@ const LABEL: Record<string, string> = {
   out: "출고 수량",
 };
 
-/**
- * 12-month combo chart: bars for count (left Y), lines for quantity (right Y).
- */
 export function MonthlyTransactionsChart({ data }: { data: MonthlyChartPoint[] }) {
   return (
     <ResponsiveContainer width="100%" height={320}>
       <ComposedChart data={data} margin={{ top: 8, right: 12, left: -8, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="#e9e8e6" vertical={false} />
         <XAxis
           dataKey="label"
-          tick={{ fontSize: 11 }}
+          tick={{ fontSize: 11, fill: "#45474c" }}
           tickLine={false}
-          axisLine={{ stroke: "hsl(var(--border))" }}
+          axisLine={{ stroke: "#e9e8e6" }}
         />
         <YAxis
           yAxisId="left"
-          tick={{ fontSize: 11 }}
+          tick={{ fontSize: 11, fill: "#76777c" }}
           tickLine={false}
           axisLine={false}
           allowDecimals={false}
-          label={{ value: "건수", angle: -90, position: "insideLeft", fontSize: 11, fill: "#999", offset: 16 }}
+          label={{ value: "건수", angle: -90, position: "insideLeft", fontSize: 11, fill: "#76777c", offset: 16 }}
         />
         <YAxis
           yAxisId="right"
           orientation="right"
-          tick={{ fontSize: 11 }}
+          tick={{ fontSize: 11, fill: "#76777c" }}
           tickLine={false}
           axisLine={false}
           allowDecimals={false}
-          label={{ value: "수량", angle: 90, position: "insideRight", fontSize: 11, fill: "#999", offset: 16 }}
+          label={{ value: "수량", angle: 90, position: "insideRight", fontSize: 11, fill: "#76777c", offset: 16 }}
         />
         <Tooltip
           contentStyle={{
-            background: "hsl(var(--background))",
-            border: "1px solid hsl(var(--border))",
-            borderRadius: 8,
+            background: "#ffffff",
+            border: "none",
+            borderRadius: 4,
+            boxShadow: "0 20px 40px rgba(27, 28, 27, 0.06)",
             fontSize: 12,
           }}
           formatter={(value, name) => [
@@ -75,8 +73,8 @@ export function MonthlyTransactionsChart({ data }: { data: MonthlyChartPoint[] }
           formatter={(value) => LABEL[value as string] ?? value}
           wrapperStyle={{ fontSize: 11 }}
         />
-        <Bar yAxisId="left" dataKey="inCount" fill={COLORS.inBar} radius={[3, 3, 0, 0]} barSize={14} />
-        <Bar yAxisId="left" dataKey="outCount" fill={COLORS.outBar} radius={[3, 3, 0, 0]} barSize={14} />
+        <Bar yAxisId="left" dataKey="inCount" fill={COLORS.inBar} radius={[2, 2, 0, 0]} barSize={14} />
+        <Bar yAxisId="left" dataKey="outCount" fill={COLORS.outBar} radius={[2, 2, 0, 0]} barSize={14} />
         <Line yAxisId="right" type="monotone" dataKey="in" stroke={COLORS.inLine} strokeWidth={2} dot={{ r: 2.5 }} />
         <Line yAxisId="right" type="monotone" dataKey="out" stroke={COLORS.outLine} strokeWidth={2} dot={{ r: 2.5 }} />
       </ComposedChart>
