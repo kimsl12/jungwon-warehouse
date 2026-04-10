@@ -13,15 +13,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 type UserRow = {
   id: string;
@@ -45,10 +36,7 @@ export function UsersTable({
   users: UserRow[];
   currentUserId: string;
 }) {
-  const [confirmTarget, setConfirmTarget] = useState<{
-    user: UserRow;
-    newRole: "admin" | "user";
-  } | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<{ user: UserRow; newRole: "admin" | "user" } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -72,7 +60,7 @@ export function UsersTable({
 
   if (users.length === 0) {
     return (
-      <div className="rounded-md border bg-muted/20 p-12 text-center">
+      <div className="rounded bg-card p-12 text-center">
         <p className="text-sm text-muted-foreground">등록된 사용자가 없습니다.</p>
       </div>
     );
@@ -80,99 +68,66 @@ export function UsersTable({
 
   return (
     <>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>이름</TableHead>
-              <TableHead>이메일</TableHead>
-              <TableHead>역할</TableHead>
-              <TableHead>가입일</TableHead>
-              <TableHead className="w-28 text-right">작업</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user) => {
-              const isMe = user.id === currentUserId;
-              return (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{user.name ?? "-"}</span>
-                      {isMe && (
-                        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                          나
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {user.email ?? "-"}
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={
-                        user.role === "admin"
-                          ? "inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
-                          : "inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
-                      }
-                    >
-                      {user.role === "admin" ? "관리자" : "일반"}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {dateFormatter.format(new Date(user.created_at))}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRoleChange(user)}
-                    >
-                      {user.role === "admin" ? "일반으로" : "관리자로"}
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+      <div className="rounded bg-card overflow-hidden">
+        {/* Header */}
+        <div className="grid grid-cols-[1fr_1fr_100px_120px_100px] gap-3 px-5 py-3 bg-surface-high text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <span>이름</span>
+          <span>이메일</span>
+          <span>역할</span>
+          <span>가입일</span>
+          <span className="text-right">작업</span>
+        </div>
+        {/* Rows */}
+        {users.map((user) => {
+          const isMe = user.id === currentUserId;
+          return (
+            <div key={user.id} className="grid grid-cols-[1fr_1fr_100px_120px_100px] gap-3 items-center px-5 py-3.5 hover:bg-surface-low/50 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground shrink-0">
+                  {(user.name ?? "?").charAt(0)}
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{user.name ?? "-"}</p>
+                  {isMe && <span className="text-[10px] text-muted-foreground">나</span>}
+                </div>
+              </div>
+              <span className="text-sm text-muted-foreground truncate">{user.email ?? "-"}</span>
+              <span>
+                {user.role === "admin" ? (
+                  <span className="inline-block rounded bg-secondary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-secondary">관리자</span>
+                ) : (
+                  <span className="inline-block rounded bg-surface-high px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">일반</span>
+                )}
+              </span>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {dateFormatter.format(new Date(user.created_at))}
+              </span>
+              <div className="text-right">
+                <button
+                  onClick={() => handleRoleChange(user)}
+                  className="rounded bg-surface-low px-2.5 py-1 text-xs text-muted-foreground hover:bg-surface-high transition-colors"
+                >
+                  {user.role === "admin" ? "일반으로" : "관리자로"}
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      <AlertDialog
-        open={confirmTarget !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setConfirmTarget(null);
-            setError(null);
-          }
-        }}
-      >
+      <AlertDialog open={confirmTarget !== null} onOpenChange={(open) => { if (!open) { setConfirmTarget(null); setError(null); } }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>역할 변경</AlertDialogTitle>
             <AlertDialogDescription>
-              <span className="font-medium text-foreground">
-                {confirmTarget?.user.name ?? confirmTarget?.user.email}
-              </span>
-              님의 역할을{" "}
-              <span className="font-semibold text-foreground">
-                {confirmTarget?.newRole === "admin" ? "관리자" : "일반 사용자"}
-              </span>
-              로 변경하시겠습니까?
+              <span className="font-medium text-foreground">{confirmTarget?.user.name ?? confirmTarget?.user.email}</span>님의 역할을{" "}
+              <span className="font-semibold text-foreground">{confirmTarget?.newRole === "admin" ? "관리자" : "일반 사용자"}</span>로 변경하시겠습니까?
               {confirmTarget?.user.id === currentUserId && (
-                <span className="mt-2 block text-destructive">
-                  본인의 권한을 변경합니다. 관리자에서 일반으로 변경하면 이 페이지에 접근할 수
-                  없게 됩니다.
-                </span>
+                <span className="mt-2 block text-destructive">본인의 권한을 변경합니다.</span>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          {error && (
-            <p className="text-sm text-destructive" role="alert">
-              {error}
-            </p>
-          )}
+          {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>취소</AlertDialogCancel>
             <AlertDialogAction onClick={confirmChange} disabled={isPending}>

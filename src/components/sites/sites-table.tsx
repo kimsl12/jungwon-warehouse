@@ -14,15 +14,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 type Site = {
   id: string;
@@ -42,10 +33,8 @@ export function SitesTable({ sites }: { sites: Site[] }) {
 
   if (sites.length === 0) {
     return (
-      <div className="rounded-md border bg-muted/20 p-12 text-center">
-        <p className="text-sm text-muted-foreground">
-          등록된 현장이 없습니다. 우측 상단의 &quot;현장 등록&quot; 버튼을 눌러 시작하세요.
-        </p>
+      <div className="rounded bg-card p-12 text-center">
+        <p className="text-sm text-muted-foreground">등록된 현장이 없습니다.</p>
       </div>
     );
   }
@@ -76,100 +65,70 @@ export function SitesTable({ sites }: { sites: Site[] }) {
 
   return (
     <>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>현장명</TableHead>
-              <TableHead>주소</TableHead>
-              <TableHead>연락처</TableHead>
-              <TableHead>메모</TableHead>
-              <TableHead className="w-20">상태</TableHead>
-              <TableHead className="w-48 text-right">작업</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sites.map((site) => (
-              <TableRow key={site.id} className={site.active ? "" : "opacity-60"}>
-                <TableCell className="font-medium">{site.name}</TableCell>
-                <TableCell className="text-muted-foreground">{site.address ?? "—"}</TableCell>
-                <TableCell className="text-muted-foreground">{site.contact ?? "—"}</TableCell>
-                <TableCell className="max-w-xs truncate text-muted-foreground">
-                  {site.note ?? "—"}
-                </TableCell>
-                <TableCell>
-                  {site.active ? (
-                    <span className="inline-flex items-center rounded bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                      활성
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center rounded bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                      비활성
-                    </span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <div className="flex justify-end gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => setEditing(site)}>
-                      수정
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleToggle(site)}>
-                      {site.active ? "비활성화" : "활성화"}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive"
-                      onClick={() => {
-                        setDeleting(site);
-                        setDeleteError(null);
-                      }}
-                    >
-                      삭제
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <div className="rounded bg-card overflow-hidden">
+        {/* Header */}
+        <div className="grid grid-cols-[1fr_1fr_120px_100px_80px_140px] gap-3 px-5 py-3 bg-surface-high text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <span>현장명</span>
+          <span>연락처</span>
+          <span>메모</span>
+          <span>상태</span>
+          <span />
+          <span className="text-right">작업</span>
+        </div>
+        {/* Rows */}
+        {sites.map((site) => (
+          <div
+            key={site.id}
+            className={`grid grid-cols-[1fr_1fr_120px_100px_80px_140px] gap-3 items-center px-5 py-3.5 hover:bg-surface-low/50 transition-colors ${site.active ? "" : "opacity-50"}`}
+          >
+            <div>
+              <p className="text-sm font-medium">{site.name}</p>
+              {site.address && <p className="text-xs text-muted-foreground">{site.address}</p>}
+            </div>
+            <span className="text-sm text-muted-foreground">{site.contact ?? "—"}</span>
+            <span className="text-xs text-muted-foreground truncate">{site.note ?? "—"}</span>
+            <span>
+              {site.active ? (
+                <span className="inline-block rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700">활성</span>
+              ) : (
+                <span className="inline-block rounded bg-surface-high px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">비활성</span>
+              )}
+            </span>
+            <span />
+            <div className="flex justify-end gap-1">
+              <button onClick={() => setEditing(site)} className="rounded bg-surface-low px-2.5 py-1 text-xs text-muted-foreground hover:bg-surface-high transition-colors">
+                수정
+              </button>
+              <button onClick={() => handleToggle(site)} className="rounded bg-surface-low px-2.5 py-1 text-xs text-muted-foreground hover:bg-surface-high transition-colors">
+                {site.active ? "비활성화" : "활성화"}
+              </button>
+              <button
+                onClick={() => { setDeleting(site); setDeleteError(null); }}
+                className="rounded bg-destructive/10 px-2.5 py-1 text-xs text-destructive hover:bg-destructive/20 transition-colors"
+              >
+                삭제
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
 
       {editing && (
-        <SiteEditDialog
-          site={editing}
-          open={true}
-          onOpenChange={(open) => !open && setEditing(null)}
-        />
+        <SiteEditDialog site={editing} open={true} onOpenChange={(open) => !open && setEditing(null)} />
       )}
 
-      <AlertDialog
-        open={deleting !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setDeleting(null);
-            setDeleteError(null);
-          }
-        }}
-      >
+      <AlertDialog open={deleting !== null} onOpenChange={(open) => { if (!open) { setDeleting(null); setDeleteError(null); } }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>현장 삭제</AlertDialogTitle>
             <AlertDialogDescription>
-              <span className="font-medium text-foreground">{deleting?.name}</span> 현장을
-              삭제하시겠습니까? 출고 내역이 있으면 삭제할 수 없으니 비활성화를 사용하세요.
+              <span className="font-medium text-foreground">{deleting?.name}</span> 현장을 삭제하시겠습니까?
             </AlertDialogDescription>
           </AlertDialogHeader>
-          {deleteError && (
-            <p className="text-sm text-destructive" role="alert">
-              {deleteError}
-            </p>
-          )}
+          {deleteError && <p className="text-sm text-destructive" role="alert">{deleteError}</p>}
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleDelete}>
-              삭제
-            </AlertDialogAction>
+            <AlertDialogAction variant="destructive" onClick={handleDelete}>삭제</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
