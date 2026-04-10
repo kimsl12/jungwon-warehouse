@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import { LowStockBanner } from "@/components/dashboard/low-stock-banner";
-import { DashboardNav } from "@/components/dashboard/nav";
+import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
@@ -24,38 +24,39 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     .single();
 
   const isAdmin = profile?.role === "admin";
+  const userName = profile?.name ?? user.email ?? "";
 
   return (
-    <div className="flex min-h-svh flex-col">
-      <header className="border-b bg-background">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-semibold">정원전기 재고관리</h1>
-            </div>
-            <DashboardNav isAdmin={isAdmin} />
-          </div>
+    <div className="flex min-h-svh">
+      {/* Sidebar — desktop only */}
+      <DashboardSidebar isAdmin={isAdmin} userName={userName} />
+
+      {/* Main content */}
+      <div className="flex flex-1 flex-col min-w-0">
+        {/* Top bar */}
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between bg-background px-6">
+          <div />
           <div className="flex items-center gap-3 text-sm">
             <Link
               href="/m/scan"
-              className="rounded border border-border px-2 py-1 text-xs text-muted-foreground hover:bg-muted"
+              className="rounded bg-surface-low px-2.5 py-1 text-xs text-muted-foreground hover:bg-surface-high transition-colors"
             >
-              모바일
+              모바일 모드
             </Link>
-            <span className="text-muted-foreground">
-              {profile?.name ?? user.email}
+            <span className="text-on-surface-variant text-sm">
+              {userName}
               {isAdmin && (
-                <span className="ml-2 rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                <span className="ml-2 rounded bg-secondary/10 px-2 py-0.5 text-xs font-medium text-secondary">
                   관리자
                 </span>
               )}
             </span>
             <LogoutButton />
           </div>
-        </div>
-      </header>
-      <LowStockBanner />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
+        </header>
+        <LowStockBanner />
+        <main className="flex-1 px-6 py-6">{children}</main>
+      </div>
     </div>
   );
 }
