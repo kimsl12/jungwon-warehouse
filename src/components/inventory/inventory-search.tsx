@@ -2,9 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
-
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Search } from "lucide-react";
 
 export function InventorySearch({
   categories,
@@ -21,7 +19,6 @@ export function InventorySearch({
   const [search, setSearch] = useState(initialSearch);
   const [category, setCategory] = useState(initialCategory);
 
-  // Debounce search input by 300ms
   useEffect(() => {
     if (search === initialSearch) return;
     const t = setTimeout(() => {
@@ -59,38 +56,36 @@ export function InventorySearch({
   }
 
   return (
-    <div className="flex flex-wrap items-end gap-3">
-      <div className="flex-1 min-w-[200px] space-y-1.5">
-        <Label htmlFor="search">검색</Label>
-        <Input
-          id="search"
+    <div className="flex flex-wrap items-center gap-3">
+      {/* Search input — recessed look */}
+      <div className="relative flex-1 min-w-[240px]">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <input
           type="search"
           placeholder="제품명 또는 별칭으로 검색..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          className="w-full rounded bg-surface-highest py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none focus:ring-2 focus:ring-secondary/20 transition-all"
         />
       </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="category-filter">분류</Label>
-        <select
-          id="category-filter"
-          value={category}
-          onChange={handleCategoryChange}
-          className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <option value="">전체</option>
-          {categories.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </div>
+      {/* Category filter */}
+      <select
+        value={category}
+        onChange={handleCategoryChange}
+        className="rounded bg-surface-highest py-2.5 px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-secondary/20 transition-all"
+      >
+        <option value="">전체 분류</option>
+        {categories.map((c) => (
+          <option key={c} value={c}>
+            {c}
+          </option>
+        ))}
+      </select>
       {(search || category) && (
         <button
           type="button"
           onClick={handleReset}
-          className="h-9 rounded-md border border-input px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="rounded bg-surface-high px-3 py-2.5 text-xs font-medium text-muted-foreground hover:bg-surface-highest transition-colors"
         >
           초기화
         </button>

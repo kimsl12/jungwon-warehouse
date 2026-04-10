@@ -20,7 +20,7 @@ export function LowStockBadge({
     <span
       data-testid="low-stock-badge"
       className={cn(
-        "inline-flex items-center rounded bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive",
+        "inline-flex items-center rounded bg-secondary-container/30 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-secondary",
         className,
       )}
     >
