@@ -11,7 +11,6 @@ import {
   Users,
   FileText,
   BarChart3,
-  Settings,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -96,7 +95,7 @@ export function DashboardSidebar({
         </nav>
 
         {/* Bottom section */}
-        <div className="mt-auto px-3 space-y-1">
+        <div className="mt-auto px-3">
           <div className="px-3 py-2.5">
             <div className="flex items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
@@ -112,13 +111,6 @@ export function DashboardSidebar({
               </div>
             </div>
           </div>
-          <Link
-            href="/activity-log"
-            className="flex items-center gap-3 rounded px-3 py-2 text-sm text-muted-foreground hover:bg-card/60 hover:text-foreground transition-colors"
-          >
-            <Settings className="h-[18px] w-[18px]" />
-            설정
-          </Link>
         </div>
       </div>
     </aside>

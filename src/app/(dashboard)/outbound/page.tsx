@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ArrowUpFromLine, Download, FileText } from "lucide-react";
+import { Download, FileText } from "lucide-react";
 
+import { QuickTransactionButton } from "@/components/transactions/quick-transaction-button";
 import { TransactionsPagination } from "@/components/transactions/transactions-pagination";
 import { createClient } from "@/lib/supabase/server";
 
@@ -36,9 +37,10 @@ export default async function OutboundPage({ searchParams }: { searchParams: Sea
     query = query.lte("created_at", endOfDay.toISOString());
   }
 
-  const [txResult, profilesResult] = await Promise.all([
+  const [txResult, profilesResult, sitesResult] = await Promise.all([
     query,
     supabase.from("profiles").select("id, name"),
+    supabase.from("sites").select("id, name").eq("active", true).order("name"),
   ]);
 
   const transactions = txResult.data ?? [];
@@ -88,13 +90,7 @@ export default async function OutboundPage({ searchParams }: { searchParams: Sea
             <Download className="h-3.5 w-3.5" />
             내보내기
           </Link>
-          <Link
-            href="/inventory"
-            className="flex items-center gap-1.5 rounded bg-gradient-to-b from-primary to-[#1a202c] px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 transition-all"
-          >
-            <ArrowUpFromLine className="h-3.5 w-3.5" />
-            출고 처리
-          </Link>
+          <QuickTransactionButton type="out" sites={sitesResult.data ?? []} />
         </div>
       </div>
 

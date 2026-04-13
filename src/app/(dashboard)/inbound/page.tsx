@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowDownToLine, Download, FileText } from "lucide-react";
 
+import { QuickTransactionButton } from "@/components/transactions/quick-transaction-button";
 import { TransactionsPagination } from "@/components/transactions/transactions-pagination";
 import { createClient } from "@/lib/supabase/server";
 
@@ -36,9 +37,10 @@ export default async function InboundPage({ searchParams }: { searchParams: Sear
     query = query.lte("created_at", endOfDay.toISOString());
   }
 
-  const [txResult, profilesResult] = await Promise.all([
+  const [txResult, profilesResult, sitesResult] = await Promise.all([
     query,
     supabase.from("profiles").select("id, name"),
+    supabase.from("sites").select("id, name").eq("active", true).order("name"),
   ]);
 
   const transactions = txResult.data ?? [];
@@ -74,6 +76,7 @@ export default async function InboundPage({ searchParams }: { searchParams: Sear
             <Download className="h-3.5 w-3.5" />
             내보내기
           </Link>
+          <QuickTransactionButton type="in" sites={sitesResult.data ?? []} />
         </div>
       </div>
 
