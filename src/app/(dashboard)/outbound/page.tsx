@@ -25,7 +25,7 @@ export default async function OutboundPage({ searchParams }: { searchParams: Sea
 
   let query = supabase
     .from("transactions")
-    .select("id, type, quantity, note, created_at, created_by, site_id, products!inner(id, name, category, unit), sites(id, name)", { count: "exact" })
+    .select("id, type, quantity, note, created_at, created_by, site_id, products!inner(id, name, category, unit, variant), sites(id, name)", { count: "exact" })
     .eq("type", "out")
     .order("created_at", { ascending: false })
     .range(fromIdx, toIdx);
@@ -51,8 +51,12 @@ export default async function OutboundPage({ searchParams }: { searchParams: Sea
 
   const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
     timeZone: "Asia/Seoul",
-    month: "short",
-    day: "numeric",
+    year: "2-digit",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const timeFormatter = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -115,40 +119,50 @@ export default async function OutboundPage({ searchParams }: { searchParams: Sea
       <TransactionsPagination currentPage={page} totalPages={totalPages} basePath="/outbound" />
 
       <div className="rounded bg-card overflow-hidden">
-        <div className="grid grid-cols-[auto_1fr_100px_100px_80px_auto] gap-3 px-5 py-3 bg-surface-high text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-          <span>ID</span>
+        <div className="grid grid-cols-[96px_1fr_140px_110px_90px_1fr] gap-3 px-5 py-3 bg-surface-high text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <span>날짜</span>
           <span>품목</span>
           <span>현장</span>
           <span className="text-right">수량</span>
-          <span>상태</span>
-          <span className="text-right">담당자</span>
+          <span>담당자</span>
+          <span>메모</span>
         </div>
         {transactions.length === 0 ? (
           <div className="px-5 py-12 text-center text-sm text-muted-foreground">
             출고 내역이 없습니다.
           </div>
         ) : (
-          transactions.map((tx) => (
-            <div key={tx.id} className="grid grid-cols-[auto_1fr_100px_100px_80px_auto] gap-3 items-center px-5 py-3.5 hover:bg-surface-low/50 transition-colors">
-              <span className="text-xs text-muted-foreground font-mono">{tx.id.slice(0, 8)}</span>
-              <div>
-                <p className="text-sm font-medium">{tx.products?.name ?? "-"}</p>
-                <p className="text-xs text-muted-foreground">{tx.products?.category ?? ""}</p>
+          transactions.map((tx) => {
+            const date = new Date(tx.created_at);
+            return (
+              <div key={tx.id} className="grid grid-cols-[96px_1fr_140px_110px_90px_1fr] gap-3 items-center px-5 py-3.5 hover:bg-surface-low/50 transition-colors">
+                <div className="text-xs tabular-nums leading-tight">
+                  <p className="font-medium">{dateFormatter.format(date)}</p>
+                  <p className="text-muted-foreground">{timeFormatter.format(date)}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">
+                    {tx.products?.name ?? "-"}
+                    {tx.products?.variant && (
+                      <span className="ml-1.5 text-xs font-normal text-muted-foreground">· {tx.products.variant}</span>
+                    )}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{tx.products?.category ?? ""}</p>
+                </div>
+                <span className="text-xs truncate" title={tx.sites?.name ?? undefined}>{tx.sites?.name ?? "—"}</span>
+                <p className="text-right text-sm font-bold tabular-nums">
+                  {tx.quantity.toLocaleString("ko-KR")}
+                  {tx.products?.unit && <span className="ml-0.5 text-xs font-normal text-muted-foreground">{tx.products.unit}</span>}
+                </p>
+                <span className="text-xs truncate">
+                  {tx.created_by ? profileMap.get(tx.created_by) ?? "—" : "시스템"}
+                </span>
+                <span className="text-xs text-muted-foreground truncate" title={tx.note ?? undefined}>
+                  {tx.note ?? ""}
+                </span>
               </div>
-              <span className="text-xs text-muted-foreground truncate">{tx.sites?.name ?? "-"}</span>
-              <p className="text-right text-sm font-bold tabular-nums">
-                {tx.quantity.toLocaleString("ko-KR")}
-                {tx.products?.unit && <span className="ml-0.5 text-xs font-normal text-muted-foreground">{tx.products.unit}</span>}
-              </p>
-              <span className="inline-block rounded bg-secondary-container/30 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-secondary w-fit">
-                출고
-              </span>
-              <span className="text-right text-xs text-muted-foreground">
-                {tx.created_by ? profileMap.get(tx.created_by) ?? "-" : "시스템"}
-                <span className="block text-[10px] tabular-nums">{dateFormatter.format(new Date(tx.created_at))}</span>
-              </span>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

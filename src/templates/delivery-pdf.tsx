@@ -130,13 +130,12 @@ const styles = StyleSheet.create({
     minHeight: 22,
   },
   cellNo: { width: 24, paddingHorizontal: 3, textAlign: "center" },
-  cellDate: { flex: 1.2, paddingHorizontal: 3 },
-  cellName: { flex: 2.4, paddingHorizontal: 3 },
-  cellSite: { flex: 1.5, paddingHorizontal: 3 },
-  cellQty: { flex: 0.8, paddingHorizontal: 3, textAlign: "right" },
-  cellUnit: { flex: 0.6, paddingHorizontal: 3, textAlign: "center" },
-  cellUser: { flex: 1, paddingHorizontal: 3 },
-  cellNote: { flex: 1.5, paddingHorizontal: 3 },
+  cellDate: { flex: 1.1, paddingHorizontal: 3 },
+  cellName: { flex: 2.2, paddingHorizontal: 3 },
+  cellSite: { flex: 1.4, paddingHorizontal: 3 },
+  cellQty: { flex: 1, paddingHorizontal: 3, textAlign: "right" },
+  cellUser: { flex: 0.9, paddingHorizontal: 3 },
+  cellNote: { flex: 1.9, paddingHorizontal: 3 },
   totalRow: {
     flexDirection: "row",
     backgroundColor: "#f5f5f5",
@@ -244,7 +243,6 @@ export function DeliveryPdf({
             <Text style={styles.cellName}>제품명</Text>
             <Text style={styles.cellSite}>현장</Text>
             <Text style={styles.cellQty}>수량</Text>
-            <Text style={styles.cellUnit}>단위</Text>
             <Text style={styles.cellUser}>담당</Text>
             <Text style={styles.cellNote}>비고</Text>
           </View>
@@ -255,8 +253,10 @@ export function DeliveryPdf({
               <Text style={styles.cellDate}>{item.date ?? ""}</Text>
               <Text style={styles.cellName}>{item.name}</Text>
               <Text style={styles.cellSite}>{item.siteName ?? "—"}</Text>
-              <Text style={styles.cellQty}>{item.quantity.toLocaleString("ko-KR")}</Text>
-              <Text style={styles.cellUnit}>{item.unit ?? ""}</Text>
+              <Text style={styles.cellQty}>
+                {item.quantity.toLocaleString("ko-KR")}
+                {item.unit ? ` ${item.unit}` : ""}
+              </Text>
               <Text style={styles.cellUser}>{item.userName ?? ""}</Text>
               <Text style={styles.cellNote}>{item.note ?? ""}</Text>
             </View>
@@ -268,7 +268,6 @@ export function DeliveryPdf({
             <Text style={styles.cellName}>합계</Text>
             <Text style={styles.cellSite}> </Text>
             <Text style={styles.cellQty}>{totalQty.toLocaleString("ko-KR")}</Text>
-            <Text style={styles.cellUnit}> </Text>
             <Text style={styles.cellUser}> </Text>
             <Text style={styles.cellNote}>{items.length}개 품목</Text>
           </View>
