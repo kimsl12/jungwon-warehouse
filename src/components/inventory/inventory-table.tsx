@@ -1,6 +1,7 @@
 import { LowStockBadge } from "@/components/inventory/low-stock-badge";
 import { ProductRowActions } from "@/components/inventory/product-row-actions";
 import type { Database } from "@/lib/database.types";
+import { productDisplayName } from "@/lib/product-display";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
 
@@ -41,7 +42,12 @@ export function InventoryTable({
           className="grid grid-cols-[1fr_140px_140px_80px_80px_120px] gap-2 items-center px-5 py-3 hover:bg-surface-low/50 transition-colors"
         >
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-sm font-medium truncate">{product.name}</span>
+            <span className="text-sm font-medium truncate" title={productDisplayName(product.name, product.variant)}>
+              {product.name}
+              {product.variant && (
+                <span className="ml-1.5 text-xs font-normal text-muted-foreground">· {product.variant}</span>
+              )}
+            </span>
             <LowStockBadge quantity={product.quantity} minQuantity={product.min_quantity} />
           </div>
           <span className="text-sm text-muted-foreground truncate">{product.category ?? "-"}</span>

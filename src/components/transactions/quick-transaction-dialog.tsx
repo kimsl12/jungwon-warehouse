@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 
 type SiteOption = { id: string; name: string };
-type ProductOption = { id: string; name: string; category: string | null; unit: string | null; quantity: number };
+type ProductOption = { id: string; name: string; category: string | null; unit: string | null; variant: string | null; quantity: number };
 
 export function QuickTransactionDialog({
   type,
@@ -49,7 +49,7 @@ export function QuickTransactionDialog({
       const supabase = createBrowserClient();
       const { data } = await supabase
         .rpc("search_products", { p_query: query })
-        .select("id, name, category, unit, quantity")
+        .select("id, name, category, unit, variant, quantity")
         .limit(10);
       setResults(data ?? []);
       setSearching(false);
@@ -109,7 +109,12 @@ export function QuickTransactionDialog({
               <div className="rounded bg-surface-low p-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium">{selected.name}</p>
+                    <p className="text-sm font-medium">
+                      {selected.name}
+                      {selected.variant && (
+                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">· {selected.variant}</span>
+                      )}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {selected.category ?? ""} · 현재 {selected.quantity.toLocaleString("ko-KR")}{selected.unit ? ` ${selected.unit}` : ""}
                     </p>
@@ -146,7 +151,12 @@ export function QuickTransactionDialog({
                         onClick={() => handleSelect(p)}
                         className="w-full text-left px-3 py-2 hover:bg-surface-low transition-colors"
                       >
-                        <p className="text-sm font-medium">{p.name}</p>
+                        <p className="text-sm font-medium">
+                          {p.name}
+                          {p.variant && (
+                            <span className="ml-1.5 text-xs font-normal text-muted-foreground">· {p.variant}</span>
+                          )}
+                        </p>
                         <p className="text-xs text-muted-foreground">{p.category ?? ""} · {p.quantity.toLocaleString("ko-KR")}{p.unit ?? ""}</p>
                       </button>
                     ))}

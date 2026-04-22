@@ -30,17 +30,19 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("products")
-    .select("name, category, unit, quantity, min_quantity, location, updated_at")
+    .select("name, category, subcategory, variant, unit, quantity, min_quantity, location, updated_at")
     .order("name");
 
   if (error) {
     return new NextResponse(`Failed to fetch products: ${error.message}`, { status: 500 });
   }
 
-  const headers = ["제품명", "분류", "단위", "수량", "최소수량", "위치", "최종수정일"];
+  const headers = ["제품명", "분류", "소분류", "변형", "단위", "수량", "최소수량", "위치", "최종수정일"];
   const rows = (data ?? []).map((p) => [
     p.name,
     p.category ?? "",
+    p.subcategory ?? "",
+    p.variant ?? "",
     p.unit ?? "",
     p.quantity,
     p.min_quantity,

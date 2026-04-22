@@ -45,7 +45,7 @@ export default async function TransactionsPage({
       created_at,
       created_by,
       site_id,
-      products!inner(id, name, category, unit),
+      products!inner(id, name, category, unit, variant),
       sites(id, name)
     `,
       { count: "exact" },

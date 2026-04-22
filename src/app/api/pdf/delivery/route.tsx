@@ -4,6 +4,7 @@ import path from "node:path";
 
 import { attachmentDispositionHeader, formatYmdCompact } from "@/lib/csv/generate";
 import { createClient } from "@/lib/supabase/server";
+import { productDisplayName } from "@/lib/product-display";
 import { DeliveryPdf, type DeliveryItem } from "@/templates/delivery-pdf";
 
 /**
@@ -47,7 +48,7 @@ export async function GET(req: Request) {
     .from("transactions")
     .select(
       `id, type, quantity, note, created_at, created_by,
-       products!inner(name, category, unit),
+       products!inner(name, category, unit, variant),
        sites(id, name, address)`,
     )
     .eq("type", "out")
@@ -90,7 +91,7 @@ export async function GET(req: Request) {
 
   const items: DeliveryItem[] = rows.map((tx, idx) => ({
     no: idx + 1,
-    name: tx.products?.name ?? "—",
+    name: productDisplayName(tx.products?.name, tx.products?.variant),
     category: tx.products?.category ?? null,
     unit: tx.products?.unit ?? null,
     quantity: tx.quantity,

@@ -142,6 +142,36 @@ describe("parseProductsCsv", () => {
     expect(result.warnings.some((w) => w.includes("중복"))).toBe(true);
   });
 
+  it("parses the 변형 column and preserves null when empty", () => {
+    const csv = "제품명,변형,수량,위치\n케이블타이,검정,10,A-1\n케이블타이,,5,A-2\n";
+    const result = parseProductsCsv(csv);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.rows).toHaveLength(2);
+    expect(result.rows[0]).toMatchObject({ name: "케이블타이", variant: "검정" });
+    expect(result.rows[1]).toMatchObject({ name: "케이블타이", variant: null });
+  });
+
+  it("treats same name with different variant as distinct rows", () => {
+    const csv = "제품명,변형,수량,위치\n케이블타이,검정,10,A-1\n케이블타이,흰색,5,A-1\n";
+    const result = parseProductsCsv(csv);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.rows).toHaveLength(2);
+    expect(result.warnings.some((w) => w.includes("중복"))).toBe(false);
+  });
+
+  it("skips duplicate (name, variant) pairs within the same file", () => {
+    const csv =
+      "제품명,변형,수량,위치\n케이블타이,검정,10,A-1\n케이블타이,검정,5,B-2\n케이블타이,흰색,3,C-3\n";
+    const result = parseProductsCsv(csv);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.rows).toHaveLength(2);
+    expect(result.rows.map((r) => r.variant)).toEqual(["검정", "흰색"]);
+    expect(result.warnings.some((w) => w.includes("중복"))).toBe(true);
+  });
+
   it("warns about unknown columns but keeps parsing", () => {
     const csv = "제품명,수량,위치,비고\n전선,10,A-1,참고메모\n";
     const result = parseProductsCsv(csv);

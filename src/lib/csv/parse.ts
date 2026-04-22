@@ -19,6 +19,8 @@ export type ParsedProductRow = {
   name: string;
   category: string | null;
   subcategory: string | null;
+  /** 같은 품목의 색상·규격 변형 (예: 검정, 흰색) */
+  variant: string | null;
   unit: string | null;
   quantity: number;
   min_quantity: number;
@@ -41,7 +43,7 @@ export type ParseResult =
     };
 
 const REQUIRED = ["제품명", "수량", "위치"] as const;
-const OPTIONAL = ["분류", "소분류", "단위", "최소수량", "순번", "별칭"] as const;
+const OPTIONAL = ["분류", "소분류", "변형", "단위", "최소수량", "순번", "별칭"] as const;
 const ALL_HEADERS = [...REQUIRED, ...OPTIONAL];
 
 /**
@@ -86,7 +88,9 @@ export function parseProductsCsv(csvText: string): ParseResult {
   }
 
   const rows: ParsedProductRow[] = [];
-  const seenNames = new Set<string>();
+  // Duplicate key is now (name, variant) — same name with different variant
+  // is a distinct SKU (e.g. 케이블타이 검정 vs 케이블타이 흰색).
+  const seenKeys = new Set<string>();
 
   result.data.forEach((raw, idx) => {
     const lineNumber = idx + 2; // +1 for 0-index, +1 for header line
@@ -116,11 +120,14 @@ export function parseProductsCsv(csvText: string): ParseResult {
       }
     }
 
-    if (seenNames.has(name)) {
-      warnings.push(`${lineNumber}행 (${name}): 같은 파일 내 중복 제품명 — 건너뜀`);
+    const variant = emptyToNull(raw["변형"]);
+    const key = `${name}\x1f${variant ?? ""}`;
+    if (seenKeys.has(key)) {
+      const label = variant ? `${name} · ${variant}` : name;
+      warnings.push(`${lineNumber}행 (${label}): 같은 파일 내 중복 — 건너뜀`);
       return;
     }
-    seenNames.add(name);
+    seenKeys.add(key);
 
     // 별칭: 쉼표 구분 허용, 빈값·중복 제거
     const aliasRaw = (raw["별칭"] ?? "").trim();
@@ -136,6 +143,7 @@ export function parseProductsCsv(csvText: string): ParseResult {
       name,
       category: emptyToNull(raw["분류"]),
       subcategory: emptyToNull(raw["소분류"]),
+      variant,
       unit: emptyToNull(raw["단위"]),
       quantity,
       min_quantity: minQuantity,

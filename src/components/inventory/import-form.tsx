@@ -75,6 +75,10 @@ export function ImportForm() {
   );
 }
 
+function productKey(name: string, variant: string | null): string {
+  return `${name}\x1f${variant ?? ""}`;
+}
+
 function PreviewSection({
   preview,
   csvText,
@@ -85,7 +89,10 @@ function PreviewSection({
   onReset: () => void;
 }) {
   const total = preview.rows.length;
-  const existingCount = preview.existingNames.length;
+  const existingSet = new Set(preview.existingKeys);
+  const existingCount = preview.rows.filter((r) =>
+    existingSet.has(productKey(r.name, r.variant)),
+  ).length;
   const newCount = total - existingCount;
 
   return (
@@ -118,6 +125,7 @@ function PreviewSection({
               <th className="px-2 py-1.5 text-left font-medium">제품명</th>
               <th className="px-2 py-1.5 text-left font-medium">분류</th>
               <th className="px-2 py-1.5 text-left font-medium">소분류</th>
+              <th className="px-2 py-1.5 text-left font-medium">변형</th>
               <th className="px-2 py-1.5 text-left font-medium">단위</th>
               <th className="px-2 py-1.5 text-right font-medium">수량</th>
               <th className="px-2 py-1.5 text-right font-medium">최소</th>
@@ -128,13 +136,14 @@ function PreviewSection({
           </thead>
           <tbody>
             {preview.rows.slice(0, 30).map((r) => {
-              const isExisting = preview.existingNames.includes(r.name);
+              const isExisting = existingSet.has(productKey(r.name, r.variant));
               return (
                 <tr key={r.lineNumber} className="border-t">
                   <td className="px-2 py-1 text-muted-foreground">{r.lineNumber}</td>
                   <td className="px-2 py-1 font-medium">{r.name}</td>
                   <td className="px-2 py-1 text-muted-foreground">{r.category ?? "—"}</td>
                   <td className="px-2 py-1 text-muted-foreground">{r.subcategory ?? "—"}</td>
+                  <td className="px-2 py-1 text-muted-foreground">{r.variant ?? "—"}</td>
                   <td className="px-2 py-1 text-muted-foreground">{r.unit ?? "—"}</td>
                   <td className="px-2 py-1 text-right tabular-nums">{r.quantity}</td>
                   <td className="px-2 py-1 text-right tabular-nums text-muted-foreground">
@@ -184,9 +193,8 @@ function PreviewSection({
           </Button>
         </form>
         <p className="text-[11px] text-muted-foreground">
-          • 건너뛰기: 같은 제품명이 있으면 그 행은 무시합니다.
-          <br />• 덮어쓰기: 같은 제품명의 분류/단위/위치/최소수량을 업데이트합니다 (수량은 변경
-          안 함).
+          • 건너뛰기: 같은 (제품명 + 변형)이 있으면 그 행은 무시합니다.
+          <br />• 덮어쓰기: 같은 (제품명 + 변형)의 분류/단위/위치/최소수량을 업데이트합니다 (수량·변형은 변경 안 함).
         </p>
       </div>
     </div>

@@ -26,6 +26,7 @@ export default async function MobileScanPage({
     name: string;
     category: string | null;
     unit: string | null;
+    variant: string | null;
     quantity: number;
     min_quantity: number;
     location: string | null;
@@ -34,7 +35,7 @@ export default async function MobileScanPage({
   if (q.length > 0) {
     const { data } = await supabase
       .rpc("search_products", { p_query: q, p_category: undefined })
-      .select("id, name, category, unit, quantity, min_quantity, location")
+      .select("id, name, category, unit, variant, quantity, min_quantity, location")
       .limit(50);
     products = data ?? [];
   }
@@ -70,7 +71,12 @@ export default async function MobileScanPage({
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{p.name}</p>
+                    <p className="truncate font-medium">
+                      {p.name}
+                      {p.variant && (
+                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">· {p.variant}</span>
+                      )}
+                    </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {p.category ?? "분류 없음"} · {p.location ?? "위치 미지정"}
                     </p>

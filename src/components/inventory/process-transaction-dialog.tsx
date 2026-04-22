@@ -76,7 +76,13 @@ export function ProcessTransactionDialog({
         <DialogHeader>
           <DialogTitle>입출고 처리</DialogTitle>
           <DialogDescription>
-            <span className="font-medium text-foreground">{product.name}</span> · 현재{" "}
+            <span className="font-medium text-foreground">
+              {product.name}
+              {product.variant && (
+                <span className="ml-1 text-xs font-normal text-muted-foreground">· {product.variant}</span>
+              )}
+            </span>
+            {" · 현재 "}
             {product.quantity.toLocaleString("ko-KR")}
             {product.unit ? ` ${product.unit}` : ""}
           </DialogDescription>

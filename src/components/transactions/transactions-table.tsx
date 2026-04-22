@@ -21,6 +21,7 @@ type TransactionRow = {
     name: string;
     category: string | null;
     unit: string | null;
+    variant: string | null;
   } | null;
   sites: {
     id: string;
@@ -87,7 +88,14 @@ export function TransactionsTable({
                     {tx.type === "in" ? "입고" : "출고"}
                   </span>
                 </TableCell>
-                <TableCell className="font-medium">{tx.products?.name ?? "-"}</TableCell>
+                <TableCell className="font-medium">
+                  {tx.products?.name ?? "-"}
+                  {tx.products?.variant && (
+                    <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                      · {tx.products.variant}
+                    </span>
+                  )}
+                </TableCell>
                 <TableCell className="text-muted-foreground">
                   {tx.products?.category ?? "-"}
                 </TableCell>

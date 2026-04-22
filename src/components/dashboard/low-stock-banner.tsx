@@ -17,7 +17,7 @@ export async function LowStockBanner() {
   // long as the inventory has reasonable cardinality (≪ 10k).
   const { data } = await supabase
     .from("products")
-    .select("id, name, quantity, min_quantity, unit")
+    .select("id, name, variant, quantity, min_quantity, unit")
     .gt("min_quantity", 0)
     .order("name");
 
@@ -41,7 +41,10 @@ export async function LowStockBanner() {
           {preview.map((p, i) => (
             <span key={p.id}>
               {i > 0 && <span className="text-destructive/60"> · </span>}
-              <span className="font-medium">{p.name}</span>
+              <span className="font-medium">
+                {p.name}
+                {p.variant && <span className="text-destructive/70"> · {p.variant}</span>}
+              </span>
               <span className="ml-1 text-xs text-destructive/80">
                 ({p.quantity.toLocaleString("ko-KR")}
                 {p.unit ?? ""} / 최소 {p.min_quantity.toLocaleString("ko-KR")}

@@ -18,7 +18,7 @@ export default async function OverviewPage() {
       supabase.rpc("get_low_stock_products").limit(9),
       supabase
         .from("transactions")
-        .select("id, type, quantity, created_at, products!inner(name, unit)")
+        .select("id, type, quantity, created_at, products!inner(name, unit, variant)")
         .order("created_at", { ascending: false })
         .limit(5),
     ]);
@@ -111,7 +111,12 @@ export default async function OverviewPage() {
               {lowStockProducts.slice(0, 8).map((p) => (
                 <div key={p.id} className="flex items-center justify-between py-3">
                   <div>
-                    <p className="text-sm font-medium">{p.name}</p>
+                    <p className="text-sm font-medium">
+                      {p.name}
+                      {p.variant && (
+                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">· {p.variant}</span>
+                      )}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {p.category ?? ""} · {p.location ?? "위치 미지정"}
                     </p>
@@ -164,7 +169,12 @@ export default async function OverviewPage() {
                   key={tx.id}
                   className="grid grid-cols-[1fr_80px_80px_auto] gap-2 items-center py-3"
                 >
-                  <span className="text-sm font-medium truncate">{tx.products?.name ?? "-"}</span>
+                  <span className="text-sm font-medium truncate">
+                    {tx.products?.name ?? "-"}
+                    {tx.products?.variant && (
+                      <span className="ml-1.5 text-xs font-normal text-muted-foreground">· {tx.products.variant}</span>
+                    )}
+                  </span>
                   <span>
                     <span
                       className={

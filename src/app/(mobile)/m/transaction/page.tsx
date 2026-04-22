@@ -25,7 +25,7 @@ export default async function MobileTransactionPage({
   const [productResult, sitesResult] = await Promise.all([
     supabase
       .from("products")
-      .select("id, name, category, unit, quantity, min_quantity, location")
+      .select("id, name, category, unit, variant, quantity, min_quantity, location")
       .eq("id", productId)
       .single(),
     supabase.from("sites").select("id, name").eq("active", true).order("name"),
@@ -46,7 +46,12 @@ export default async function MobileTransactionPage({
         >
           ← 다른 품목 선택
         </Link>
-        <h1 className="mt-2 text-xl font-bold">{product.name}</h1>
+        <h1 className="mt-2 text-xl font-bold">
+          {product.name}
+          {product.variant && (
+            <span className="ml-2 text-base font-normal text-muted-foreground">· {product.variant}</span>
+          )}
+        </h1>
         <p className="mt-1 text-xs text-muted-foreground">
           {product.category ?? "분류 없음"} · {product.location ?? "위치 미지정"}
         </p>

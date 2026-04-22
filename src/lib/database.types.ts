@@ -86,6 +86,7 @@ export type Database = {
           subcategory: string | null
           unit: string | null
           updated_at: string
+          variant: string | null
         }
         Insert: {
           category?: string | null
@@ -99,6 +100,7 @@ export type Database = {
           subcategory?: string | null
           unit?: string | null
           updated_at?: string
+          variant?: string | null
         }
         Update: {
           category?: string | null
@@ -112,6 +114,7 @@ export type Database = {
           subcategory?: string | null
           unit?: string | null
           updated_at?: string
+          variant?: string | null
         }
         Relationships: []
       }
@@ -303,6 +306,7 @@ export type Database = {
           subcategory: string | null
           unit: string | null
           updated_at: string
+          variant: string | null
         }[]
         SetofOptions: {
           from: "*"
@@ -339,6 +343,7 @@ export type Database = {
           subcategory: string | null
           unit: string | null
           updated_at: string
+          variant: string | null
         }[]
         SetofOptions: {
           from: "*"

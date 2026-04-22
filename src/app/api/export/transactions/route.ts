@@ -53,7 +53,7 @@ export async function GET(req: Request) {
     .from("transactions")
     .select(
       `id, type, quantity, note, created_at, created_by,
-       products!inner(name, category, unit),
+       products!inner(name, category, unit, variant),
        sites(name)`,
     )
     .order("created_at", { ascending: false });
@@ -88,11 +88,12 @@ export async function GET(req: Request) {
     for (const p of profileRows ?? []) profileNameMap.set(p.id, p.name);
   }
 
-  const headers = ["일시", "구분", "제품명", "분류", "단위", "수량", "현장", "담당자", "메모"];
+  const headers = ["일시", "구분", "제품명", "변형", "분류", "단위", "수량", "현장", "담당자", "메모"];
   const rows = (data ?? []).map((tx) => [
     dateFormatter.format(new Date(tx.created_at)),
     tx.type === "in" ? "입고" : "출고",
     tx.products?.name ?? "",
+    tx.products?.variant ?? "",
     tx.products?.category ?? "",
     tx.products?.unit ?? "",
     tx.quantity,
