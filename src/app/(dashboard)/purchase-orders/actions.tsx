@@ -1,9 +1,12 @@
 "use server";
 
+import { renderToBuffer } from "@react-pdf/renderer";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { isFaxConfigured, sendFax } from "@/lib/fax";
 import { createClient } from "@/lib/supabase/server";
+import { PurchaseOrderPdf, type PurchaseOrderPdfItem } from "@/templates/purchase-order-pdf";
 
 // -----------------------------------------------------------------------------
 // Schemas
@@ -46,6 +49,10 @@ const poReceiveSchema = z.object({
 const poStatusSchema = z.object({
   po_id: z.string().uuid(),
   status: z.enum(["sent", "canceled"]),
+});
+
+const poFaxSchema = z.object({
+  po_id: z.string().uuid(),
 });
 
 export type PoFormState = {
@@ -205,4 +212,105 @@ export async function receivePurchaseOrder(payload: unknown): Promise<{
     error: null,
     result: data as unknown as { status: string; fulfilled_items: number; total_items: number },
   };
+}
+
+// -----------------------------------------------------------------------------
+// sendPurchaseOrderFax — 발주서를 PDF로 렌더한 뒤 팩스 API로 전송
+// -----------------------------------------------------------------------------
+export async function sendPurchaseOrderFax(
+  formData: FormData,
+): Promise<{ error: string | null; ok?: boolean }> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { error: auth.error };
+
+  if (!isFaxConfigured()) {
+    return {
+      error:
+        "팩스 API가 설정되지 않았습니다. 관리자에게 환경변수 등록을 요청하세요 " +
+        "(FAX_API_BASE_URL, FAX_API_KEY, FAX_SENDER_NUMBER).",
+    };
+  }
+
+  const parsed = poFaxSchema.safeParse({ po_id: formData.get("po_id") });
+  if (!parsed.success) return { error: "잘못된 요청입니다." };
+
+  const { data: po, error } = await auth.supabase
+    .from("purchase_orders")
+    .select(
+      `id, po_number, order_date, due_date,
+       payment_terms, delivery_terms, inspection_terms,
+       ship_to, ship_to_contact, note,
+       vendor:vendors!inner(name, address, contact_phone, fax)`,
+    )
+    .eq("id", parsed.data.po_id)
+    .single();
+  if (error || !po) return { error: "발주서를 찾을 수 없습니다." };
+
+  if (!po.vendor?.fax) {
+    return { error: "거래처의 팩스번호가 등록되어 있지 않습니다. 거래처 정보에서 팩스번호를 추가하세요." };
+  }
+
+  const { data: items } = await auth.supabase
+    .from("purchase_order_items")
+    .select(
+      "id, product_name, product_variant, spec, unit, ordered_quantity, unit_price, note, sort_order",
+    )
+    .eq("purchase_order_id", po.id)
+    .order("sort_order");
+
+  const pdfItems: PurchaseOrderPdfItem[] = (items ?? []).map((it, i) => ({
+    no: i + 1,
+    name: it.product_name,
+    variant: it.product_variant,
+    spec: it.spec,
+    unit: it.unit,
+    quantity: it.ordered_quantity,
+    unit_price: it.unit_price,
+    note: it.note,
+  }));
+
+  const pdfBuffer = await renderToBuffer(
+    <PurchaseOrderPdf
+      poNumber={po.po_number}
+      orderDate={po.order_date}
+      dueDate={po.due_date}
+      vendor={{
+        name: po.vendor.name,
+        address: po.vendor.address ?? null,
+        contact_phone: po.vendor.contact_phone ?? null,
+        fax: po.vendor.fax ?? null,
+      }}
+      items={pdfItems}
+      paymentTerms={po.payment_terms}
+      deliveryTerms={po.delivery_terms}
+      inspectionTerms={po.inspection_terms}
+      shipTo={po.ship_to}
+      shipToContact={po.ship_to_contact}
+      note={po.note}
+    />,
+  );
+
+  const result = await sendFax({
+    toFaxNumber: po.vendor.fax,
+    pdfBuffer: new Uint8Array(pdfBuffer),
+    subject: `발주서 ${po.po_number}`,
+  });
+
+  if (!result.ok) {
+    return {
+      error:
+        result.error === "NOT_IMPLEMENTED"
+          ? result.detail ?? "팩스 API 연동 코드가 아직 활성화되지 않았습니다."
+          : `팩스 전송 실패: ${result.error}${result.detail ? " · " + result.detail : ""}`,
+    };
+  }
+
+  // 발주서가 draft 면 sent 로 자동 전이
+  await auth.supabase.rpc("update_purchase_order_status", {
+    p_po_id: po.id,
+    p_status: "sent",
+  });
+
+  revalidatePath(`/purchase-orders/${po.id}`);
+  return { error: null, ok: true };
 }

@@ -1,23 +1,30 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { Send, X } from "lucide-react";
+import { Printer, Send, X } from "lucide-react";
 
-import { updatePurchaseOrderStatus } from "@/app/(dashboard)/purchase-orders/actions";
+import {
+  sendPurchaseOrderFax,
+  updatePurchaseOrderStatus,
+} from "@/app/(dashboard)/purchase-orders/actions";
 import { Button } from "@/components/ui/button";
 
 export function PurchaseOrderActions({
   poId,
   canSend,
   canCancel,
-  vendorFax: _vendorFax,
+  vendorFax,
+  faxConfigured,
 }: {
   poId: string;
   canSend: boolean;
   canCancel: boolean;
-  /** 추후 C8에서 팩스 발송 기능이 붙을 때 사용 */
   vendorFax: string | null;
+  /** Vercel env로 팩스 API가 설정되어 있는지 (서버에서 주입) */
+  faxConfigured: boolean;
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   function changeStatus(status: "sent" | "canceled", confirmMsg: string) {
@@ -28,11 +35,49 @@ export function PurchaseOrderActions({
       fd.set("status", status);
       const result = await updatePurchaseOrderStatus(fd);
       if (result.error) alert(result.error);
+      else router.refresh();
     });
   }
 
+  function sendFax() {
+    if (!vendorFax) {
+      alert("거래처의 팩스번호가 등록되어 있지 않습니다.");
+      return;
+    }
+    if (!confirm(`거래처 팩스 ${vendorFax} 로 발주서를 전송하시겠습니까?`)) return;
+    startTransition(async () => {
+      const fd = new FormData();
+      fd.set("po_id", poId);
+      const result = await sendPurchaseOrderFax(fd);
+      if (result.error) alert(result.error);
+      else {
+        alert("팩스 발송 요청이 접수되었습니다.");
+        router.refresh();
+      }
+    });
+  }
+
+  // 팩스 버튼은 설정 여부에 관계없이 표시하되, 미설정 시 툴팁으로 안내
+  const faxBtnTitle = !faxConfigured
+    ? "팩스 API 환경변수(FAX_API_BASE_URL, FAX_API_KEY, FAX_SENDER_NUMBER) 미설정"
+    : !vendorFax
+      ? "거래처에 팩스번호가 등록되어 있지 않음"
+      : `${vendorFax} 로 전송`;
+
   return (
     <>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        onClick={sendFax}
+        disabled={isPending || !faxConfigured || !vendorFax}
+        title={faxBtnTitle}
+      >
+        <Printer className="h-3.5 w-3.5 mr-1" />
+        팩스 발송
+      </Button>
+
       {canSend && (
         <Button
           type="button"

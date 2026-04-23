@@ -4,6 +4,7 @@ import { ArrowLeft, Download } from "lucide-react";
 
 import { PurchaseOrderActions } from "@/components/purchase-orders/purchase-order-actions";
 import { PurchaseOrderReceiveForm } from "@/components/purchase-orders/purchase-order-receive-form";
+import { isFaxConfigured } from "@/lib/fax";
 import { PO_STATUS_LABEL, type PoStatus } from "@/lib/po-options";
 import { createClient } from "@/lib/supabase/server";
 
@@ -107,6 +108,7 @@ export default async function PurchaseOrderDetailPage({ params }: { params: Para
             canSend={canSendOrCancel}
             canCancel={canSendOrCancel || canCancelSent}
             vendorFax={po.vendor?.fax ?? null}
+            faxConfigured={isFaxConfigured()}
           />
         </div>
       </div>
