@@ -12,6 +12,7 @@ import {
   FileText,
   BarChart3,
   Building2,
+  ClipboardList,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/reports", label: "리포트", icon: BarChart3 },
   { href: "/sites", label: "현장 관리", icon: MapPin, adminOnly: true },
   { href: "/vendors", label: "거래처 관리", icon: Building2, adminOnly: true },
+  { href: "/purchase-orders", label: "발주서", icon: ClipboardList, adminOnly: true },
   { href: "/users", label: "사용자", icon: Users, adminOnly: true },
   { href: "/activity-log", label: "활동 로그", icon: FileText, adminOnly: true },
 ];
