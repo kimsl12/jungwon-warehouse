@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { VendorPricesEditor } from "@/components/vendors/vendor-prices-editor";
+import { VendorPricesImport } from "@/components/vendors/vendor-prices-import";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -97,8 +98,8 @@ export default async function VendorDetailPage({ params }: { params: Params }) {
       </div>
 
       {/* Prices */}
-      <div>
-        <div className="flex items-end justify-between gap-4 mb-4">
+      <div className="space-y-4">
+        <div className="flex items-end justify-between gap-4">
           <div>
             <h3 className="text-lg font-bold">취급 품목 · 단가</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -107,6 +108,7 @@ export default async function VendorDetailPage({ params }: { params: Params }) {
             </p>
           </div>
         </div>
+        <VendorPricesImport vendorId={vendor.id} />
         <VendorPricesEditor vendorId={vendor.id} prices={priceRows} />
       </div>
     </div>
