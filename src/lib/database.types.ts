@@ -223,6 +223,54 @@ export type Database = {
           },
         ]
       }
+      vendors: {
+        Row: {
+          active: boolean
+          address: string | null
+          business_number: string | null
+          ceo: string | null
+          contact_person: string | null
+          contact_phone: string | null
+          created_at: string
+          email: string | null
+          fax: string | null
+          id: string
+          name: string
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          address?: string | null
+          business_number?: string | null
+          ceo?: string | null
+          contact_person?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          email?: string | null
+          fax?: string | null
+          id?: string
+          name: string
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          address?: string | null
+          business_number?: string | null
+          ceo?: string | null
+          contact_person?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          email?: string | null
+          fax?: string | null
+          id?: string
+          name?: string
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       daily_transaction_summary: {
