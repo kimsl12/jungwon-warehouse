@@ -142,6 +142,134 @@ export type Database = {
         }
         Relationships: []
       }
+      purchase_order_items: {
+        Row: {
+          id: string
+          note: string | null
+          ordered_quantity: number
+          product_id: string
+          product_name: string
+          product_variant: string | null
+          purchase_order_id: string
+          received_quantity: number
+          sort_order: number
+          spec: string | null
+          unit: string | null
+          unit_price: number
+        }
+        Insert: {
+          id?: string
+          note?: string | null
+          ordered_quantity: number
+          product_id: string
+          product_name: string
+          product_variant?: string | null
+          purchase_order_id: string
+          received_quantity?: number
+          sort_order?: number
+          spec?: string | null
+          unit?: string | null
+          unit_price?: number
+        }
+        Update: {
+          id?: string
+          note?: string | null
+          ordered_quantity?: number
+          product_id?: string
+          product_name?: string
+          product_variant?: string | null
+          purchase_order_id?: string
+          received_quantity?: number
+          sort_order?: number
+          spec?: string | null
+          unit?: string | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_items_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_orders: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          delivery_terms: string | null
+          due_date: string | null
+          id: string
+          inspection_terms: string | null
+          note: string | null
+          order_date: string
+          payment_terms: string | null
+          po_number: string
+          sent_at: string | null
+          ship_to: string | null
+          ship_to_contact: string | null
+          status: string
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivery_terms?: string | null
+          due_date?: string | null
+          id?: string
+          inspection_terms?: string | null
+          note?: string | null
+          order_date?: string
+          payment_terms?: string | null
+          po_number: string
+          sent_at?: string | null
+          ship_to?: string | null
+          ship_to_contact?: string | null
+          status?: string
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivery_terms?: string | null
+          due_date?: string | null
+          id?: string
+          inspection_terms?: string | null
+          note?: string | null
+          order_date?: string
+          payment_terms?: string | null
+          po_number?: string
+          sent_at?: string | null
+          ship_to?: string | null
+          ship_to_contact?: string | null
+          status?: string
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_orders_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sites: {
         Row: {
           active: boolean
@@ -360,6 +488,24 @@ export type Database = {
         Args: { p_products: Json; p_user_id: string }
         Returns: Json
       }
+      create_purchase_order: {
+        Args: {
+          p_delivery_terms: string
+          p_due_date: string
+          p_inspection_terms: string
+          p_items: Json
+          p_note: string
+          p_order_date: string
+          p_payment_terms: string
+          p_ship_to: string
+          p_ship_to_contact: string
+          p_status?: string
+          p_user_id: string
+          p_vendor_id: string
+        }
+        Returns: string
+      }
+      generate_po_number: { Args: never; Returns: string }
       get_low_stock_products: {
         Args: never
         Returns: {
@@ -414,6 +560,10 @@ export type Database = {
         }
         Returns: Json
       }
+      receive_purchase_order_items: {
+        Args: { p_po_id: string; p_receipts: Json; p_user_id: string }
+        Returns: Json
+      }
       search_products: {
         Args: { p_category?: string; p_query?: string }
         Returns: {
@@ -436,6 +586,10 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      update_purchase_order_status: {
+        Args: { p_po_id: string; p_status: string }
+        Returns: undefined
       }
       update_user_role: {
         Args: { p_new_role: string; p_user_id: string }
