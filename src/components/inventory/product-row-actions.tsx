@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { ChevronDown } from "lucide-react";
 
 import { deleteProduct } from "@/app/(dashboard)/inventory/actions";
 import {
@@ -14,8 +15,16 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ProcessTransactionDialog } from "@/components/inventory/process-transaction-dialog";
 import { ProductEditDialog } from "@/components/inventory/product-edit-dialog";
+import { VariantAddDialog } from "@/components/inventory/variant-add-dialog";
 import type { Database } from "@/lib/database.types";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
@@ -30,11 +39,18 @@ export function ProductRowActions({
   isAdmin: boolean;
   sites: SiteOption[];
 }) {
-  const [transactionOpen, setTransactionOpen] = useState(false);
+  const [processOpen, setProcessOpen] = useState(false);
+  const [processType, setProcessType] = useState<"in" | "out">("in");
+  const [variantOpen, setVariantOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  function openProcess(type: "in" | "out") {
+    setProcessType(type);
+    setProcessOpen(true);
+  }
 
   function handleDelete() {
     setDeleteError(null);
@@ -52,9 +68,27 @@ export function ProductRowActions({
 
   return (
     <div className="flex justify-end gap-1">
-      <Button variant="outline" size="sm" onClick={() => setTransactionOpen(true)}>
-        처리
-      </Button>
+      {/* 처리: 입고 / 출고 / 변형 추가 를 드롭다운 메뉴로 통합 */}
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button variant="outline" size="sm">
+              처리 <ChevronDown className="ml-1 h-3.5 w-3.5" />
+            </Button>
+          }
+        />
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => openProcess("in")}>입고 처리</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => openProcess("out")}>출고 처리</DropdownMenuItem>
+          {isAdmin && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setVariantOpen(true)}>변형 추가</DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       {isAdmin && (
         <>
           <Button variant="ghost" size="sm" onClick={() => setEditOpen(true)}>
@@ -73,13 +107,20 @@ export function ProductRowActions({
 
       <ProcessTransactionDialog
         product={product}
-        open={transactionOpen}
-        onOpenChange={setTransactionOpen}
+        open={processOpen}
+        onOpenChange={setProcessOpen}
         sites={sites}
+        initialType={processType}
       />
 
       {isAdmin && (
         <>
+          <VariantAddDialog
+            baseProduct={product}
+            open={variantOpen}
+            onOpenChange={setVariantOpen}
+          />
+
           <ProductEditDialog product={product} open={editOpen} onOpenChange={setEditOpen} isAdmin={isAdmin} />
 
           <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import {
   processTransaction,
@@ -28,16 +28,25 @@ export function ProcessTransactionDialog({
   open,
   onOpenChange,
   sites,
+  initialType = "in",
 }: {
   product: Product;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sites: SiteOption[];
+  initialType?: "in" | "out";
 }) {
-  const [type, setType] = useState<"in" | "out">("in");
+  const [type, setType] = useState<"in" | "out">(initialType);
   const [siteId, setSiteId] = useState<string>("");
   const [state, setState] = useState<ProcessTransactionState>(null);
   const [isPending, startTransition] = useTransition();
+
+  // When the dialog re-opens after a prior close, reset the type to the
+  // caller-supplied initialType. Otherwise a user who opens 출고 처리 once,
+  // closes, then opens 입고 처리 would keep seeing out.
+  useEffect(() => {
+    if (open) setType(initialType);
+  }, [open, initialType]);
 
   function handleSubmit(formData: FormData) {
     setState(null);
@@ -62,7 +71,7 @@ export function ProcessTransactionDialog({
     onOpenChange(next);
     if (!next) {
       setState(null);
-      setType("in");
+      setType(initialType);
       setSiteId("");
     }
   }

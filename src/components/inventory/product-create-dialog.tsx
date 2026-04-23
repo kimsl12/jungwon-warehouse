@@ -43,11 +43,14 @@ export function ProductCreateDialog() {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger render={<Button />}>품목 등록</DialogTrigger>
+      <DialogTrigger render={<Button />}>신규 품목</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>새 품목 등록</DialogTitle>
-          <DialogDescription>품목 정보를 입력해주세요.</DialogDescription>
+          <DialogTitle>신규 품목 등록</DialogTitle>
+          <DialogDescription>
+            DB에 없던 자재를 처음 등록할 때 사용합니다. 같은 품목의 색상·규격 변형을
+            추가할 때는 재고 목록에서 해당 품목의 &quot;처리 → 변형 추가&quot;를 이용하세요.
+          </DialogDescription>
         </DialogHeader>
         <form action={handleSubmit}>
           <ProductFormFields fieldErrors={state?.fieldErrors} disabled={isPending} />

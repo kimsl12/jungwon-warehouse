@@ -98,13 +98,37 @@ export async function createProduct(
     };
   }
 
+  const normalizedVariant = emptyToNull(parsed.data.variant ?? null);
+
+  // (name, variant) 조합 중복 검사.
+  // variant가 null인 경우 PostgREST의 기본 "eq"로는 NULL 매칭이 안 되므로
+  // is("variant", null) 분기를 사용한다. bulk_import_products RPC의 SQL 규칙과 동일.
+  {
+    let dupQuery = auth.supabase
+      .from("products")
+      .select("id", { head: true, count: "exact" })
+      .eq("name", parsed.data.name);
+    dupQuery = normalizedVariant === null
+      ? dupQuery.is("variant", null)
+      : dupQuery.eq("variant", normalizedVariant);
+    const { count: dupCount } = await dupQuery;
+    if ((dupCount ?? 0) > 0) {
+      return {
+        error: normalizedVariant
+          ? `이미 같은 품목(${parsed.data.name})의 변형 "${normalizedVariant}"이(가) 등록되어 있습니다.`
+          : `이미 같은 이름(${parsed.data.name})의 품목이 등록되어 있습니다.`,
+        fieldErrors: { variant: [normalizedVariant ? "중복된 변형" : "중복된 제품명"] },
+      };
+    }
+  }
+
   const { data: inserted, error } = await auth.supabase
     .from("products")
     .insert({
       name: parsed.data.name,
       category: emptyToNull(parsed.data.category ?? null),
       subcategory: emptyToNull(parsed.data.subcategory ?? null),
-      variant: emptyToNull(parsed.data.variant ?? null),
+      variant: normalizedVariant,
       unit: emptyToNull(parsed.data.unit ?? null),
       quantity: parsed.data.quantity,
       min_quantity: parsed.data.min_quantity,
