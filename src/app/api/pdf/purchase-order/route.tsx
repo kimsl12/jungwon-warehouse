@@ -1,9 +1,14 @@
 import { renderToBuffer } from "@react-pdf/renderer";
 import { NextResponse } from "next/server";
 
+import { COMPANY } from "@/lib/company";
 import { attachmentDispositionHeader } from "@/lib/csv/generate";
 import { createClient } from "@/lib/supabase/server";
-import { PurchaseOrderPdf, type PurchaseOrderPdfItem } from "@/templates/purchase-order-pdf";
+import {
+  PurchaseOrderPdf,
+  type PurchaseOrderPdfContactPerson,
+  type PurchaseOrderPdfItem,
+} from "@/templates/purchase-order-pdf";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,7 +38,7 @@ export async function GET(req: Request) {
   const { data: po, error } = await supabase
     .from("purchase_orders")
     .select(
-      `id, po_number, order_date, due_date,
+      `id, po_number, order_date, due_date, created_by,
        payment_terms, delivery_terms, inspection_terms,
        ship_to, ship_to_contact, note,
        vendor:vendors!inner(name, address, contact_phone, fax)`,
@@ -43,6 +48,30 @@ export async function GET(req: Request) {
 
   if (error || !po) {
     return new NextResponse("발주서를 찾을 수 없습니다.", { status: 404 });
+  }
+
+  // 발주서 작성자의 profile 로 담당자 칸 채우기.
+  // 작성자 정보가 비어 있으면 회사 기본값(COMPANY.contactPerson) 폴백.
+  let contactPerson: PurchaseOrderPdfContactPerson = {
+    name: COMPANY.contactPerson,
+    title: null,
+    phone: COMPANY.contactPhone,
+    email: COMPANY.contactEmail,
+  };
+  if (po.created_by) {
+    const { data: author } = await supabase
+      .from("profiles")
+      .select("name, title, phone, email")
+      .eq("id", po.created_by)
+      .single();
+    if (author) {
+      contactPerson = {
+        name: author.name ?? COMPANY.contactPerson,
+        title: author.title ?? null,
+        phone: author.phone ?? null,
+        email: author.email ?? null,
+      };
+    }
   }
 
   const { data: items } = await supabase
@@ -82,6 +111,7 @@ export async function GET(req: Request) {
       shipTo={po.ship_to}
       shipToContact={po.ship_to_contact}
       note={po.note}
+      contactPerson={contactPerson}
     />,
   );
 

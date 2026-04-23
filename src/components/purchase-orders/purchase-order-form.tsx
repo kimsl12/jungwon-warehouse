@@ -127,7 +127,8 @@ export function PurchaseOrderForm({ vendors }: { vendors: VendorOption[] }) {
           product_id: p.id,
           product_name: p.name,
           product_variant: p.variant,
-          spec: p.subcategory ?? null,
+          // 규격 셀은 기본 공란. 필요 시 사용자가 수동 입력.
+          spec: null,
           unit: p.unit,
           ordered_quantity: 1,
           unit_price: vendorPriceMap.get(p.id) ?? 0,

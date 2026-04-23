@@ -4,9 +4,14 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { COMPANY } from "@/lib/company";
 import { isFaxConfigured, sendFax } from "@/lib/fax";
 import { createClient } from "@/lib/supabase/server";
-import { PurchaseOrderPdf, type PurchaseOrderPdfItem } from "@/templates/purchase-order-pdf";
+import {
+  PurchaseOrderPdf,
+  type PurchaseOrderPdfContactPerson,
+  type PurchaseOrderPdfItem,
+} from "@/templates/purchase-order-pdf";
 
 // -----------------------------------------------------------------------------
 // Schemas
@@ -237,7 +242,7 @@ export async function sendPurchaseOrderFax(
   const { data: po, error } = await auth.supabase
     .from("purchase_orders")
     .select(
-      `id, po_number, order_date, due_date,
+      `id, po_number, order_date, due_date, created_by,
        payment_terms, delivery_terms, inspection_terms,
        ship_to, ship_to_contact, note,
        vendor:vendors!inner(name, address, contact_phone, fax)`,
@@ -248,6 +253,29 @@ export async function sendPurchaseOrderFax(
 
   if (!po.vendor?.fax) {
     return { error: "거래처의 팩스번호가 등록되어 있지 않습니다. 거래처 정보에서 팩스번호를 추가하세요." };
+  }
+
+  // 담당자 정보 — 작성자 profile 기반, 비어 있으면 COMPANY 폴백
+  let contactPerson: PurchaseOrderPdfContactPerson = {
+    name: COMPANY.contactPerson,
+    title: null,
+    phone: COMPANY.contactPhone,
+    email: COMPANY.contactEmail,
+  };
+  if (po.created_by) {
+    const { data: author } = await auth.supabase
+      .from("profiles")
+      .select("name, title, phone, email")
+      .eq("id", po.created_by)
+      .single();
+    if (author) {
+      contactPerson = {
+        name: author.name ?? COMPANY.contactPerson,
+        title: author.title ?? null,
+        phone: author.phone ?? null,
+        email: author.email ?? null,
+      };
+    }
   }
 
   const { data: items } = await auth.supabase
@@ -287,6 +315,7 @@ export async function sendPurchaseOrderFax(
       shipTo={po.ship_to}
       shipToContact={po.ship_to_contact}
       note={po.note}
+      contactPerson={contactPerson}
     />,
   );
 
