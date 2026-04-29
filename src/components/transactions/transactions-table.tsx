@@ -1,3 +1,4 @@
+import { TransactionUndoButton } from "@/components/transactions/transaction-undo-button";
 import {
   Table,
   TableBody,
@@ -16,6 +17,8 @@ type TransactionRow = {
   created_at: string;
   created_by: string | null;
   site_id: string | null;
+  canceled_at: string | null;
+  related_tx_id: string | null;
   products: {
     id: string;
     name: string;
@@ -38,12 +41,16 @@ const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
   minute: "2-digit",
 });
 
+const UNDO_WINDOW_MS = 20 * 60 * 1000;
+
 export function TransactionsTable({
   transactions,
   profileNameMap,
+  currentUserId,
 }: {
   transactions: TransactionRow[];
   profileNameMap: Map<string, string | null>;
+  currentUserId: string | null;
 }) {
   if (transactions.length === 0) {
     return (
@@ -52,6 +59,8 @@ export function TransactionsTable({
       </div>
     );
   }
+
+  const now = Date.now();
 
   return (
     <div className="rounded-md border">
@@ -66,13 +75,31 @@ export function TransactionsTable({
             <TableHead>현장</TableHead>
             <TableHead>담당자</TableHead>
             <TableHead>메모</TableHead>
+            <TableHead className="w-20 text-right" />
           </TableRow>
         </TableHeader>
         <TableBody>
           {transactions.map((tx) => {
             const userName = tx.created_by ? (profileNameMap.get(tx.created_by) ?? "—") : "—";
+            const isCanceled = tx.canceled_at !== null;
+            const isReversal = tx.related_tx_id !== null && !isCanceled;
+            const isLinked =
+              tx.note?.startsWith("자재 신청 출고") === true ||
+              tx.note?.startsWith("발주 ") === true;
+            const age = now - new Date(tx.created_at).getTime();
+            const canUndo =
+              !isCanceled &&
+              !isReversal &&
+              !isLinked &&
+              currentUserId !== null &&
+              tx.created_by === currentUserId &&
+              age < UNDO_WINDOW_MS;
+
             return (
-              <TableRow key={tx.id}>
+              <TableRow
+                key={tx.id}
+                className={isCanceled ? "opacity-50 line-through decoration-muted-foreground" : undefined}
+              >
                 <TableCell className="text-muted-foreground tabular-nums">
                   {dateFormatter.format(new Date(tx.created_at))}
                 </TableCell>
@@ -87,6 +114,16 @@ export function TransactionsTable({
                   >
                     {tx.type === "in" ? "입고" : "출고"}
                   </span>
+                  {isCanceled && (
+                    <span className="ml-1.5 inline-flex items-center rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground no-underline">
+                      취소됨
+                    </span>
+                  )}
+                  {isReversal && (
+                    <span className="ml-1.5 inline-flex items-center rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-blue-700">
+                      역방향
+                    </span>
+                  )}
                 </TableCell>
                 <TableCell className="font-medium">
                   {tx.products?.name ?? "-"}
@@ -113,6 +150,9 @@ export function TransactionsTable({
                 <TableCell className="text-muted-foreground">{userName}</TableCell>
                 <TableCell className="max-w-xs truncate text-muted-foreground">
                   {tx.note ?? ""}
+                </TableCell>
+                <TableCell className="text-right">
+                  {canUndo && <TransactionUndoButton txId={tx.id} />}
                 </TableCell>
               </TableRow>
             );

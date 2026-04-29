@@ -3,6 +3,10 @@
 import { useState, useTransition } from "react";
 
 import { createSite, type SiteFormState } from "@/app/(dashboard)/sites/actions";
+import {
+  SiteAssigneesPicker,
+  type AssigneeCandidate,
+} from "@/components/sites/site-assignees-picker";
 import { SiteFormFields } from "@/components/sites/site-form-fields";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +19,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-export function SiteCreateDialog() {
+export function SiteCreateDialog({
+  assigneeCandidates,
+}: {
+  assigneeCandidates: AssigneeCandidate[];
+}) {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<SiteFormState>(null);
   const [isPending, startTransition] = useTransition();
@@ -48,6 +56,12 @@ export function SiteCreateDialog() {
         </DialogHeader>
         <form action={handleSubmit}>
           <SiteFormFields fieldErrors={state?.fieldErrors} disabled={isPending} />
+          <div className="mt-4 border-t pt-4">
+            <SiteAssigneesPicker
+              candidates={assigneeCandidates}
+              disabled={isPending}
+            />
+          </div>
           {state?.error && (
             <p className="mt-3 text-sm text-destructive" role="alert">
               {state.error}

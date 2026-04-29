@@ -3,6 +3,10 @@
 import { useState, useTransition } from "react";
 
 import { updateSite, type SiteFormState } from "@/app/(dashboard)/sites/actions";
+import {
+  SiteAssigneesPicker,
+  type AssigneeCandidate,
+} from "@/components/sites/site-assignees-picker";
 import { SiteFormFields } from "@/components/sites/site-form-fields";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,16 +22,18 @@ type Site = {
   id: string;
   name: string;
   address: string | null;
-  contact: string | null;
   note: string | null;
+  assigneeIds: string[];
 };
 
 export function SiteEditDialog({
   site,
+  assigneeCandidates,
   open,
   onOpenChange,
 }: {
   site: Site;
+  assigneeCandidates: AssigneeCandidate[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -66,6 +72,14 @@ export function SiteEditDialog({
             fieldErrors={state?.fieldErrors}
             disabled={isPending}
           />
+          <div className="mt-4 border-t pt-4">
+            <SiteAssigneesPicker
+              candidates={assigneeCandidates}
+              initialSelectedIds={site.assigneeIds}
+              currentSiteName={site.name}
+              disabled={isPending}
+            />
+          </div>
           {state?.error && (
             <p className="mt-3 text-sm text-destructive" role="alert">
               {state.error}

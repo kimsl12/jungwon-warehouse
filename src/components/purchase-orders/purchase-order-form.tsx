@@ -41,6 +41,12 @@ type LineItem = {
   note: string;
 };
 
+type VendorPriceOffer = {
+  vendor_id: string;
+  vendor_name: string;
+  unit_price: number;
+};
+
 function todayYmd() {
   const d = new Date();
   const y = d.getFullYear();
@@ -62,6 +68,10 @@ export function PurchaseOrderForm({ vendors }: { vendors: VendorOption[] }) {
   const [note, setNote] = useState("");
   const [items, setItems] = useState<LineItem[]>([]);
   const [vendorPriceMap, setVendorPriceMap] = useState<Map<string, number>>(new Map());
+  // product_id → 모든 거래처 offer 리스트 (단가 비교용)
+  const [offersByProduct, setOffersByProduct] = useState<Map<string, VendorPriceOffer[]>>(
+    new Map(),
+  );
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ProductOption[]>([]);
@@ -94,6 +104,48 @@ export function PurchaseOrderForm({ vendors }: { vendors: VendorOption[] }) {
       });
   }, [vendorId]);
 
+  // 담긴 품목의 모든 거래처 단가 로드 (비교용)
+  useEffect(() => {
+    const productIds = Array.from(new Set(items.map((it) => it.product_id)));
+    if (productIds.length === 0) {
+      setOffersByProduct(new Map());
+      return;
+    }
+    // 이미 로드된 항목은 스킵
+    const missing = productIds.filter((id) => !offersByProduct.has(id));
+    if (missing.length === 0) return;
+
+    const supabase = createBrowserClient();
+    supabase
+      .from("vendor_product_prices")
+      .select("vendor_id, unit_price, product_id, vendors!inner(id, name)")
+      .in("product_id", missing)
+      .then(({ data }) => {
+        setOffersByProduct((prev) => {
+          const next = new Map(prev);
+          // 빈 배열로 초기화 (매칭이 없어도 다시 조회 안 하도록)
+          for (const pid of missing) next.set(pid, []);
+          for (const row of data ?? []) {
+            const arr = next.get(row.product_id) ?? [];
+            arr.push({
+              vendor_id: row.vendor_id,
+              vendor_name: row.vendors?.name ?? "?",
+              unit_price: row.unit_price,
+            });
+            next.set(row.product_id, arr);
+          }
+          // 가격 오름차순 정렬
+          for (const [pid, arr] of next) {
+            next.set(
+              pid,
+              arr.sort((a, b) => a.unit_price - b.unit_price),
+            );
+          }
+          return next;
+        });
+      });
+  }, [items, offersByProduct]);
+
   // 품목 검색
   useEffect(() => {
     if (query.length < 1) { setResults([]); return; }
@@ -103,7 +155,7 @@ export function PurchaseOrderForm({ vendors }: { vendors: VendorOption[] }) {
       const { data } = await supabase
         .rpc("search_products", { p_query: query })
         .select("id, name, variant, unit, subcategory")
-        .limit(10);
+        .limit(200);
       setResults((data ?? []) as ProductOption[]);
       setSearching(false);
     }, 250);
@@ -264,7 +316,7 @@ export function PurchaseOrderForm({ vendors }: { vendors: VendorOption[] }) {
             />
           </div>
           {results.length > 0 && (
-            <div className="rounded border bg-background max-h-56 overflow-y-auto">
+            <div className="rounded border bg-background max-h-[60vh] overflow-y-auto">
               {results.map((p) => (
                 <button
                   key={p.id}
@@ -314,11 +366,17 @@ export function PurchaseOrderForm({ vendors }: { vendors: VendorOption[] }) {
             </div>
             {items.map((it) => {
               const supply = it.ordered_quantity * it.unit_price;
+              const offers = offersByProduct.get(it.product_id) ?? [];
+              const otherOffers = offers.filter((o) => o.vendor_id !== vendorId);
+              const cheapest = offers[0]; // 이미 오름차순 정렬
+              const currentIsCheapest =
+                cheapest && vendorId && cheapest.vendor_id === vendorId;
               return (
                 <div
                   key={it.key}
-                  className="grid grid-cols-[1fr_100px_60px_90px_100px_100px_1fr_40px] gap-2 items-center px-3 py-2 border-t"
+                  className="border-t"
                 >
+                <div className="grid grid-cols-[1fr_100px_60px_90px_100px_100px_1fr_40px] gap-2 items-center px-3 py-2">
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">
                       {it.product_name}
@@ -372,6 +430,59 @@ export function PurchaseOrderForm({ vendors }: { vendors: VendorOption[] }) {
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
+                </div>
+                {/* 거래처 단가 비교 (이 자재가 다른 거래처에도 등록되어 있을 때만) */}
+                {offers.length > 0 && (
+                  <div className="px-3 pb-2 text-[11px]">
+                    {cheapest && !currentIsCheapest && vendorId && (
+                      <p className="text-amber-700">
+                        💡 최저가 <b>{cheapest.vendor_name}</b>{" "}
+                        {nf.format(cheapest.unit_price)}원
+                        {offers.find((o) => o.vendor_id === vendorId) && (
+                          <>
+                            {" "}(현재 거래처 대비{" "}
+                            <b>
+                              -
+                              {nf.format(
+                                (offers.find((o) => o.vendor_id === vendorId)?.unit_price ?? 0) -
+                                  cheapest.unit_price,
+                              )}원
+                            </b>
+                            )
+                          </>
+                        )}
+                      </p>
+                    )}
+                    {currentIsCheapest && (
+                      <p className="text-emerald-700">✓ 현재 거래처가 최저가</p>
+                    )}
+                    {otherOffers.length > 0 && (
+                      <details className="mt-0.5 text-muted-foreground">
+                        <summary className="cursor-pointer hover:text-foreground">
+                          다른 거래처 단가 {otherOffers.length}곳 보기
+                        </summary>
+                        <ul className="mt-1 space-y-0.5 pl-3">
+                          {offers.map((o, idx) => (
+                            <li
+                              key={o.vendor_id}
+                              className={
+                                o.vendor_id === vendorId
+                                  ? "font-semibold text-foreground"
+                                  : idx === 0
+                                    ? "text-emerald-700"
+                                    : ""
+                              }
+                            >
+                              {idx === 0 && "🏆 "}
+                              {o.vendor_name}: {nf.format(o.unit_price)}원
+                              {o.vendor_id === vendorId && " (현재 선택)"}
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    )}
+                  </div>
+                )}
                 </div>
               );
             })}

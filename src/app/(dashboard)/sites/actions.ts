@@ -11,13 +11,14 @@ import { createClient } from "@/lib/supabase/server";
 const siteCreateSchema = z.object({
   name: z.string().trim().min(1, "현장명을 입력해주세요."),
   address: z.string().trim().optional().or(z.literal("")),
-  contact: z.string().trim().optional().or(z.literal("")),
   note: z.string().trim().max(500).optional().or(z.literal("")),
 });
 
 const siteUpdateSchema = siteCreateSchema.extend({
   id: z.string().uuid(),
 });
+
+const assigneeIdsSchema = z.array(z.string().uuid());
 
 const siteToggleSchema = z.object({
   id: z.string().uuid(),
@@ -61,6 +62,61 @@ function emptyToNull(v: FormDataEntryValue | null): string | null {
   return s.length > 0 ? s : null;
 }
 
+function parseAssigneeIds(raw: FormDataEntryValue | null): string[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(String(raw));
+    const result = assigneeIdsSchema.safeParse(parsed);
+    return result.success ? Array.from(new Set(result.data)) : [];
+  } catch {
+    return [];
+  }
+}
+
+type AdminSupabase = Awaited<ReturnType<typeof createClient>>;
+
+async function syncSiteAssignees(
+  supabase: AdminSupabase,
+  adminId: string,
+  siteId: string,
+  userIds: string[],
+): Promise<{ error: string | null }> {
+  const { data: current, error: currentErr } = await supabase
+    .from("profile_sites")
+    .select("profile_id")
+    .eq("site_id", siteId);
+  if (currentErr) {
+    return { error: "담당자 조회 실패: " + currentErr.message };
+  }
+
+  const currentSet = new Set((current ?? []).map((r) => r.profile_id));
+  const targetSet = new Set(userIds);
+
+  const toRemove = [...currentSet].filter((id) => !targetSet.has(id));
+  if (toRemove.length > 0) {
+    const { error: delErr } = await supabase
+      .from("profile_sites")
+      .delete()
+      .eq("site_id", siteId)
+      .in("profile_id", toRemove);
+    if (delErr) return { error: "담당자 해제 실패: " + delErr.message };
+  }
+
+  const toAdd = [...targetSet].filter((id) => !currentSet.has(id));
+  if (toAdd.length > 0) {
+    const { error: addErr } = await supabase.from("profile_sites").insert(
+      toAdd.map((profile_id) => ({
+        profile_id,
+        site_id: siteId,
+        assigned_by: adminId,
+      })),
+    );
+    if (addErr) return { error: "담당자 배정 실패: " + addErr.message };
+  }
+
+  return { error: null };
+}
+
 // -----------------------------------------------------------------------------
 // createSite
 // -----------------------------------------------------------------------------
@@ -74,7 +130,6 @@ export async function createSite(
   const parsed = siteCreateSchema.safeParse({
     name: formData.get("name"),
     address: formData.get("address"),
-    contact: formData.get("contact"),
     note: formData.get("note"),
   });
   if (!parsed.success) {
@@ -84,12 +139,17 @@ export async function createSite(
     };
   }
 
-  const { error } = await auth.supabase.from("sites").insert({
-    name: parsed.data.name,
-    address: emptyToNull(parsed.data.address ?? null),
-    contact: emptyToNull(parsed.data.contact ?? null),
-    note: emptyToNull(parsed.data.note ?? null),
-  });
+  const assigneeIds = parseAssigneeIds(formData.get("assignee_ids"));
+
+  const { data: inserted, error } = await auth.supabase
+    .from("sites")
+    .insert({
+      name: parsed.data.name,
+      address: emptyToNull(parsed.data.address ?? null),
+      note: emptyToNull(parsed.data.note ?? null),
+    })
+    .select("id")
+    .single();
 
   if (error) {
     if (error.code === "23505") {
@@ -98,7 +158,18 @@ export async function createSite(
     return { error: "등록에 실패했습니다: " + error.message };
   }
 
+  if (assigneeIds.length > 0) {
+    const sync = await syncSiteAssignees(
+      auth.supabase,
+      auth.user.id,
+      inserted.id,
+      assigneeIds,
+    );
+    if (sync.error) return { error: sync.error };
+  }
+
   revalidatePath("/sites");
+  revalidatePath("/users");
   return { error: null, success: true };
 }
 
@@ -116,7 +187,6 @@ export async function updateSite(
     id: formData.get("id"),
     name: formData.get("name"),
     address: formData.get("address"),
-    contact: formData.get("contact"),
     note: formData.get("note"),
   });
   if (!parsed.success) {
@@ -126,12 +196,13 @@ export async function updateSite(
     };
   }
 
+  const assigneeIds = parseAssigneeIds(formData.get("assignee_ids"));
+
   const { error } = await auth.supabase
     .from("sites")
     .update({
       name: parsed.data.name,
       address: emptyToNull(parsed.data.address ?? null),
-      contact: emptyToNull(parsed.data.contact ?? null),
       note: emptyToNull(parsed.data.note ?? null),
     })
     .eq("id", parsed.data.id);
@@ -143,7 +214,16 @@ export async function updateSite(
     return { error: "수정에 실패했습니다: " + error.message };
   }
 
+  const sync = await syncSiteAssignees(
+    auth.supabase,
+    auth.user.id,
+    parsed.data.id,
+    assigneeIds,
+  );
+  if (sync.error) return { error: sync.error };
+
   revalidatePath("/sites");
+  revalidatePath("/users");
   return { error: null, success: true };
 }
 

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import { LowStockBanner } from "@/components/dashboard/low-stock-banner";
+import { RequestAlertBar } from "@/components/dashboard/request-alert-bar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { createClient } from "@/lib/supabase/server";
 
@@ -54,6 +55,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
             <LogoutButton />
           </div>
         </header>
+        {isAdmin && <RequestAlertBar />}
         <LowStockBanner />
         <main className="flex-1 px-6 py-6">{children}</main>
       </div>

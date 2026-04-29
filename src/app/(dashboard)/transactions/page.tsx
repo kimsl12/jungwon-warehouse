@@ -30,6 +30,9 @@ export default async function TransactionsPage({
   const toIdx = fromIdx + PAGE_SIZE - 1;
 
   const supabase = await createClient();
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
 
   // Build the transactions query. We embed `products` (FK on transactions
   // → products) but resolve `profiles` separately because the FK on
@@ -45,6 +48,8 @@ export default async function TransactionsPage({
       created_at,
       created_by,
       site_id,
+      canceled_at,
+      related_tx_id,
       products!inner(id, name, category, unit, variant),
       sites(id, name)
     `,
@@ -186,7 +191,11 @@ export default async function TransactionsPage({
 
       <TransactionsPagination currentPage={page} totalPages={totalPages} />
 
-      <TransactionsTable transactions={transactions} profileNameMap={profileNameMap} />
+      <TransactionsTable
+        transactions={transactions}
+        profileNameMap={profileNameMap}
+        currentUserId={currentUser?.id ?? null}
+      />
 
       <TransactionsPagination currentPage={page} totalPages={totalPages} />
     </div>

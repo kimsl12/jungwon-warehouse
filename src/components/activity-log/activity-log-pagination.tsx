@@ -8,11 +8,13 @@ export function ActivityLogPagination({
   totalPages,
   tableFilter,
   actionFilter,
+  recordIdFilter,
 }: {
   currentPage: number;
   totalPages: number;
   tableFilter: string;
   actionFilter: string;
+  recordIdFilter?: string;
 }) {
   if (totalPages <= 1) return null;
 
@@ -20,6 +22,7 @@ export function ActivityLogPagination({
     const params = new URLSearchParams();
     if (tableFilter) params.set("table", tableFilter);
     if (actionFilter) params.set("action", actionFilter);
+    if (recordIdFilter) params.set("record_id", recordIdFilter);
     if (page > 1) params.set("page", String(page));
     const qs = params.toString();
     return qs ? `/activity-log?${qs}` : "/activity-log";

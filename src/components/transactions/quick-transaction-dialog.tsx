@@ -50,7 +50,7 @@ export function QuickTransactionDialog({
       const { data } = await supabase
         .rpc("search_products", { p_query: query })
         .select("id, name, category, unit, variant, quantity")
-        .limit(10);
+        .limit(200);
       setResults(data ?? []);
       setSearching(false);
     }, 250);
@@ -143,7 +143,7 @@ export function QuickTransactionDialog({
                   />
                 </div>
                 {results.length > 0 && (
-                  <div className="rounded bg-card max-h-48 overflow-y-auto" style={{ boxShadow: "0 20px 40px rgba(27,28,27,0.06)" }}>
+                  <div className="rounded bg-card max-h-96 overflow-y-auto" style={{ boxShadow: "0 20px 40px rgba(27,28,27,0.06)" }}>
                     {results.map((p) => (
                       <button
                         key={p.id}

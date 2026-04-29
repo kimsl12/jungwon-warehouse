@@ -15,26 +15,31 @@ export default async function MobileLayout({ children }: { children: ReactNode }
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("name")
+    .select("name, role")
     .eq("id", user.id)
     .single();
+
+  const role: "admin" | "user" = profile?.role === "admin" ? "admin" : "user";
+  const homeHref = role === "user" ? "/m/request" : "/m/scan";
 
   return (
     <div className="flex min-h-svh flex-col bg-background">
       {/* Dark header */}
       <header className="sticky top-0 z-10 bg-primary text-primary-foreground">
         <div className="mx-auto flex h-12 max-w-md items-center justify-between px-4">
-          <Link href="/m/scan" className="text-sm font-bold tracking-tight">
+          <Link href={homeHref} className="text-sm font-bold tracking-tight">
             정원전기
           </Link>
           <div className="flex items-center gap-2 text-xs">
             <span className="text-primary-foreground/70">{profile?.name ?? user.email}</span>
-            <Link
-              href="/overview"
-              className="rounded bg-white/10 px-2 py-1 text-primary-foreground/80 hover:bg-white/20 transition-colors"
-            >
-              데스크톱
-            </Link>
+            {role === "admin" && (
+              <Link
+                href="/overview"
+                className="rounded bg-white/10 px-2 py-1 text-primary-foreground/80 hover:bg-white/20 transition-colors"
+              >
+                데스크톱
+              </Link>
+            )}
             <LogoutButton />
           </div>
         </div>
@@ -46,7 +51,7 @@ export default async function MobileLayout({ children }: { children: ReactNode }
       </main>
 
       {/* Bottom tabs */}
-      <MobileBottomTabs />
+      <MobileBottomTabs role={role} />
     </div>
   );
 }

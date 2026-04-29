@@ -44,6 +44,125 @@ export type Database = {
         }
         Relationships: []
       }
+      material_request_items: {
+        Row: {
+          fulfilled_quantity: number
+          id: string
+          note: string | null
+          product_id: string
+          product_name: string
+          product_variant: string | null
+          request_id: string
+          requested_quantity: number
+          sort_order: number
+          unit: string | null
+        }
+        Insert: {
+          fulfilled_quantity?: number
+          id?: string
+          note?: string | null
+          product_id: string
+          product_name: string
+          product_variant?: string | null
+          request_id: string
+          requested_quantity: number
+          sort_order?: number
+          unit?: string | null
+        }
+        Update: {
+          fulfilled_quantity?: number
+          id?: string
+          note?: string | null
+          product_id?: string
+          product_name?: string
+          product_variant?: string | null
+          request_id?: string
+          requested_quantity?: number
+          sort_order?: number
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_request_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_request_items_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "material_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      material_requests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          canceled_at: string | null
+          canceled_by: string | null
+          created_at: string
+          created_by: string
+          fulfilled_at: string | null
+          id: string
+          is_urgent: boolean
+          note: string | null
+          reject_reason: string | null
+          rejected_at: string | null
+          site_id: string
+          status: string
+          updated_at: string
+          urgent_reason: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          canceled_at?: string | null
+          canceled_by?: string | null
+          created_at?: string
+          created_by: string
+          fulfilled_at?: string | null
+          id?: string
+          is_urgent?: boolean
+          note?: string | null
+          reject_reason?: string | null
+          rejected_at?: string | null
+          site_id: string
+          status?: string
+          updated_at?: string
+          urgent_reason?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          canceled_at?: string | null
+          canceled_by?: string | null
+          created_at?: string
+          created_by?: string
+          fulfilled_at?: string | null
+          id?: string
+          is_urgent?: boolean
+          note?: string | null
+          reject_reason?: string | null
+          rejected_at?: string | null
+          site_id?: string
+          status?: string
+          updated_at?: string
+          urgent_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_requests_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_aliases: {
         Row: {
           alias: string
@@ -117,6 +236,42 @@ export type Database = {
           variant?: string | null
         }
         Relationships: []
+      }
+      profile_sites: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          profile_id: string
+          site_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          profile_id: string
+          site_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          profile_id?: string
+          site_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_sites_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_sites_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -276,6 +431,42 @@ export type Database = {
           },
         ]
       }
+      request_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_public: boolean
+          items: Json
+          name: string
+          note: string | null
+          owner_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_public?: boolean
+          items: Json
+          name: string
+          note?: string | null
+          owner_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_public?: boolean
+          items?: Json
+          name?: string
+          note?: string | null
+          owner_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sites: {
         Row: {
           active: boolean
@@ -309,34 +500,103 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_audits: {
+        Row: {
+          adjustment_tx_id: string | null
+          counted_quantity: number
+          created_at: string
+          created_by: string | null
+          db_quantity: number
+          difference: number
+          id: string
+          note: string | null
+          product_id: string
+          resolution: string
+          resolved_at: string | null
+        }
+        Insert: {
+          adjustment_tx_id?: string | null
+          counted_quantity: number
+          created_at?: string
+          created_by?: string | null
+          db_quantity: number
+          difference: number
+          id?: string
+          note?: string | null
+          product_id: string
+          resolution: string
+          resolved_at?: string | null
+        }
+        Update: {
+          adjustment_tx_id?: string | null
+          counted_quantity?: number
+          created_at?: string
+          created_by?: string | null
+          db_quantity?: number
+          difference?: number
+          id?: string
+          note?: string | null
+          product_id?: string
+          resolution?: string
+          resolved_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_audits_adjustment_tx_id_fkey"
+            columns: ["adjustment_tx_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_audits_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
+          canceled_at: string | null
+          canceled_by: string | null
+          canceled_reason: string | null
           created_at: string
           created_by: string | null
           id: string
           note: string | null
           product_id: string
           quantity: number
+          related_tx_id: string | null
           site_id: string | null
           type: string
         }
         Insert: {
+          canceled_at?: string | null
+          canceled_by?: string | null
+          canceled_reason?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           note?: string | null
           product_id: string
           quantity: number
+          related_tx_id?: string | null
           site_id?: string | null
           type: string
         }
         Update: {
+          canceled_at?: string | null
+          canceled_by?: string | null
+          canceled_reason?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           note?: string | null
           product_id?: string
           quantity?: number
+          related_tx_id?: string | null
           site_id?: string | null
           type?: string
         }
@@ -346,6 +606,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_related_tx_id_fkey"
+            columns: ["related_tx_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
             referencedColumns: ["id"]
           },
           {
@@ -490,9 +757,28 @@ export type Database = {
       }
     }
     Functions: {
+      approve_material_request: {
+        Args: { p_request_id: string }
+        Returns: undefined
+      }
       bulk_import_products: {
         Args: { p_products: Json; p_user_id: string }
         Returns: Json
+      }
+      cancel_material_request: {
+        Args: { p_request_id: string }
+        Returns: undefined
+      }
+      create_material_request: {
+        Args: {
+          p_is_urgent?: boolean
+          p_items: Json
+          p_note: string
+          p_site_id: string
+          p_urgent_reason?: string
+          p_user_id: string
+        }
+        Returns: string
       }
       create_purchase_order: {
         Args: {
@@ -511,7 +797,21 @@ export type Database = {
         }
         Returns: string
       }
+      fulfill_material_request_items: {
+        Args: { p_fulfillments: Json; p_request_id: string; p_user_id: string }
+        Returns: Json
+      }
       generate_po_number: { Args: never; Returns: string }
+      get_dashboard_alert_counts: { Args: never; Returns: Json }
+      get_inventory_availability: {
+        Args: { p_product_ids?: string[] }
+        Returns: {
+          available: number
+          pending: number
+          product_id: string
+          stock: number
+        }[]
+      }
       get_low_stock_products: {
         Args: never
         Returns: {
@@ -554,6 +854,7 @@ export type Database = {
       }
       get_products_summary: { Args: never; Returns: Json }
       is_admin: { Args: never; Returns: boolean }
+      is_site_assigned: { Args: { p_site_id: string }; Returns: boolean }
       natural_sort_key: { Args: { input: string }; Returns: string }
       process_transaction: {
         Args: {
@@ -569,6 +870,19 @@ export type Database = {
       receive_purchase_order_items: {
         Args: { p_po_id: string; p_receipts: Json; p_user_id: string }
         Returns: Json
+      }
+      record_stock_audit: {
+        Args: {
+          p_counted_quantity: number
+          p_mode: string
+          p_note?: string
+          p_product_id: string
+        }
+        Returns: Json
+      }
+      reject_material_request: {
+        Args: { p_reason: string; p_request_id: string }
+        Returns: undefined
       }
       search_products: {
         Args: { p_category?: string; p_query?: string }
@@ -592,6 +906,10 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      undo_transaction: {
+        Args: { p_reason?: string; p_tx_id: string }
+        Returns: string
       }
       update_purchase_order_status: {
         Args: { p_po_id: string; p_status: string }

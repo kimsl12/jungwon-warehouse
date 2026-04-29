@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Download } from "lucide-react";
 
+import { RecordActivityPanel } from "@/components/activity-log/record-activity-panel";
 import { PurchaseOrderActions } from "@/components/purchase-orders/purchase-order-actions";
 import { PurchaseOrderReceiveForm } from "@/components/purchase-orders/purchase-order-receive-form";
 import { isFaxConfigured } from "@/lib/fax";
@@ -234,6 +235,12 @@ export default async function PurchaseOrderDetailPage({ params }: { params: Para
           />
         </div>
       )}
+
+      <RecordActivityPanel
+        tableName="purchase_orders"
+        recordId={po.id}
+        title="이 발주서의 활동 내역"
+      />
     </div>
   );
 }

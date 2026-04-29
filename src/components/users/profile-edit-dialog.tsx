@@ -22,8 +22,10 @@ type UserRow = {
   id: string;
   name: string | null;
   email: string | null;
+  role: string;
   title: string | null;
   phone: string | null;
+  assignedSiteIds: string[];
 };
 
 export function ProfileEditDialog({
@@ -55,6 +57,8 @@ export function ProfileEditDialog({
     onOpenChange(next);
     if (!next) setState(null);
   }
+
+  const showAssignedHint = user.role === "user";
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -118,6 +122,20 @@ export function ProfileEditDialog({
             </Button>
           </DialogFooter>
         </form>
+
+        {showAssignedHint && (
+          <div className="mt-4 rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
+            이 사용자의 <b>담당 현장</b>은 <b>현장 관리</b> 페이지에서 배정하세요.
+            {user.assignedSiteIds.length > 0 ? (
+              <>
+                {" "}
+                현재 <b className="text-foreground">{user.assignedSiteIds.length}곳</b> 배정되어 있습니다.
+              </>
+            ) : (
+              <> 현재 배정된 현장이 없습니다.</>
+            )}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

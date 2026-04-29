@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
+import { History } from "lucide-react";
 
 import { updateUserRole } from "@/app/(dashboard)/users/actions";
 import { ProfileEditDialog } from "@/components/users/profile-edit-dialog";
@@ -23,7 +25,9 @@ type UserRow = {
   title: string | null;
   phone: string | null;
   created_at: string;
+  assignedSiteIds: string[];
 };
+
 
 const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
   timeZone: "Asia/Seoul",
@@ -70,7 +74,7 @@ export function UsersTable({
     );
   }
 
-  const GRID = "grid-cols-[1fr_130px_120px_1fr_90px_110px_150px]";
+  const GRID = "grid-cols-[1fr_130px_120px_1fr_90px_110px_220px]";
 
   return (
     <>
@@ -120,11 +124,20 @@ export function UsersTable({
                 {dateFormatter.format(new Date(user.created_at))}
               </span>
               <div className="flex justify-end gap-1">
+                <Link
+                  href={`/activity-log?table=profiles&record_id=${user.id}`}
+                  title="이 사용자 역할 변경 이력"
+                  className="inline-flex items-center gap-1 rounded bg-surface-low px-2.5 py-1 text-xs text-muted-foreground hover:bg-surface-high transition-colors"
+                >
+                  <History className="h-3 w-3" /> 이력
+                </Link>
                 <button
                   onClick={() => setEditing(user)}
                   className="rounded bg-surface-low px-2.5 py-1 text-xs text-muted-foreground hover:bg-surface-high transition-colors"
                 >
-                  편집
+                  {user.role === "user" && user.assignedSiteIds.length > 0
+                    ? `편집·현장 ${user.assignedSiteIds.length}`
+                    : "편집"}
                 </button>
                 <button
                   onClick={() => handleRoleChange(user)}

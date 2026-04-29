@@ -6,16 +6,18 @@ type Product = Database["public"]["Tables"]["products"]["Row"];
 
 export type SiteOption = { id: string; name: string };
 
-const GRID_COLS = "grid-cols-[1fr_110px_110px_120px_80px_70px_110px]";
+const GRID_COLS = "grid-cols-[1fr_110px_110px_120px_90px_90px_70px_110px]";
 
 export function InventoryTable({
   products,
   isAdmin,
   sites,
+  availabilityMap,
 }: {
   products: Product[];
   isAdmin: boolean;
   sites: SiteOption[];
+  availabilityMap?: Record<string, { pending: number; available: number }>;
 }) {
   if (products.length === 0) {
     return (
@@ -33,7 +35,8 @@ export function InventoryTable({
         <span>대분류</span>
         <span>소분류</span>
         <span>변형 (색상·규격)</span>
-        <span className="text-right">수량</span>
+        <span className="text-right">재고</span>
+        <span className="text-right">가용 (대기 제외)</span>
         <span className="text-right">최소</span>
         <span className="text-right">작업</span>
       </div>
@@ -64,6 +67,31 @@ export function InventoryTable({
             {product.unit && (
               <span className="ml-0.5 text-xs font-normal text-muted-foreground">{product.unit}</span>
             )}
+          </span>
+          <span className="text-right text-sm tabular-nums">
+            {(() => {
+              const availability = availabilityMap?.[product.id];
+              if (!availability) {
+                return (
+                  <span className="text-muted-foreground">
+                    {product.quantity.toLocaleString("ko-KR")}
+                  </span>
+                );
+              }
+              const warn = availability.pending > 0;
+              return (
+                <span className="inline-flex flex-col items-end leading-tight">
+                  <span className={warn ? "font-semibold text-amber-700" : ""}>
+                    {availability.available.toLocaleString("ko-KR")}
+                  </span>
+                  {warn && (
+                    <span className="text-[10px] font-normal text-muted-foreground">
+                      대기 {availability.pending.toLocaleString("ko-KR")}
+                    </span>
+                  )}
+                </span>
+              );
+            })()}
           </span>
           <span className="text-right text-sm tabular-nums text-muted-foreground">
             {product.min_quantity.toLocaleString("ko-KR")}

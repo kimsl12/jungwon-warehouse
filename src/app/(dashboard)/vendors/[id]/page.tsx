@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
+import { RecordActivityPanel } from "@/components/activity-log/record-activity-panel";
 import { VendorPricesEditor } from "@/components/vendors/vendor-prices-editor";
 import { VendorPricesImport } from "@/components/vendors/vendor-prices-import";
 import { createClient } from "@/lib/supabase/server";
@@ -111,6 +112,12 @@ export default async function VendorDetailPage({ params }: { params: Params }) {
         <VendorPricesImport vendorId={vendor.id} />
         <VendorPricesEditor vendorId={vendor.id} prices={priceRows} />
       </div>
+
+      <RecordActivityPanel
+        tableName="vendors"
+        recordId={vendor.id}
+        title="이 거래처의 활동 내역"
+      />
     </div>
   );
 }

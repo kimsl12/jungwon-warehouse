@@ -52,6 +52,21 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const isAdmin = profileResult?.role === "admin";
 
+  // 가용 재고 계산: 이 페이지에 보이는 품목의 pending/available
+  const productIds = products.map((p) => p.id);
+  const availabilityMap = new Map<string, { pending: number; available: number }>();
+  if (productIds.length > 0) {
+    const { data: availability } = await supabase.rpc("get_inventory_availability", {
+      p_product_ids: productIds,
+    });
+    for (const row of availability ?? []) {
+      availabilityMap.set(row.product_id, {
+        pending: row.pending,
+        available: row.available,
+      });
+    }
+  }
+
   const categorySet = new Set<string>();
   for (const row of categoriesResult.data ?? []) {
     if (row.category) categorySet.add(row.category);
@@ -97,7 +112,12 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
       )}
 
       {hasFilter && <InventoryPagination currentPage={page} totalPages={totalPages} />}
-      <InventoryTable products={products} isAdmin={isAdmin} sites={sitesResult.data ?? []} />
+      <InventoryTable
+        products={products}
+        isAdmin={isAdmin}
+        sites={sitesResult.data ?? []}
+        availabilityMap={Object.fromEntries(availabilityMap)}
+      />
       {hasFilter && <InventoryPagination currentPage={page} totalPages={totalPages} />}
     </div>
   );

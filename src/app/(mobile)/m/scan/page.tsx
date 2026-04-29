@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { ClipboardCheck } from "lucide-react";
+
 import { MobileProductSearch } from "@/components/mobile/mobile-product-search";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,6 +23,20 @@ export default async function MobileScanPage({
 
   const supabase = await createClient();
 
+  // admin이면 "실사 모드" 링크 노출
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  let isAdmin = false;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    isAdmin = profile?.role === "admin";
+  }
+
   // Only fetch when there's a search query (search-first for 3800+ items)
   let products: {
     id: string;
@@ -36,7 +53,7 @@ export default async function MobileScanPage({
     const { data } = await supabase
       .rpc("search_products", { p_query: q, p_category: undefined })
       .select("id, name, category, unit, variant, quantity, min_quantity, location")
-      .limit(50);
+      .limit(200);
     products = data ?? [];
   }
 
@@ -50,6 +67,15 @@ export default async function MobileScanPage({
       </div>
 
       <MobileProductSearch initialQuery={q} />
+
+      {isAdmin && (
+        <Link
+          href="/m/audit"
+          className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-md border border-secondary/30 bg-secondary/5 text-xs font-medium text-secondary active:bg-secondary/10"
+        >
+          <ClipboardCheck className="h-4 w-4" /> 재고 실사 모드
+        </Link>
+      )}
 
       <div className="space-y-2">
         {q.length === 0 ? (
@@ -105,9 +131,9 @@ export default async function MobileScanPage({
             );
           })
         )}
-        {products.length === 50 && (
+        {products.length === 200 && (
           <p className="px-1 py-2 text-center text-xs text-muted-foreground">
-            상위 50건만 표시 — 더 정확한 검색어를 입력하세요
+            상위 200건만 표시 — 더 정확한 검색어를 입력하세요
           </p>
         )}
       </div>

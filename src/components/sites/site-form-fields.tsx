@@ -6,7 +6,6 @@ type FieldErrors = Record<string, string[] | undefined> | undefined;
 export type SiteFormDefaults = {
   name?: string | null;
   address?: string | null;
-  contact?: string | null;
   note?: string | null;
 };
 
@@ -49,19 +48,6 @@ export function SiteFormFields({
           maxLength={200}
           defaultValue={defaults?.address ?? ""}
           disabled={disabled}
-        />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="site-contact">연락처 (선택)</Label>
-        <Input
-          id="site-contact"
-          name="contact"
-          type="text"
-          maxLength={50}
-          defaultValue={defaults?.contact ?? ""}
-          disabled={disabled}
-          placeholder="담당자명, 전화번호 등"
         />
       </div>
 

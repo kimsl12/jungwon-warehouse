@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
+import { History } from "lucide-react";
 
 import { updateProduct, type ProductFormState } from "@/app/(dashboard)/inventory/actions";
 import { Button } from "@/components/ui/button";
@@ -71,6 +73,20 @@ export function ProductEditDialog({
           {isAdmin && (
             <div className="mt-4 border-t pt-4">
               <ProductAliases productId={product.id} />
+            </div>
+          )}
+          {isAdmin && (
+            <div className="mt-4 border-t pt-4 flex items-center justify-between gap-3">
+              <div className="text-xs text-muted-foreground">
+                품목 메타정보 변경(이름·분류·위치 등) 이력 확인
+              </div>
+              <Link
+                href={`/activity-log?table=products&record_id=${product.id}`}
+                target="_blank"
+                className="inline-flex items-center gap-1 rounded border px-2 py-1 text-[11px] text-foreground hover:bg-surface-low"
+              >
+                <History className="h-3 w-3" /> 변경 이력
+              </Link>
             </div>
           )}
           {state?.error && (

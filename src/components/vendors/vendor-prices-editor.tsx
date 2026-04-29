@@ -58,7 +58,7 @@ export function VendorPricesEditor({
       const { data } = await supabase
         .rpc("search_products", { p_query: query })
         .select("id, name, variant, unit, category")
-        .limit(10);
+        .limit(200);
       setResults((data ?? []) as ProductOption[]);
       setSearching(false);
     }, 250);
@@ -131,7 +131,7 @@ export function VendorPricesEditor({
               />
             </div>
             {results.length > 0 && (
-              <div className="rounded border bg-background max-h-56 overflow-y-auto">
+              <div className="rounded border bg-background max-h-[60vh] overflow-y-auto">
                 {results.map((p) => (
                   <button
                     key={p.id}
