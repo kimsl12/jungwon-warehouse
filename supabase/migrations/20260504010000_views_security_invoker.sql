@@ -5,9 +5,10 @@
 --
 -- 현재 transactions SELECT 정책은 모든 authenticated 에게 허용이라 동작에는
 -- 변화 없으나, 향후 RLS 정책이 강화되어도 view 가 우회하지 않도록 차단.
+--
+-- 참고: outgoing_by_user / outgoing_by_site 는 마이그레이션
+-- 20260422120000 에서 RPC 함수로 교체되며 DROP 됨 → 여기 포함 X.
 
 ALTER VIEW public.daily_transaction_summary   SET (security_invoker = true);
 ALTER VIEW public.monthly_transaction_summary SET (security_invoker = true);
 ALTER VIEW public.top_products_by_outgoing    SET (security_invoker = true);
-ALTER VIEW public.outgoing_by_user            SET (security_invoker = true);
-ALTER VIEW public.outgoing_by_site            SET (security_invoker = true);
