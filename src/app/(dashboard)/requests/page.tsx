@@ -28,10 +28,10 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
 ];
 
 const STATUS_META: Record<string, { label: string; tone: string }> = {
-  submitted: { label: "대기", tone: "bg-amber-100 text-amber-700" },
-  approved: { label: "승인", tone: "bg-blue-100 text-blue-700" },
-  fulfilled: { label: "출고완료", tone: "bg-emerald-100 text-emerald-700" },
-  rejected: { label: "거절", tone: "bg-red-100 text-red-700" },
+  submitted: { label: "대기", tone: "bg-warning-bg text-warning" },
+  approved: { label: "승인", tone: "bg-info-bg text-info" },
+  fulfilled: { label: "출고완료", tone: "bg-success-bg text-success" },
+  rejected: { label: "거절", tone: "bg-danger-bg text-danger" },
   canceled: { label: "취소", tone: "bg-muted text-muted-foreground" },
 };
 
@@ -239,7 +239,7 @@ export default async function RequestsPage({ searchParams }: { searchParams: Sea
             const progress = progressMap.get(r.id) ?? { total: 0, fulfilled: 0 };
             const urgentBgClass =
               r.is_urgent && r.status === "submitted"
-                ? "bg-red-50/50 hover:bg-red-50"
+                ? "bg-danger-bg/50 hover:bg-danger-bg"
                 : "hover:bg-surface-low/50";
             return (
               <Link
@@ -253,7 +253,7 @@ export default async function RequestsPage({ searchParams }: { searchParams: Sea
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">
                     {r.is_urgent && (
-                      <span className="mr-1.5 inline-block rounded bg-red-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-red-700">
+                      <span className="mr-1.5 inline-block rounded bg-danger-bg px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-danger">
                         긴급
                       </span>
                     )}
@@ -263,7 +263,7 @@ export default async function RequestsPage({ searchParams }: { searchParams: Sea
                     <p className="text-xs text-muted-foreground truncate">{r.note}</p>
                   )}
                   {r.is_urgent && r.urgent_reason && (
-                    <p className="text-xs text-red-700 truncate">⚠ {r.urgent_reason}</p>
+                    <p className="text-xs text-danger truncate">⚠ {r.urgent_reason}</p>
                   )}
                 </div>
                 <span className="text-sm text-muted-foreground truncate">

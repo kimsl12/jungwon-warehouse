@@ -108,8 +108,8 @@ export function TransactionsTable({
                     className={cn(
                       "inline-flex items-center rounded px-2 py-0.5 text-xs font-medium",
                       tx.type === "in"
-                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
-                        : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+                        ? "bg-success-bg text-success dark:bg-emerald-950 dark:text-emerald-300"
+                        : "bg-warning-bg text-warning dark:bg-amber-950 dark:text-amber-300",
                     )}
                   >
                     {tx.type === "in" ? "입고" : "출고"}
@@ -120,7 +120,7 @@ export function TransactionsTable({
                     </span>
                   )}
                   {isReversal && (
-                    <span className="ml-1.5 inline-flex items-center rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-blue-700">
+                    <span className="ml-1.5 inline-flex items-center rounded bg-info-bg px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-info">
                       역방향
                     </span>
                   )}

@@ -26,13 +26,13 @@ export async function RequestAlertBar() {
   if (urgent === 0 && pending === 0) return null;
 
   return (
-    <div className="sticky top-14 z-20 flex items-center gap-3 border-b bg-gradient-to-r from-amber-50 via-background to-background px-6 py-2 text-xs">
+    <div className="sticky top-14 z-20 flex items-center gap-3 border-b border-border bg-warning-bg/40 px-6 py-2 text-xs">
       <div className="flex items-center gap-3 text-muted-foreground">
         <span className="font-semibold text-foreground">대기 중 자재 신청</span>
         {urgent > 0 && (
           <Link
             href="/requests?status=submitted&urgent=1"
-            className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 font-semibold text-red-700 hover:bg-red-200"
+            className="inline-flex items-center gap-1 rounded-full bg-danger-bg px-2.5 py-1 font-semibold text-danger transition-colors hover:bg-danger-bg/70"
           >
             <AlertCircle className="h-3.5 w-3.5" />
             긴급 {urgent}건
@@ -41,7 +41,7 @@ export async function RequestAlertBar() {
         {pending > 0 && (
           <Link
             href="/requests?status=submitted"
-            className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 font-semibold text-amber-700 hover:bg-amber-200"
+            className="inline-flex items-center gap-1 rounded-full bg-warning-bg px-2.5 py-1 font-semibold text-warning transition-colors hover:bg-warning-bg/70"
           >
             <Clock className="h-3.5 w-3.5" />
             일반 {pending}건

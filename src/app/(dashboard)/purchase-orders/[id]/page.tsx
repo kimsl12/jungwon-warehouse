@@ -147,7 +147,7 @@ export default async function PurchaseOrderDetailPage({ params }: { params: Para
             return (
               <div
                 key={it.id}
-                className={`grid grid-cols-[1fr_100px_60px_80px_90px_100px_100px_1fr] gap-2 items-center px-3 py-2 border-t text-xs ${fulfilled ? "bg-emerald-50/40" : ""}`}
+                className={`grid grid-cols-[1fr_100px_60px_80px_90px_100px_100px_1fr] gap-2 items-center px-3 py-2 border-t text-xs ${fulfilled ? "bg-success-bg/40" : ""}`}
               >
                 <div className="min-w-0">
                   <p className="font-medium truncate">
@@ -167,7 +167,7 @@ export default async function PurchaseOrderDetailPage({ params }: { params: Para
                 <span
                   className={
                     "text-right tabular-nums " +
-                    (fulfilled ? "text-emerald-700 font-semibold" : "text-muted-foreground")
+                    (fulfilled ? "text-success font-semibold" : "text-muted-foreground")
                   }
                 >
                   {nf.format(it.received_quantity)}
@@ -270,11 +270,11 @@ function StatusBadge({ status }: { status: PoStatus }) {
   const label = PO_STATUS_LABEL[status];
   const tone =
     status === "received"
-      ? "bg-emerald-100 text-emerald-700"
+      ? "bg-success-bg text-success"
       : status === "receiving"
-        ? "bg-amber-100 text-amber-700"
+        ? "bg-warning-bg text-warning"
         : status === "sent"
-          ? "bg-blue-100 text-blue-700"
+          ? "bg-info-bg text-info"
           : status === "canceled"
             ? "bg-muted text-muted-foreground"
             : "bg-surface-high text-muted-foreground";

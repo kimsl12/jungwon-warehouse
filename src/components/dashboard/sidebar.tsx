@@ -3,19 +3,21 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  Package,
   ArrowDownToLine,
   ArrowUpFromLine,
-  MapPin,
-  Users,
-  FileText,
   BarChart3,
+  Boxes,
   Building2,
   ClipboardList,
-  Boxes,
+  FileText,
+  LayoutDashboard,
+  MapPin,
+  Package,
+  Users,
+  Warehouse,
 } from "lucide-react";
 
+import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -32,9 +34,9 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/outbound", label: "출고", icon: ArrowUpFromLine },
   { href: "/reports", label: "리포트", icon: BarChart3 },
   { href: "/sites", label: "현장 관리", icon: MapPin, adminOnly: true },
-  { href: "/vendors", label: "거래처 관리", icon: Building2, adminOnly: true },
-  { href: "/purchase-orders", label: "발주서", icon: ClipboardList, adminOnly: true },
   { href: "/requests", label: "자재 신청", icon: Boxes, adminOnly: true },
+  { href: "/purchase-orders", label: "발주서", icon: ClipboardList, adminOnly: true },
+  { href: "/vendors", label: "거래처 관리", icon: Building2, adminOnly: true },
   { href: "/users", label: "사용자", icon: Users, adminOnly: true },
   { href: "/activity-log", label: "활동 로그", icon: FileText, adminOnly: true },
 ];
@@ -47,77 +49,56 @@ export function DashboardSidebar({
   userName: string;
 }) {
   const pathname = usePathname();
-  const items = NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin);
+  const items = NAV_ITEMS.filter((i) => !i.adminOnly || isAdmin);
 
   return (
-    <aside className="hidden md:flex h-svh w-60 flex-col sticky top-0 left-0 bg-surface-low z-40">
-      <div className="flex flex-col h-full py-6">
-        {/* Branding */}
-        <div className="px-6 mb-8">
-          <h1 className="text-lg font-bold tracking-tight text-foreground">
+    <aside className="sticky top-0 left-0 z-40 hidden h-svh w-[232px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
+      <div className="flex h-16 items-center gap-2.5 border-b border-sidebar-border px-[18px]">
+        <div className="inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
+          <Warehouse className="size-[18px]" strokeWidth={2} />
+        </div>
+        <div className="min-w-0">
+          <div className="truncate font-display text-[15px] font-semibold tracking-tight">
             정원전기
-          </h1>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mt-0.5">
-            재고관리 시스템
+          </div>
+          <div className="text-[11px] text-muted-foreground">재고관리 시스템</div>
+        </div>
+      </div>
+
+      <nav className="flex-1 overflow-auto px-2 py-2.5">
+        {items.map((item) => {
+          const active =
+            pathname === item.href || pathname.startsWith(item.href + "/");
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "mb-0.5 flex h-9 items-center gap-2.5 rounded-md px-2.5 text-[13px] transition-colors",
+                active
+                  ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
+                  : "font-medium text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+              )}
+            >
+              <Icon className="size-[18px] shrink-0" />
+              <span className="flex-1 truncate">{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="flex items-center gap-2.5 border-t border-sidebar-border p-3">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+          {userName.charAt(0)}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-semibold leading-tight">{userName}</p>
+          <p className="text-[11px] text-muted-foreground">
+            {isAdmin ? "관리자" : "사용자"}
           </p>
         </div>
-
-        {/* CTA */}
-        <div className="px-4 mb-6">
-          <Link
-            href="/inventory"
-            className="flex w-full items-center justify-center gap-2 rounded bg-gradient-to-b from-primary to-[#1a202c] px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90"
-          >
-            <Package className="h-4 w-4" />
-            재고 조회
-          </Link>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 px-3 space-y-0.5">
-          {items.map((item) => {
-            const active =
-              pathname === item.href || pathname.startsWith(item.href + "/");
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded px-3 py-2.5 text-sm font-medium transition-colors relative",
-                  active
-                    ? "bg-card text-foreground"
-                    : "text-muted-foreground hover:bg-card/60 hover:text-foreground",
-                )}
-              >
-                {active && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r bg-secondary" />
-                )}
-                <Icon className="h-[18px] w-[18px] shrink-0" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Bottom section */}
-        <div className="mt-auto px-3">
-          <div className="px-3 py-2.5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                {userName.charAt(0)}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">
-                  {userName}
-                </p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                  {isAdmin ? "관리자" : "사용자"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ThemeToggle />
       </div>
     </aside>
   );

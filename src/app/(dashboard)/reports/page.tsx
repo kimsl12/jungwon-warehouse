@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowDownToLine, ArrowUpFromLine, TrendingUp } from "lucide-react";
 
 import { MonthlyTransactionsChart } from "@/components/dashboard/monthly-transactions-chart";
 import {
@@ -6,6 +7,7 @@ import {
   type TopOutgoingPoint,
 } from "@/components/dashboard/top-outgoing-chart";
 import { ReportsRangeFilter } from "@/components/dashboard/reports-range-filter";
+import { KPICard } from "@/components/shared/kpi-card";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeMonthlySummary } from "@/lib/summary-normalizers";
 
@@ -104,42 +106,51 @@ export default async function ReportsPage({ searchParams }: { searchParams: Sear
   const rangeParams = new URLSearchParams({ type: "out", from: fromYmd, to: toYmd });
 
   return (
-    <div className="space-y-8">
-      <div>
-        <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">분석</p>
-        <h2 className="text-2xl font-bold tracking-tight mt-1">리포트</h2>
-        <p className="text-sm text-muted-foreground mt-0.5">최근 12개월 입출고 추이와 담당자·현장별 출고 집계</p>
-      </div>
+    <div className="space-y-5">
+      <p className="text-sm text-muted-foreground">
+        최근 12개월 입출고 추이와 담당자·현장별 출고 집계
+      </p>
 
-      {/* KPI — fixed 12 months */}
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded bg-card p-5">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">12개월 입고</p>
-          <p className="text-3xl font-extrabold mt-1 tabular-nums text-emerald-600">{totalIn12mo.toLocaleString("ko-KR")}</p>
-        </div>
-        <div className="rounded bg-card p-5">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">12개월 출고</p>
-          <p className="text-3xl font-extrabold mt-1 tabular-nums">{totalOut12mo.toLocaleString("ko-KR")}</p>
-        </div>
-        <div className="rounded bg-card p-5">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">이번 달 출고</p>
-          <p className="text-3xl font-extrabold mt-1 tabular-nums">{currentMonth?.out.toLocaleString("ko-KR") ?? "0"}</p>
-          {monthOverMonthOut !== null && (
-            <p className={monthOverMonthOut >= 0 ? "text-xs font-medium text-secondary mt-1" : "text-xs font-medium text-emerald-600 mt-1"}>
-              {monthOverMonthOut >= 0 ? "+" : ""}{monthOverMonthOut.toFixed(1)}% 전월 대비
-            </p>
-          )}
-        </div>
+        <KPICard
+          label="12개월 입고"
+          value={totalIn12mo.toLocaleString("ko-KR")}
+          icon={ArrowDownToLine}
+          iconAccent="success"
+        />
+        <KPICard
+          label="12개월 출고"
+          value={totalOut12mo.toLocaleString("ko-KR")}
+          icon={ArrowUpFromLine}
+          iconAccent="brand"
+        />
+        <KPICard
+          label="이번 달 출고"
+          value={currentMonth?.out.toLocaleString("ko-KR") ?? "0"}
+          icon={TrendingUp}
+          iconAccent="info"
+          delta={
+            monthOverMonthOut !== null
+              ? `${monthOverMonthOut >= 0 ? "+" : ""}${monthOverMonthOut.toFixed(1)}%`
+              : undefined
+          }
+          deltaTone={
+            monthOverMonthOut !== null && monthOverMonthOut >= 0
+              ? "warning"
+              : "success"
+          }
+          deltaCaption="전월 대비"
+        />
       </div>
 
       {/* Monthly chart — fixed 12 months */}
-      <div className="rounded bg-card p-6">
+      <div className="rounded-lg border border-border bg-card p-5 shadow-xs">
         <h3 className="text-lg font-bold mb-4">월별 입출고 추이</h3>
         <MonthlyTransactionsChart data={monthlyData} />
       </div>
 
       {/* Top outgoing — all time */}
-      <div className="rounded bg-card p-6">
+      <div className="rounded-lg border border-border bg-card p-5 shadow-xs">
         <h3 className="text-lg font-bold mb-4">출고 상위 품목 (Top 10)</h3>
         {topOutgoing.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">아직 출고 내역이 없습니다.</p>
@@ -161,7 +172,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Sear
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded bg-card p-6">
+          <div className="rounded-lg border border-border bg-card p-5 shadow-xs">
             <h4 className="text-sm font-bold mb-3 text-muted-foreground">인원별 출고</h4>
             {outByUser.length === 0 ? (
               <p className="py-4 text-center text-sm text-muted-foreground">선택 기간에 출고 내역이 없습니다.</p>
@@ -196,7 +207,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Sear
             )}
           </div>
 
-          <div className="rounded bg-card p-6">
+          <div className="rounded-lg border border-border bg-card p-5 shadow-xs">
             <h4 className="text-sm font-bold mb-3 text-muted-foreground">현장별 출고</h4>
             {outBySite.length === 0 ? (
               <p className="py-4 text-center text-sm text-muted-foreground">선택 기간에 출고 내역이 없습니다.</p>

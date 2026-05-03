@@ -11,10 +11,10 @@ export const dynamic = "force-dynamic";
 type Params = Promise<{ id: string }>;
 
 const REQUEST_STATUS_META: Record<string, { label: string; tone: string }> = {
-  submitted: { label: "대기", tone: "bg-amber-100 text-amber-700" },
-  approved: { label: "승인", tone: "bg-blue-100 text-blue-700" },
-  fulfilled: { label: "출고완료", tone: "bg-emerald-100 text-emerald-700" },
-  rejected: { label: "거절", tone: "bg-red-100 text-red-700" },
+  submitted: { label: "대기", tone: "bg-warning-bg text-warning" },
+  approved: { label: "승인", tone: "bg-info-bg text-info" },
+  fulfilled: { label: "출고완료", tone: "bg-success-bg text-success" },
+  rejected: { label: "거절", tone: "bg-danger-bg text-danger" },
   canceled: { label: "취소", tone: "bg-muted text-muted-foreground" },
 };
 
@@ -135,7 +135,7 @@ export default async function SiteDetailPage({ params }: { params: Params }) {
             </h2>
             <div className="mt-2 flex items-center gap-2">
               {site.active ? (
-                <span className="inline-block rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
+                <span className="inline-block rounded bg-success-bg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-success">
                   활성
                 </span>
               ) : (
@@ -246,7 +246,7 @@ export default async function SiteDetailPage({ params }: { params: Params }) {
                       {meta.label}
                     </span>
                     {r.is_urgent && (
-                      <span className="inline-block rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-700">
+                      <span className="inline-block rounded bg-danger-bg px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-danger">
                         긴급
                       </span>
                     )}
@@ -302,8 +302,8 @@ export default async function SiteDetailPage({ params }: { params: Params }) {
                   <span
                     className={`inline-block rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
                       isOut
-                        ? "bg-red-100 text-red-700"
-                        : "bg-emerald-100 text-emerald-700"
+                        ? "bg-danger-bg text-danger"
+                        : "bg-success-bg text-success"
                     }`}
                   >
                     {isOut ? "출고" : "입고"}

@@ -142,7 +142,7 @@ export function RequestFulfillForm({
                 {it.fulfilled_quantity.toLocaleString("ko-KR")}
               </span>
               <span className="text-muted-foreground"> / </span>
-              <span className={isDone ? "text-emerald-600" : "text-amber-600 font-semibold"}>
+              <span className={isDone ? "text-success" : "text-warning font-semibold"}>
                 {remaining.toLocaleString("ko-KR")}
               </span>
             </span>

@@ -95,8 +95,8 @@ export function VendorPricesImport({ vendorId }: { vendorId: string }) {
       )}
 
       {result && result.ok && (
-        <div className="rounded border bg-emerald-50 px-3 py-3 text-xs space-y-1.5 dark:bg-emerald-950/30">
-          <p className="font-semibold text-emerald-700 dark:text-emerald-300">
+        <div className="rounded border bg-success-bg px-3 py-3 text-xs space-y-1.5 dark:bg-emerald-950/30">
+          <p className="font-semibold text-success dark:text-emerald-300">
             완료 — 신규 {result.inserted}건 · 갱신 {result.updated}건 · 건너뜀 {result.skipped}건
           </p>
           {(result.warnings.length > 0 || result.matchWarnings.length > 0) && (

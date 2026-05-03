@@ -1,149 +1,267 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css");
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* shadcn 기본 시맨틱 */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  /* Architectural Ledger custom surfaces */
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Charts */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Sidebar */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Surface tiers (Architectural Ledger 호환 — 코드에서 사용 중) */
   --color-surface: var(--surface);
   --color-surface-low: var(--surface-low);
   --color-surface-high: var(--surface-high);
   --color-surface-highest: var(--surface-highest);
   --color-on-surface-variant: var(--on-surface-variant);
   --color-secondary-container: var(--secondary-container);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Brand scale */
+  --color-brand-50: var(--c-brand-50);
+  --color-brand-100: var(--c-brand-100);
+  --color-brand-200: var(--c-brand-200);
+  --color-brand-300: var(--c-brand-300);
+  --color-brand-400: var(--c-brand-400);
+  --color-brand-500: var(--c-brand-500);
+  --color-brand-600: var(--c-brand-600);
+  --color-brand-700: var(--c-brand-700);
+  --color-brand-800: var(--c-brand-800);
+  --color-brand-900: var(--c-brand-900);
+
+  /* Cream */
+  --color-cream-50: var(--c-cream-50);
+  --color-cream-100: var(--c-cream-100);
+  --color-cream-200: var(--c-cream-200);
+  --color-cream-300: var(--c-cream-300);
+
+  /* Status (semantic + bg) */
+  --color-success: var(--c-success);
+  --color-success-bg: var(--c-success-bg);
+  --color-warning: var(--c-warning);
+  --color-warning-bg: var(--c-warning-bg);
+  --color-danger: var(--c-danger);
+  --color-danger-bg: var(--c-danger-bg);
+  --color-info: var(--c-info);
+  --color-info-bg: var(--c-info-bg);
+
+  /* Fonts */
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-display);
+
+  /* Radii — README 명세 */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+  --radius-3xl: 36px;
+
+  /* Shadows */
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
 }
 
 /* ============================================================================
-   Architectural Ledger — Color System
-   Primary: Deep Obsidian (#030813)
-   Secondary: Terracotta (#914b1e)
-   Surface: Tonal layering (no borders)
+   Jungwon Inventory — Claude warm palette + Slate neutrals
+   Primary: Terracotta #C96442 · Surface: Cream-tinted neutrals
    ============================================================================ */
 
 :root {
-  --background: #fbf9f7;
-  --foreground: #1b1c1b;
-  --card: #ffffff;
-  --card-foreground: #1b1c1b;
-  --popover: #ffffff;
-  --popover-foreground: #1b1c1b;
-  --primary: #030813;
+  /* Brand scale */
+  --c-brand-50: #fbefe6;
+  --c-brand-100: #f4d9c4;
+  --c-brand-200: #ecbe9b;
+  --c-brand-300: #e0a074;
+  --c-brand-400: #d08858;
+  --c-brand-500: #c96442;
+  --c-brand-600: #b5482a;
+  --c-brand-700: #913a22;
+  --c-brand-800: #6e2c1a;
+  --c-brand-900: #4a1e12;
+
+  /* Cream / neutrals */
+  --c-cream-50: #faf7f2;
+  --c-cream-100: #f4efe6;
+  --c-cream-200: #eae2d2;
+  --c-cream-300: #ddd2be;
+  --c-n-0: #ffffff;
+  --c-n-25: #fbfaf7;
+  --c-n-50: #f6f4ef;
+  --c-n-100: #ece9e2;
+  --c-n-200: #dbd7ce;
+  --c-n-300: #bbb6ab;
+  --c-n-400: #8e8a82;
+  --c-n-500: #6b6862;
+  --c-n-600: #4d4a45;
+  --c-n-700: #34322e;
+  --c-n-800: #232220;
+  --c-n-900: #161513;
+
+  /* Status */
+  --c-success: #4f8a55;
+  --c-success-bg: #e7f0e5;
+  --c-warning: #c28b2b;
+  --c-warning-bg: #f8efd8;
+  --c-danger: #b5482a;
+  --c-danger-bg: #f6e0d5;
+  --c-info: #4a6e8e;
+  --c-info-bg: #e2eaf1;
+
+  /* shadcn semantic mapping — light */
+  --background: var(--c-cream-50);
+  --foreground: var(--c-n-800);
+  --card: var(--c-n-0);
+  --card-foreground: var(--c-n-800);
+  --popover: var(--c-n-0);
+  --popover-foreground: var(--c-n-800);
+  --primary: var(--c-brand-500);
   --primary-foreground: #ffffff;
-  --secondary: #914b1e;
-  --secondary-foreground: #ffffff;
-  --muted: #f5f3f2;
-  --muted-foreground: #45474c;
-  --accent: #f5f3f2;
-  --accent-foreground: #1b1c1b;
-  --destructive: #ba1a1a;
-  --border: rgba(198, 198, 204, 0.15);
-  --input: #e4e2e1;
-  --ring: rgba(145, 75, 30, 0.2);
-  /* Surface tonal tiers */
-  --surface: #fbf9f7;
-  --surface-low: #f5f3f2;
-  --surface-high: #e9e8e6;
-  --surface-highest: #e4e2e1;
-  --on-surface-variant: #45474c;
-  --secondary-container: #fea36e;
+  --secondary: var(--c-brand-100);
+  --secondary-foreground: var(--c-brand-700);
+  --muted: var(--c-cream-100);
+  --muted-foreground: var(--c-n-500);
+  --accent: var(--c-brand-50);
+  --accent-foreground: var(--c-brand-700);
+  --destructive: var(--c-danger);
+  --border: var(--c-n-100);
+  --input: var(--c-n-200);
+  --ring: var(--c-brand-500);
+
+  /* Surface tiers — 기존 코드 호환 */
+  --surface: var(--c-n-0);
+  --surface-low: var(--c-cream-100);
+  --surface-high: var(--c-n-0);
+  --surface-highest: var(--c-n-100);
+  --on-surface-variant: var(--c-n-500);
+  --secondary-container: var(--c-brand-200);
+
   /* Charts */
-  --chart-1: #030813;
-  --chart-2: #914b1e;
-  --chart-3: #fea36e;
-  --chart-4: #45474c;
-  --chart-5: #c6c6cc;
-  --radius: 0.25rem;
+  --chart-1: var(--c-brand-500);
+  --chart-2: var(--c-success);
+  --chart-3: var(--c-info);
+  --chart-4: var(--c-warning);
+  --chart-5: var(--c-n-500);
+
   /* Sidebar */
-  --sidebar: #f5f3f2;
-  --sidebar-foreground: #1b1c1b;
-  --sidebar-primary: #914b1e;
+  --sidebar: var(--c-n-0);
+  --sidebar-foreground: var(--c-n-800);
+  --sidebar-primary: var(--c-brand-500);
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #efedec;
-  --sidebar-accent-foreground: #1b1c1b;
-  --sidebar-border: rgba(198, 198, 204, 0.1);
-  --sidebar-ring: rgba(145, 75, 30, 0.2);
+  --sidebar-accent: var(--c-brand-50);
+  --sidebar-accent-foreground: var(--c-brand-700);
+  --sidebar-border: var(--c-n-100);
+  --sidebar-ring: var(--c-brand-500);
+
+  /* Radii base (shadcn) */
+  --radius: 0.625rem;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(35, 34, 32, 0.04);
+  --shadow-sm: 0 1px 2px rgba(35, 34, 32, 0.04), 0 1px 3px rgba(35, 34, 32, 0.06);
+  --shadow-md: 0 4px 12px -2px rgba(35, 34, 32, 0.08), 0 2px 4px rgba(35, 34, 32, 0.04);
+  --shadow-lg: 0 12px 28px -8px rgba(35, 34, 32, 0.14), 0 4px 8px rgba(35, 34, 32, 0.05);
+
+  /* Fonts */
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system,
+    BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", system-ui,
+    sans-serif;
+  --font-display: "Copernicus", "Source Serif Pro", "Noto Serif KR", Georgia,
+    serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas,
+    monospace;
 }
 
 .dark {
-  --background: #0a0e18;
-  --foreground: #e4e2e1;
-  --card: #111827;
-  --card-foreground: #e4e2e1;
-  --popover: #111827;
-  --popover-foreground: #e4e2e1;
-  --primary: #c1c6d7;
-  --primary-foreground: #030813;
-  --secondary: #ffb68e;
-  --secondary-foreground: #331200;
-  --muted: #1a202c;
-  --muted-foreground: #828796;
-  --accent: #1a202c;
-  --accent-foreground: #e4e2e1;
+  --background: #1a1816;
+  --foreground: #f0ede7;
+  --card: #232220;
+  --card-foreground: #f0ede7;
+  --popover: #2a2926;
+  --popover-foreground: #f0ede7;
+  --primary: var(--c-brand-300);
+  --primary-foreground: #1a1816;
+  --secondary: #34322e;
+  --secondary-foreground: #f0ede7;
+  --muted: #1f1e1c;
+  --muted-foreground: #a8a39a;
+  --accent: #2a2926;
+  --accent-foreground: var(--c-brand-300);
   --destructive: #ff897d;
-  --border: rgba(198, 198, 204, 0.08);
-  --input: rgba(255, 255, 255, 0.1);
-  --ring: rgba(193, 198, 215, 0.2);
-  --surface: #0a0e18;
-  --surface-low: #111827;
-  --surface-high: #1a202c;
-  --surface-highest: #252d3c;
-  --on-surface-variant: #828796;
-  --secondary-container: #743507;
-  --chart-1: #c1c6d7;
-  --chart-2: #ffb68e;
-  --chart-3: #fea36e;
-  --chart-4: #828796;
-  --chart-5: #45474c;
-  --sidebar: #111827;
-  --sidebar-foreground: #e4e2e1;
-  --sidebar-primary: #ffb68e;
-  --sidebar-primary-foreground: #331200;
-  --sidebar-accent: #1a202c;
-  --sidebar-accent-foreground: #e4e2e1;
-  --sidebar-border: rgba(255, 255, 255, 0.06);
-  --sidebar-ring: rgba(193, 198, 215, 0.2);
+  --border: #2d2c29;
+  --input: #3a3835;
+  --ring: var(--c-brand-300);
+
+  --surface: #232220;
+  --surface-low: #1f1e1c;
+  --surface-high: #2a2926;
+  --surface-highest: #34322e;
+  --on-surface-variant: #a8a39a;
+  --secondary-container: #6e2c1a;
+
+  --c-success-bg: rgba(79, 138, 85, 0.16);
+  --c-warning-bg: rgba(194, 139, 43, 0.18);
+  --c-danger-bg: rgba(181, 72, 42, 0.18);
+  --c-info-bg: rgba(74, 110, 142, 0.18);
+
+  --chart-1: var(--c-brand-300);
+  --chart-2: #6faa75;
+  --chart-3: #6f8fb0;
+  --chart-4: #d8a95a;
+  --chart-5: #a8a39a;
+
+  --sidebar: #232220;
+  --sidebar-foreground: #f0ede7;
+  --sidebar-primary: var(--c-brand-300);
+  --sidebar-primary-foreground: #1a1816;
+  --sidebar-accent: #2a2926;
+  --sidebar-accent-foreground: var(--c-brand-300);
+  --sidebar-border: #2d2c29;
+  --sidebar-ring: var(--c-brand-300);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.45);
 }
 
 @layer base {
@@ -152,6 +270,8 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "ss02";
   }
   html {
     @apply font-sans;

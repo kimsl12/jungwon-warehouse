@@ -15,10 +15,10 @@ import {
 import type { MonthlyChartPoint } from "@/lib/summary-normalizers";
 
 const COLORS = {
-  inBar: "#030813",
-  outBar: "#fea36e",
-  inLine: "#45474c",
-  outLine: "#914b1e",
+  inBar: "#4F8A55",
+  outBar: "#C96442",
+  inLine: "#34322E",
+  outLine: "#913A22",
 };
 
 const LABEL: Record<string, string> = {

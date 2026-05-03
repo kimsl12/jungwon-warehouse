@@ -54,7 +54,7 @@ export function TopOutgoingChart({ data }: { data: TopOutgoingPoint[] }) {
           }}
           formatter={(value) => [Number(value ?? 0).toLocaleString("ko-KR"), "출고 합계"]}
         />
-        <Bar dataKey="total" fill="#914b1e" radius={[0, 2, 2, 0]} />
+        <Bar dataKey="total" fill="#C96442" radius={[0, 2, 2, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

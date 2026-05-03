@@ -1,12 +1,13 @@
-import { LowStockBadge } from "@/components/inventory/low-stock-badge";
+import { Box } from "lucide-react";
+
 import { ProductRowActions } from "@/components/inventory/product-row-actions";
+import { StatusBadge } from "@/components/shared/status-badge";
+import { StockBar } from "@/components/shared/stock-bar";
 import type { Database } from "@/lib/database.types";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
 
 export type SiteOption = { id: string; name: string };
-
-const GRID_COLS = "grid-cols-[1fr_110px_110px_120px_90px_90px_70px_110px]";
 
 export function InventoryTable({
   products,
@@ -21,86 +22,126 @@ export function InventoryTable({
 }) {
   if (products.length === 0) {
     return (
-      <div className="rounded bg-card p-12 text-center">
+      <div className="rounded-lg border border-border bg-card p-12 text-center">
         <p className="text-sm text-muted-foreground">등록된 품목이 없습니다.</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded bg-card overflow-hidden">
-      {/* Header row */}
-      <div className={`grid ${GRID_COLS} gap-2 px-5 py-3 bg-surface-high text-[10px] font-semibold uppercase tracking-widest text-muted-foreground`}>
-        <span>품목명</span>
-        <span>대분류</span>
-        <span>소분류</span>
-        <span>변형 (색상·규격)</span>
-        <span className="text-right">재고</span>
-        <span className="text-right">가용 (대기 제외)</span>
-        <span className="text-right">최소</span>
-        <span className="text-right">작업</span>
-      </div>
-      {/* Rows */}
-      {products.map((product) => (
-        <div
-          key={product.id}
-          className={`grid ${GRID_COLS} gap-2 items-center px-5 py-3 hover:bg-surface-low/50 transition-colors`}
-        >
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-sm font-medium truncate" title={product.name}>{product.name}</span>
-            <LowStockBadge quantity={product.quantity} minQuantity={product.min_quantity} />
-          </div>
-          <span className="text-sm text-muted-foreground truncate">{product.category ?? "—"}</span>
-          <span className="text-xs text-muted-foreground truncate">{product.subcategory ?? "—"}</span>
-          <span
-            className={
-              product.variant
-                ? "inline-flex w-fit items-center rounded bg-surface-high px-2 py-0.5 text-xs font-medium text-foreground truncate"
-                : "text-xs text-muted-foreground/60"
-            }
-            title={product.variant ?? undefined}
-          >
-            {product.variant ?? "—"}
-          </span>
-          <span className="text-right text-sm tabular-nums font-semibold">
-            {product.quantity.toLocaleString("ko-KR")}
-            {product.unit && (
-              <span className="ml-0.5 text-xs font-normal text-muted-foreground">{product.unit}</span>
-            )}
-          </span>
-          <span className="text-right text-sm tabular-nums">
-            {(() => {
-              const availability = availabilityMap?.[product.id];
-              if (!availability) {
-                return (
-                  <span className="text-muted-foreground">
-                    {product.quantity.toLocaleString("ko-KR")}
-                  </span>
-                );
-              }
-              const warn = availability.pending > 0;
+    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-xs">
+      <div className="overflow-x-auto">
+        <table className="w-full text-[13px]">
+          <thead className="bg-muted">
+            <tr className="text-[10.5px] font-medium uppercase tracking-widest text-muted-foreground">
+              <th className="px-5 py-2.5 text-left font-medium">품목</th>
+              <th className="px-3 py-2.5 text-left font-medium">분류</th>
+              <th className="px-3 py-2.5 text-left font-medium">위치</th>
+              <th className="px-3 py-2.5 text-right font-medium">재고</th>
+              <th className="px-3 py-2.5 text-right font-medium">최소</th>
+              <th className="px-3 py-2.5 text-right font-medium">가용</th>
+              <th className="px-3 py-2.5 text-left font-medium">상태</th>
+              <th className="px-3 py-2.5 text-right font-medium">작업</th>
+            </tr>
+          </thead>
+          <tbody>
+            {products.map((p) => {
+              const status =
+                p.quantity === 0
+                  ? { tone: "danger" as const, label: "소진" }
+                  : p.quantity <= p.min_quantity
+                    ? { tone: "warning" as const, label: "부족" }
+                    : { tone: "success" as const, label: "정상" };
+              const availability = availabilityMap?.[p.id];
+              const showPending = availability && availability.pending > 0;
+
               return (
-                <span className="inline-flex flex-col items-end leading-tight">
-                  <span className={warn ? "font-semibold text-amber-700" : ""}>
-                    {availability.available.toLocaleString("ko-KR")}
-                  </span>
-                  {warn && (
-                    <span className="text-[10px] font-normal text-muted-foreground">
-                      대기 {availability.pending.toLocaleString("ko-KR")}
-                    </span>
-                  )}
-                </span>
+                <tr
+                  key={p.id}
+                  className="border-t border-border transition-colors hover:bg-muted/40"
+                >
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="inline-flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-brand-600 dark:text-brand-300">
+                        <Box className="size-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-foreground">
+                          {p.name}
+                        </div>
+                        {p.variant && (
+                          <div className="mt-0.5 text-[11.5px] text-muted-foreground">
+                            {p.variant}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-3 py-3 text-muted-foreground">
+                    {p.category ?? "—"}
+                    {p.subcategory && (
+                      <span className="text-[11px]"> / {p.subcategory}</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-3 font-mono text-[12px] text-muted-foreground">
+                    {p.location ?? "—"}
+                  </td>
+                  <td className="px-3 py-3">
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="font-semibold tabular-nums">
+                        {p.quantity.toLocaleString("ko-KR")}
+                        {p.unit && (
+                          <span className="ml-0.5 text-[11px] font-normal text-muted-foreground">
+                            {p.unit}
+                          </span>
+                        )}
+                      </span>
+                      <StockBar
+                        current={p.quantity}
+                        safe={p.min_quantity}
+                        showLabel={false}
+                        className="w-20"
+                      />
+                    </div>
+                  </td>
+                  <td className="px-3 py-3 text-right tabular-nums text-muted-foreground">
+                    {p.min_quantity.toLocaleString("ko-KR")}
+                    {p.unit && <span className="ml-0.5 text-[11px]">{p.unit}</span>}
+                  </td>
+                  <td className="px-3 py-3 text-right tabular-nums">
+                    {showPending ? (
+                      <div className="leading-tight">
+                        <div className="font-semibold text-warning">
+                          {availability!.available.toLocaleString("ko-KR")}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground">
+                          대기 {availability!.pending.toLocaleString("ko-KR")}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {(availability?.available ?? p.quantity).toLocaleString("ko-KR")}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-3">
+                    <StatusBadge tone={status.tone} dot>
+                      {status.label}
+                    </StatusBadge>
+                  </td>
+                  <td className="px-3 py-3 text-right">
+                    <ProductRowActions
+                      product={p}
+                      isAdmin={isAdmin}
+                      sites={sites}
+                    />
+                  </td>
+                </tr>
               );
-            })()}
-          </span>
-          <span className="text-right text-sm tabular-nums text-muted-foreground">
-            {product.min_quantity.toLocaleString("ko-KR")}
-          </span>
-          <div className="flex justify-end">
-            <ProductRowActions product={product} isAdmin={isAdmin} sites={sites} />
-          </div>
-        </div>
-      ))}
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

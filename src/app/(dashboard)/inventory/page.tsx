@@ -1,7 +1,6 @@
-import { InventoryHeader } from "@/components/inventory/inventory-header";
 import { InventoryPagination } from "@/components/inventory/inventory-pagination";
-import { InventorySearch } from "@/components/inventory/inventory-search";
 import { InventoryTable } from "@/components/inventory/inventory-table";
+import { InventoryToolbar } from "@/components/inventory/inventory-toolbar";
 import { createClient } from "@/lib/supabase/server";
 
 const PAGE_SIZE = 20;
@@ -13,7 +12,11 @@ type SearchParams = Promise<{
   import?: string;
 }>;
 
-export default async function InventoryPage({ searchParams }: { searchParams: SearchParams }) {
+export default async function InventoryPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const params = await searchParams;
   const search = params.q?.trim() ?? "";
   const category = params.category?.trim() ?? "";
@@ -25,7 +28,6 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
 
   const supabase = await createClient();
 
-  // Search-first mode: no filter → show low-stock only; with filter → RPC search
   const productsResult = hasFilter
     ? await supabase
         .rpc(
@@ -34,14 +36,19 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
           { count: "exact" },
         )
         .range(from, to)
-    : await supabase.rpc("get_low_stock_products", undefined, { count: "exact" }).range(from, to);
+    : await supabase
+        .rpc("get_low_stock_products", undefined, { count: "exact" })
+        .range(from, to);
 
-  // Distinct categories for the filter dropdown
   const [categoriesResult, profileResult, sitesResult] = await Promise.all([
     supabase.from("products").select("category").not("category", "is", null),
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return null;
-      const { data } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+      const { data } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
       return data;
     }),
     supabase.from("sites").select("id, name").eq("active", true).order("name"),
@@ -52,13 +59,16 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const isAdmin = profileResult?.role === "admin";
 
-  // 가용 재고 계산: 이 페이지에 보이는 품목의 pending/available
   const productIds = products.map((p) => p.id);
-  const availabilityMap = new Map<string, { pending: number; available: number }>();
+  const availabilityMap = new Map<
+    string,
+    { pending: number; available: number }
+  >();
   if (productIds.length > 0) {
-    const { data: availability } = await supabase.rpc("get_inventory_availability", {
-      p_product_ids: productIds,
-    });
+    const { data: availability } = await supabase.rpc(
+      "get_inventory_availability",
+      { p_product_ids: productIds },
+    );
     for (const row of availability ?? []) {
       availabilityMap.set(row.product_id, {
         pending: row.pending,
@@ -71,10 +81,16 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
   for (const row of categoriesResult.data ?? []) {
     if (row.category) categorySet.add(row.category);
   }
-  const categories = Array.from(categorySet).sort((a, b) => a.localeCompare(b, "ko"));
+  const categories = Array.from(categorySet).sort((a, b) =>
+    a.localeCompare(b, "ko"),
+  );
 
-  // Surface import results posted via redirect from /inventory/import
-  let importBanner: { inserted: number; updated: number; skipped: number; aliases: number } | null = null;
+  let importBanner: {
+    inserted: number;
+    updated: number;
+    skipped: number;
+    aliases: number;
+  } | null = null;
   if (params.import) {
     const sp = new URLSearchParams(params.import);
     importBanner = {
@@ -86,10 +102,11 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {importBanner && (
-        <div className="rounded-md border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
-          CSV 가져오기 완료 — 신규 {importBanner.inserted.toLocaleString("ko-KR")}건, 업데이트{" "}
+        <div className="rounded-md border border-success bg-success-bg px-4 py-3 text-sm text-success">
+          CSV 가져오기 완료 — 신규{" "}
+          {importBanner.inserted.toLocaleString("ko-KR")}건, 업데이트{" "}
           {importBanner.updated.toLocaleString("ko-KR")}건, 건너뜀{" "}
           {importBanner.skipped.toLocaleString("ko-KR")}건
           {importBanner.aliases > 0 && (
@@ -97,28 +114,39 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
           )}
         </div>
       )}
-      <InventoryHeader isAdmin={isAdmin} totalCount={totalCount} />
-      <InventorySearch categories={categories} initialSearch={search} initialCategory={category} />
+
+      <InventoryToolbar
+        categories={categories}
+        initialSearch={search}
+        initialCategory={category}
+        isAdmin={isAdmin}
+      />
 
       {!hasFilter && (
-        <div className="rounded-md border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-          제품명, 별칭, 또는 분류를 선택하면 품목이 표시됩니다.
+        <div className="rounded-md border border-border bg-muted/40 px-4 py-2.5 text-sm text-muted-foreground">
+          제품명·별칭 검색 또는 분류 선택 시 품목이 표시됩니다.
           {totalCount > 0 && (
-            <span className="ml-1 font-medium text-destructive">
-              현재 재고 부족 품목 {totalCount.toLocaleString("ko-KR")}건을 표시 중입니다.
+            <span className="ml-1 font-medium text-warning">
+              현재 부족 품목 {totalCount.toLocaleString("ko-KR")}건 표시 중.
             </span>
           )}
         </div>
       )}
 
-      {hasFilter && <InventoryPagination currentPage={page} totalPages={totalPages} />}
+      {hasFilter && (
+        <InventoryPagination currentPage={page} totalPages={totalPages} />
+      )}
+
       <InventoryTable
         products={products}
         isAdmin={isAdmin}
         sites={sitesResult.data ?? []}
         availabilityMap={Object.fromEntries(availabilityMap)}
       />
-      {hasFilter && <InventoryPagination currentPage={page} totalPages={totalPages} />}
+
+      {hasFilter && (
+        <InventoryPagination currentPage={page} totalPages={totalPages} />
+      )}
     </div>
   );
 }

@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { History } from "lucide-react";
+import { History, Trash2 } from "lucide-react";
 
-import { updateUserRole } from "@/app/(dashboard)/users/actions";
+import { deleteUser, updateUserRole } from "@/app/(dashboard)/users/actions";
 import { ProfileEditDialog } from "@/components/users/profile-edit-dialog";
 import {
   AlertDialog,
@@ -45,6 +45,7 @@ export function UsersTable({
 }) {
   const [confirmTarget, setConfirmTarget] = useState<{ user: UserRow; newRole: "admin" | "user" } | null>(null);
   const [editing, setEditing] = useState<UserRow | null>(null);
+  const [deleting, setDeleting] = useState<UserRow | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -66,6 +67,19 @@ export function UsersTable({
     });
   }
 
+  function confirmDelete() {
+    if (!deleting) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await deleteUser(deleting.id);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setDeleting(null);
+      }
+    });
+  }
+
   if (users.length === 0) {
     return (
       <div className="rounded bg-card p-12 text-center">
@@ -74,7 +88,7 @@ export function UsersTable({
     );
   }
 
-  const GRID = "grid-cols-[1fr_130px_120px_1fr_90px_110px_220px]";
+  const GRID = "grid-cols-[1fr_130px_120px_1fr_90px_110px_280px]";
 
   return (
     <>
@@ -145,6 +159,14 @@ export function UsersTable({
                 >
                   {user.role === "admin" ? "일반으로" : "관리자로"}
                 </button>
+                <button
+                  onClick={() => setDeleting(user)}
+                  disabled={user.id === currentUserId}
+                  title={user.id === currentUserId ? "자기 자신은 삭제할 수 없습니다" : "사용자 영구 삭제"}
+                  className="inline-flex items-center gap-1 rounded border border-destructive/30 px-2 py-1 text-[11px] text-destructive transition-colors hover:bg-destructive/5 disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  <Trash2 className="size-3" /> 삭제
+                </button>
               </div>
             </div>
           );
@@ -158,6 +180,33 @@ export function UsersTable({
           onOpenChange={(open) => !open && setEditing(null)}
         />
       )}
+
+      <AlertDialog open={deleting !== null} onOpenChange={(open) => { if (!open) { setDeleting(null); setError(null); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>사용자 삭제</AlertDialogTitle>
+            <AlertDialogDescription>
+              <span className="font-medium text-foreground">
+                {deleting?.name ?? deleting?.email ?? "—"}
+              </span>{" "}
+              계정을 영구 삭제합니다. 로그인이 즉시 차단되며 본인이 만든 자재
+              신청·입출고 기록은 보존되지만 작성자 표시는 빈칸으로 바뀝니다.
+              복구할 수 없습니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>취소</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isPending ? "삭제 중..." : "영구 삭제"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={confirmTarget !== null} onOpenChange={(open) => { if (!open) { setConfirmTarget(null); setError(null); } }}>
         <AlertDialogContent>

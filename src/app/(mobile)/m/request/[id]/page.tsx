@@ -12,22 +12,22 @@ type Params = Promise<{ id: string }>;
 const STATUS_META: Record<string, { label: string; tone: string; hint: string }> = {
   submitted: {
     label: "대기",
-    tone: "bg-amber-100 text-amber-700",
+    tone: "bg-warning-bg text-warning",
     hint: "관리자 승인 대기 중입니다.",
   },
   approved: {
     label: "승인",
-    tone: "bg-blue-100 text-blue-700",
+    tone: "bg-info-bg text-info",
     hint: "공장에서 출고 준비 중입니다. 아래 출고장으로 확인하세요.",
   },
   fulfilled: {
     label: "출고완료",
-    tone: "bg-emerald-100 text-emerald-700",
+    tone: "bg-success-bg text-success",
     hint: "요청하신 자재가 모두 출고되었습니다.",
   },
   rejected: {
     label: "거절",
-    tone: "bg-red-100 text-red-700",
+    tone: "bg-danger-bg text-danger",
     hint: "관리자가 거절했습니다.",
   },
   canceled: {
@@ -188,8 +188,8 @@ export default async function MobileRequestDetailPage({ params }: { params: Para
                       <p
                         className={
                           isComplete
-                            ? "text-[11px] font-medium text-emerald-600"
-                            : "text-[11px] font-medium text-blue-600"
+                            ? "text-[11px] font-medium text-success"
+                            : "text-[11px] font-medium text-info"
                         }
                       >
                         {isComplete ? "출고완료" : `${it.fulfilled_quantity.toLocaleString("ko-KR")}${it.unit ?? ""} 출고됨`}

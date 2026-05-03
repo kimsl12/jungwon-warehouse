@@ -1,8 +1,11 @@
 import Link from "next/link";
-import { ArrowDownToLine, Download, FileText } from "lucide-react";
+import { ArrowDownToLine, Download, Package, Truck } from "lucide-react";
 
+import { KPICard } from "@/components/shared/kpi-card";
+import { StatusBadge, type StatusTone } from "@/components/shared/status-badge";
 import { QuickTransactionButton } from "@/components/transactions/quick-transaction-button";
 import { TransactionsPagination } from "@/components/transactions/transactions-pagination";
+import { PO_STATUS_LABEL, type PoStatus } from "@/lib/po-options";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +18,19 @@ type SearchParams = Promise<{
   to?: string;
 }>;
 
-export default async function InboundPage({ searchParams }: { searchParams: SearchParams }) {
+const PO_TONE: Record<PoStatus, StatusTone> = {
+  draft: "neutral",
+  sent: "info",
+  receiving: "warning",
+  received: "success",
+  canceled: "neutral",
+};
+
+export default async function InboundPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const params = await searchParams;
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
   const fromIdx = (page - 1) * PAGE_SIZE;
@@ -25,7 +40,10 @@ export default async function InboundPage({ searchParams }: { searchParams: Sear
 
   let query = supabase
     .from("transactions")
-    .select("id, type, quantity, note, created_at, created_by, products!inner(id, name, category, unit)", { count: "exact" })
+    .select(
+      "id, type, quantity, note, created_at, created_by, products!inner(id, name, category, unit, variant)",
+      { count: "exact" },
+    )
     .eq("type", "in")
     .order("created_at", { ascending: false })
     .range(fromIdx, toIdx);
@@ -37,106 +55,268 @@ export default async function InboundPage({ searchParams }: { searchParams: Sear
     query = query.lte("created_at", endOfDay.toISOString());
   }
 
-  const [txResult, profilesResult, sitesResult] = await Promise.all([
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const [
+    txResult,
+    profilesResult,
+    sitesResult,
+    pendingPoResult,
+    last7Result,
+  ] = await Promise.all([
     query,
     supabase.from("profiles").select("id, name"),
     supabase.from("sites").select("id, name").eq("active", true).order("name"),
+    supabase
+      .from("purchase_orders")
+      .select(
+        "id, po_number, status, order_date, due_date, vendor:vendors!inner(id, name)",
+      )
+      .in("status", ["sent", "receiving"])
+      .order("due_date", { ascending: true, nullsFirst: false })
+      .limit(5),
+    supabase
+      .from("transactions")
+      .select("quantity")
+      .eq("type", "in")
+      .gte("created_at", sevenDaysAgo.toISOString()),
   ]);
 
   const transactions = txResult.data ?? [];
   const totalCount = txResult.count ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const pendingPos = pendingPoResult.data ?? [];
+  const last7Sum = (last7Result.data ?? []).reduce(
+    (s, t) => s + t.quantity,
+    0,
+  );
 
-  const profileMap = new Map((profilesResult.data ?? []).map((p) => [p.id, p.name]));
+  const profileMap = new Map(
+    (profilesResult.data ?? []).map((p) => [p.id, p.name]),
+  );
 
-  const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
+  const poIds = pendingPos.map((po) => po.id);
+  const poTotals = new Map<string, { ordered: number; received: number }>();
+  if (poIds.length > 0) {
+    const { data: items } = await supabase
+      .from("purchase_order_items")
+      .select("purchase_order_id, ordered_quantity, received_quantity")
+      .in("purchase_order_id", poIds);
+    for (const it of items ?? []) {
+      const agg = poTotals.get(it.purchase_order_id) ?? {
+        ordered: 0,
+        received: 0,
+      };
+      agg.ordered += it.ordered_quantity;
+      agg.received += it.received_quantity;
+      poTotals.set(it.purchase_order_id, agg);
+    }
+  }
+
+  const dateTimeFmt = new Intl.DateTimeFormat("ko-KR", {
     timeZone: "Asia/Seoul",
     month: "short",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   });
+  const dateOnlyFmt = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    month: "2-digit",
+    day: "2-digit",
+  });
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-            입고 관리
-          </p>
-          <h2 className="text-2xl font-bold tracking-tight mt-1">입고 내역</h2>
-        </div>
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+        <KPICard
+          label="총 입고 건수"
+          value={totalCount.toLocaleString("ko-KR")}
+          icon={ArrowDownToLine}
+          iconAccent="success"
+        />
+        <KPICard
+          label="입고 예정 PO"
+          value={pendingPos.length.toLocaleString("ko-KR")}
+          icon={Truck}
+          iconAccent="info"
+          delta={pendingPos.length > 0 ? "확인 필요" : "없음"}
+          deltaTone={pendingPos.length > 0 ? "info" : "neutral"}
+          deltaCaption=""
+        />
+        <KPICard
+          label="최근 7일 입고량"
+          value={last7Sum.toLocaleString("ko-KR")}
+          icon={Package}
+          iconAccent="brand"
+        />
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          전체 {totalCount.toLocaleString("ko-KR")}건
+        </p>
         <div className="flex items-center gap-2">
           <Link
             href="/api/export/transactions?type=in"
-            className="flex items-center gap-1.5 rounded bg-surface-low px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-surface-high transition-colors"
             prefetch={false}
+            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-input bg-card px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted"
           >
-            <Download className="h-3.5 w-3.5" />
+            <Download className="size-3.5" />
             내보내기
           </Link>
           <QuickTransactionButton type="in" sites={sitesResult.data ?? []} />
         </div>
       </div>
 
-      {/* KPI summary */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="rounded bg-primary text-primary-foreground p-5">
-          <p className="text-[10px] font-medium uppercase tracking-widest text-primary-foreground/60">입고 총 건수</p>
-          <p className="text-3xl font-extrabold mt-1 tabular-nums">{totalCount.toLocaleString("ko-KR")}</p>
-        </div>
-        <div className="rounded bg-card p-5">
-          <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">현재 페이지</p>
-          <p className="text-3xl font-extrabold mt-1 tabular-nums">{transactions.length}</p>
-          <p className="text-xs text-muted-foreground mt-1">건 표시 중</p>
-        </div>
-        <div className="rounded bg-card p-5">
-          <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">총 페이지</p>
-          <p className="text-3xl font-extrabold mt-1 tabular-nums">{totalPages}</p>
-        </div>
-      </div>
+      {pendingPos.length > 0 && (
+        <section className="rounded-lg border border-border bg-card shadow-xs">
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+            <div>
+              <h3 className="font-display text-[15px] font-semibold tracking-tight">
+                입고 예정
+              </h3>
+              <p className="mt-0.5 text-[12.5px] text-muted-foreground">
+                발송·부분수령 상태의 발주서 {pendingPos.length}건
+              </p>
+            </div>
+            <Link
+              href="/purchase-orders"
+              className="text-xs text-primary hover:underline"
+            >
+              전체 발주서
+            </Link>
+          </div>
+          <ul className="divide-y divide-border">
+            {pendingPos.map((po) => {
+              const totals = poTotals.get(po.id);
+              const tone = PO_TONE[po.status as PoStatus] ?? "neutral";
+              const dueLabel = po.due_date
+                ? dateOnlyFmt.format(new Date(po.due_date))
+                : "—";
+              return (
+                <li
+                  key={po.id}
+                  className="flex items-center gap-4 px-5 py-3.5"
+                >
+                  <div className="inline-flex size-10 shrink-0 items-center justify-center rounded-md bg-info-bg text-info">
+                    <Truck className="size-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/purchase-orders/${po.id}`}
+                        className="font-mono text-[13px] font-semibold hover:underline"
+                      >
+                        {po.po_number}
+                      </Link>
+                      <span className="text-[12px] text-muted-foreground">
+                        ·
+                      </span>
+                      <span className="text-[13px]">{po.vendor.name}</span>
+                    </div>
+                    {totals && (
+                      <p className="mt-0.5 text-[11.5px] text-muted-foreground tabular-nums">
+                        수량 {totals.received.toLocaleString("ko-KR")} /{" "}
+                        {totals.ordered.toLocaleString("ko-KR")}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right text-[12px] tabular-nums text-muted-foreground">
+                    납기 {dueLabel}
+                  </div>
+                  <StatusBadge tone={tone} dot>
+                    {PO_STATUS_LABEL[po.status as PoStatus] ?? po.status}
+                  </StatusBadge>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
-      {/* Table */}
-      <TransactionsPagination currentPage={page} totalPages={totalPages} basePath="/inbound" />
+      <TransactionsPagination
+        currentPage={page}
+        totalPages={totalPages}
+        basePath="/inbound"
+      />
 
-      <div className="rounded bg-card overflow-hidden">
-        <div className="grid grid-cols-[auto_1fr_100px_80px_auto] gap-3 px-5 py-3 bg-surface-high text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-          <span>ID</span>
-          <span>품목</span>
-          <span className="text-right">수량</span>
-          <span>상태</span>
-          <span className="text-right">담당자</span>
+      <section className="overflow-hidden rounded-lg border border-border bg-card shadow-xs">
+        <div className="border-b border-border px-5 py-4">
+          <h3 className="font-display text-[15px] font-semibold tracking-tight">
+            입고 기록
+          </h3>
+          <p className="mt-0.5 text-[12.5px] text-muted-foreground">
+            완료된 입고 트랜잭션
+          </p>
         </div>
         {transactions.length === 0 ? (
           <div className="px-5 py-12 text-center text-sm text-muted-foreground">
             입고 내역이 없습니다.
           </div>
         ) : (
-          transactions.map((tx) => (
-            <div key={tx.id} className="grid grid-cols-[auto_1fr_100px_80px_auto] gap-3 items-center px-5 py-3.5 hover:bg-surface-low/50 transition-colors">
-              <span className="text-xs text-muted-foreground font-mono">{tx.id.slice(0, 8)}</span>
-              <div>
-                <p className="text-sm font-medium">{tx.products?.name ?? "-"}</p>
-                <p className="text-xs text-muted-foreground">{tx.products?.category ?? ""}</p>
-              </div>
-              <p className="text-right text-sm font-bold tabular-nums">
-                {tx.quantity.toLocaleString("ko-KR")}
-                {tx.products?.unit && <span className="ml-0.5 text-xs font-normal text-muted-foreground">{tx.products.unit}</span>}
-              </p>
-              <span className="inline-block rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 w-fit">
-                입고
-              </span>
-              <span className="text-right text-xs text-muted-foreground">
-                {tx.created_by ? profileMap.get(tx.created_by) ?? "-" : "시스템"}
-                <span className="block text-[10px] tabular-nums">{dateFormatter.format(new Date(tx.created_at))}</span>
-              </span>
-            </div>
-          ))
+          <div className="overflow-x-auto">
+            <table className="w-full text-[13px]">
+              <thead className="bg-muted">
+                <tr className="text-[10.5px] font-medium uppercase tracking-widest text-muted-foreground">
+                  <th className="px-5 py-2.5 text-left font-medium">일시</th>
+                  <th className="px-3 py-2.5 text-left font-medium">품목</th>
+                  <th className="px-3 py-2.5 text-right font-medium">수량</th>
+                  <th className="px-3 py-2.5 text-left font-medium">담당자</th>
+                  <th className="px-3 py-2.5 text-left font-medium">메모</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.map((tx) => (
+                  <tr
+                    key={tx.id}
+                    className="border-t border-border transition-colors hover:bg-muted/40"
+                  >
+                    <td className="px-5 py-3 tabular-nums text-muted-foreground">
+                      {dateTimeFmt.format(new Date(tx.created_at))}
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="font-semibold">
+                        {tx.products?.name ?? "—"}
+                      </div>
+                      {tx.products?.variant && (
+                        <div className="text-[11.5px] text-muted-foreground">
+                          {tx.products.variant}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 text-right">
+                      <span className="font-semibold tabular-nums text-success">
+                        +{tx.quantity.toLocaleString("ko-KR")}
+                        {tx.products?.unit && (
+                          <span className="ml-0.5 text-[11px] font-normal text-muted-foreground">
+                            {tx.products.unit}
+                          </span>
+                        )}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-[12.5px] text-muted-foreground">
+                      {tx.created_by
+                        ? (profileMap.get(tx.created_by) ?? "—")
+                        : "시스템"}
+                    </td>
+                    <td className="px-3 py-3 text-[12px] text-muted-foreground">
+                      {tx.note ?? ""}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
-      </div>
+      </section>
 
-      <TransactionsPagination currentPage={page} totalPages={totalPages} basePath="/inbound" />
+      <TransactionsPagination
+        currentPage={page}
+        totalPages={totalPages}
+        basePath="/inbound"
+      />
     </div>
   );
 }

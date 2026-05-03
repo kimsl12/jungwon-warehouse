@@ -1,14 +1,20 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Smartphone } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import { LowStockBanner } from "@/components/dashboard/low-stock-banner";
+import { PageTitle } from "@/components/dashboard/page-title";
 import { RequestAlertBar } from "@/components/dashboard/request-alert-bar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function DashboardLayout({ children }: { children: ReactNode }) {
+export default async function DashboardLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -29,31 +35,19 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   return (
     <div className="flex min-h-svh">
-      {/* Sidebar — desktop only */}
       <DashboardSidebar isAdmin={isAdmin} userName={userName} />
 
-      {/* Main content */}
-      <div className="flex flex-1 flex-col min-w-0">
-        {/* Top bar */}
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between bg-background px-6">
-          <div />
-          <div className="flex items-center gap-3 text-sm">
-            <Link
-              href="/m/scan"
-              className="rounded bg-surface-low px-2.5 py-1 text-xs text-muted-foreground hover:bg-surface-high transition-colors"
-            >
-              모바일 모드
-            </Link>
-            <span className="text-on-surface-variant text-sm">
-              {userName}
-              {isAdmin && (
-                <span className="ml-2 rounded bg-secondary/10 px-2 py-0.5 text-xs font-medium text-secondary">
-                  관리자
-                </span>
-              )}
-            </span>
-            <LogoutButton />
-          </div>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-background px-6">
+          <PageTitle />
+          <Link
+            href="/m/scan"
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted"
+          >
+            <Smartphone className="size-3.5" />
+            모바일 모드
+          </Link>
+          <LogoutButton />
         </header>
         {isAdmin && <RequestAlertBar />}
         <LowStockBanner />

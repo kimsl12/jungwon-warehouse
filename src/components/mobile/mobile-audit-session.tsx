@@ -288,7 +288,7 @@ export function MobileAuditSession({ recent }: { recent: RecentRow[] }) {
                       <p
                         className={
                           r.difference > 0
-                            ? "text-[11px] font-semibold text-emerald-700"
+                            ? "text-[11px] font-semibold text-success"
                             : "text-[11px] font-semibold text-destructive"
                         }
                       >
@@ -299,9 +299,9 @@ export function MobileAuditSession({ recent }: { recent: RecentRow[] }) {
                     <p
                       className={
                         r.resolution === "auto_adjusted"
-                          ? "mt-0.5 inline-block rounded bg-emerald-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-emerald-700"
+                          ? "mt-0.5 inline-block rounded bg-success-bg px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-success"
                           : r.resolution === "manual_pending"
-                            ? "mt-0.5 inline-block rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-amber-700"
+                            ? "mt-0.5 inline-block rounded bg-warning-bg px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-warning"
                             : "mt-0.5 inline-block rounded bg-muted px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground"
                       }
                     >

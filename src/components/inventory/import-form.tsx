@@ -106,7 +106,7 @@ function PreviewSection({
       </div>
 
       {preview.warnings.length > 0 && (
-        <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+        <div className="rounded-md border border-warning/40 bg-warning-bg p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
           <p className="mb-1 font-semibold">경고 ({preview.warnings.length}건)</p>
           <ul className="space-y-0.5">
             {preview.warnings.slice(0, 5).map((w, i) => (
@@ -153,11 +153,11 @@ function PreviewSection({
                   <td className="px-2 py-1 text-muted-foreground">{r.aliases.length > 0 ? r.aliases.join(", ") : "—"}</td>
                   <td className="px-2 py-1">
                     {isExisting ? (
-                      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                      <span className="rounded bg-warning-bg px-1.5 py-0.5 text-[10px] font-medium text-warning dark:bg-amber-950 dark:text-amber-300">
                         기존
                       </span>
                     ) : (
-                      <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                      <span className="rounded bg-success-bg px-1.5 py-0.5 text-[10px] font-medium text-success dark:bg-emerald-950 dark:text-emerald-300">
                         신규
                       </span>
                     )}

@@ -103,7 +103,7 @@ export function PurchaseOrderReceiveForm({
           return (
             <div
               key={it.id}
-              className={`grid grid-cols-[1fr_90px_90px_90px_140px] gap-2 items-center px-3 py-2 border-t text-xs ${fulfilled ? "bg-emerald-50/40 opacity-60" : ""}`}
+              className={`grid grid-cols-[1fr_90px_90px_90px_140px] gap-2 items-center px-3 py-2 border-t text-xs ${fulfilled ? "bg-success-bg/40 opacity-60" : ""}`}
             >
               <div className="min-w-0">
                 <p className="font-medium truncate">

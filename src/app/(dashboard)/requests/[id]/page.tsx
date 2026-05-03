@@ -12,10 +12,10 @@ export const dynamic = "force-dynamic";
 type Params = Promise<{ id: string }>;
 
 const STATUS_META: Record<string, { label: string; tone: string }> = {
-  submitted: { label: "대기", tone: "bg-amber-100 text-amber-700" },
-  approved: { label: "승인", tone: "bg-blue-100 text-blue-700" },
-  fulfilled: { label: "출고완료", tone: "bg-emerald-100 text-emerald-700" },
-  rejected: { label: "거절", tone: "bg-red-100 text-red-700" },
+  submitted: { label: "대기", tone: "bg-warning-bg text-warning" },
+  approved: { label: "승인", tone: "bg-info-bg text-info" },
+  fulfilled: { label: "출고완료", tone: "bg-success-bg text-success" },
+  rejected: { label: "거절", tone: "bg-danger-bg text-danger" },
   canceled: { label: "취소", tone: "bg-muted text-muted-foreground" },
 };
 
@@ -74,6 +74,7 @@ export default async function AdminRequestDetailPage({ params }: { params: Param
   const canApprove = request.status === "submitted";
   const canReject = request.status === "submitted" || request.status === "approved";
   const canCancel = request.status === "submitted" || request.status === "approved";
+  const canDelete = request.status === "canceled" || request.status === "rejected";
   const canFulfill = request.status === "approved";
   const canShowPdf = request.status === "approved" || request.status === "fulfilled";
 
@@ -88,7 +89,7 @@ export default async function AdminRequestDetailPage({ params }: { params: Param
 
       {/* Header */}
       <div
-        className={`rounded p-6 space-y-3 ${request.is_urgent && request.status === "submitted" ? "bg-red-50 border border-red-200" : "bg-card"}`}
+        className={`rounded p-6 space-y-3 ${request.is_urgent && request.status === "submitted" ? "bg-danger-bg border border-destructive/30" : "bg-card"}`}
       >
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -97,7 +98,7 @@ export default async function AdminRequestDetailPage({ params }: { params: Param
                 자재 신청
               </p>
               {request.is_urgent && (
-                <span className="inline-block rounded bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                <span className="inline-block rounded bg-destructive px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
                   긴급
                 </span>
               )}
@@ -109,7 +110,7 @@ export default async function AdminRequestDetailPage({ params }: { params: Param
               <p className="text-xs text-muted-foreground">{request.sites.address}</p>
             )}
             {request.is_urgent && request.urgent_reason && (
-              <p className="mt-2 text-sm font-medium text-red-700">
+              <p className="mt-2 text-sm font-medium text-danger">
                 ⚠ 긴급 사유: {request.urgent_reason}
               </p>
             )}
@@ -158,12 +159,13 @@ export default async function AdminRequestDetailPage({ params }: { params: Param
       </div>
 
       {/* Actions */}
-      {(canApprove || canReject || canCancel) && (
+      {(canApprove || canReject || canCancel || canDelete) && (
         <RequestActions
           requestId={request.id}
           canApprove={canApprove}
           canReject={canReject}
           canCancel={canCancel}
+          canDelete={canDelete}
         />
       )}
 
@@ -231,11 +233,11 @@ export default async function AdminRequestDetailPage({ params }: { params: Param
                   </span>
                   <span className="text-right">
                     {done ? (
-                      <span className="inline-block rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
+                      <span className="inline-block rounded bg-success-bg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-success">
                         완료
                       </span>
                     ) : partial ? (
-                      <span className="inline-block rounded bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-700">
+                      <span className="inline-block rounded bg-warning-bg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-warning">
                         부분
                       </span>
                     ) : (

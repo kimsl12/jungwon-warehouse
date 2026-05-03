@@ -544,7 +544,7 @@ export function MobileRequestForm({
             disabled={isSubmitting}
             className="h-5 w-5 rounded border-muted-foreground/30"
           />
-          <AlertCircle className="h-4 w-4 text-red-500" />
+          <AlertCircle className="h-4 w-4 text-danger" />
           <span>긴급 처리 요청</span>
         </label>
         {isUrgent && (
@@ -751,7 +751,7 @@ export function MobileRequestForm({
                               className={
                                 c.available === 0
                                   ? "text-[10px] font-semibold text-destructive tabular-nums"
-                                  : "text-[10px] font-medium text-amber-600 tabular-nums"
+                                  : "text-[10px] font-medium text-warning tabular-nums"
                               }
                             >
                               가용 {c.available.toLocaleString("ko-KR")} (대기 {c.pending.toLocaleString("ko-KR")})

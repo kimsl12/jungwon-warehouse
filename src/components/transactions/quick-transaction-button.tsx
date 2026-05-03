@@ -23,7 +23,7 @@ export function QuickTransactionButton({
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 rounded bg-gradient-to-b from-primary to-[#1a202c] px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 transition-all"
+        className="inline-flex h-9 items-center gap-1.5 rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
       >
         <Icon className="h-3.5 w-3.5" />
         {label}

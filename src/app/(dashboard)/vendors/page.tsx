@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
+import { Building2, CheckCircle, XCircle } from "lucide-react";
 
+import { KPICard } from "@/components/shared/kpi-card";
 import { VendorCreateDialog } from "@/components/vendors/vendor-create-dialog";
 import { VendorsTable } from "@/components/vendors/vendors-table";
 import { createClient } from "@/lib/supabase/server";
@@ -32,35 +34,34 @@ export default async function VendorsPage() {
   const totalCount = (vendors ?? []).length;
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-            거래처 관리
-          </p>
-          <h2 className="text-2xl font-bold tracking-tight mt-1">거래처 목록</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {totalCount.toLocaleString("ko-KR")}곳 관리 중 · 활성 {activeCount}곳
-          </p>
-        </div>
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          {totalCount.toLocaleString("ko-KR")}곳 관리 중 · 활성{" "}
+          {activeCount.toLocaleString("ko-KR")}곳
+        </p>
         <VendorCreateDialog />
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <div className="rounded bg-card p-5">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">전체 거래처</p>
-          <p className="text-3xl font-extrabold mt-1 tabular-nums">{totalCount}</p>
-        </div>
-        <div className="rounded bg-card p-5">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">활성</p>
-          <p className="text-3xl font-extrabold mt-1 tabular-nums text-emerald-600">{activeCount}</p>
-        </div>
-        <div className="rounded bg-card p-5">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">비활성</p>
-          <p className="text-3xl font-extrabold mt-1 tabular-nums text-muted-foreground">
-            {totalCount - activeCount}
-          </p>
-        </div>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+        <KPICard
+          label="전체 거래처"
+          value={totalCount.toLocaleString("ko-KR")}
+          icon={Building2}
+          iconAccent="brand"
+        />
+        <KPICard
+          label="활성"
+          value={activeCount.toLocaleString("ko-KR")}
+          icon={CheckCircle}
+          iconAccent="success"
+        />
+        <KPICard
+          label="비활성"
+          value={(totalCount - activeCount).toLocaleString("ko-KR")}
+          icon={XCircle}
+          iconAccent="info"
+        />
       </div>
 
       <VendorsTable vendors={vendors ?? []} />

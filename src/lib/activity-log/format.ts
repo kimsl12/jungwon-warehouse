@@ -24,14 +24,14 @@ export function actionTone(action: string): string {
   switch (action) {
     case "create":
     case "in":
-      return "bg-emerald-100 text-emerald-700";
+      return "bg-success-bg text-success";
     case "update":
     case "out":
-      return "bg-secondary-container/30 text-secondary";
+      return "bg-info-bg text-info";
     case "delete":
-      return "bg-destructive/10 text-destructive";
+      return "bg-danger-bg text-danger";
     default:
-      return "bg-surface-high text-muted-foreground";
+      return "bg-muted text-muted-foreground";
   }
 }
 

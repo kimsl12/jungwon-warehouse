@@ -24,7 +24,7 @@ export default async function MobileSitesPage() {
         </div>
         <div className="rounded bg-card p-4">
           <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">활성</p>
-          <p className="text-2xl font-extrabold mt-1 tabular-nums text-emerald-600">{activeCount}</p>
+          <p className="text-2xl font-extrabold mt-1 tabular-nums text-success">{activeCount}</p>
         </div>
       </div>
 
@@ -45,7 +45,7 @@ export default async function MobileSitesPage() {
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium truncate">{site.name}</p>
                     {site.active ? (
-                      <span className="shrink-0 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-emerald-700">활성</span>
+                      <span className="shrink-0 rounded bg-success-bg px-1.5 py-0.5 text-[10px] font-semibold uppercase text-success">활성</span>
                     ) : (
                       <span className="shrink-0 rounded bg-surface-high px-1.5 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">비활성</span>
                     )}

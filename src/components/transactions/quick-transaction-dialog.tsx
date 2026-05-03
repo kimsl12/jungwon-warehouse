@@ -212,8 +212,8 @@ export function QuickTransactionDialog({
             <p className="mt-3 text-sm text-destructive" role="alert">{state.error}</p>
           )}
           {state?.success && (
-            <div className="mt-3 rounded bg-emerald-50 p-3 text-sm">
-              <p className="font-medium text-emerald-700">
+            <div className="mt-3 rounded bg-success-bg p-3 text-sm">
+              <p className="font-medium text-success">
                 처리 완료 · 새 수량 {state.newQuantity?.toLocaleString("ko-KR")}
               </p>
               {state.lowStock && (

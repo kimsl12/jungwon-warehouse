@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export async function updateUserRole(
@@ -107,5 +108,65 @@ export async function updateUserProfile(
 
   revalidatePath("/users");
   return { error: null, success: true };
+}
+
+// -----------------------------------------------------------------------------
+// 사용자 영구 삭제 — auth.users 까지 제거. service_role 키 사용.
+// profiles 는 ON DELETE CASCADE 로 함께 삭제, 작성자 FK 들 (transactions /
+// purchase_orders / material_requests / activity_logs 등) 은 SET NULL 로 정리됨.
+// -----------------------------------------------------------------------------
+export async function deleteUser(
+  userId: string,
+): Promise<{ error: string | null }> {
+  if (!z.string().uuid().safeParse(userId).success) {
+    return { error: "잘못된 요청입니다." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
+  if (!currentUser) return { error: "로그인이 필요합니다." };
+
+  const { data: meProfile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", currentUser.id)
+    .single();
+  if (meProfile?.role !== "admin") {
+    return { error: "관리자 권한이 필요합니다." };
+  }
+
+  if (userId === currentUser.id) {
+    return { error: "자기 자신은 삭제할 수 없습니다." };
+  }
+
+  const { data: target } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .single();
+  if (!target) return { error: "사용자를 찾을 수 없습니다." };
+
+  // 마지막 관리자 보호
+  if (target.role === "admin") {
+    const { count } = await supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "admin");
+    if ((count ?? 0) <= 1) {
+      return { error: "마지막 관리자 계정은 삭제할 수 없습니다." };
+    }
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  if (error) {
+    return { error: "삭제 실패: " + error.message };
+  }
+
+  revalidatePath("/users");
+  revalidatePath("/sites");
+  return { error: null };
 }
 

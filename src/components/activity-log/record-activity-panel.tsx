@@ -117,7 +117,7 @@ export async function RecordActivityPanel({
                     log.action === "delete"
                       ? "bg-destructive"
                       : log.action === "create" || log.action === "in"
-                        ? "bg-emerald-500"
+                        ? "bg-success-bg0"
                         : "bg-secondary",
                   )}
                 />

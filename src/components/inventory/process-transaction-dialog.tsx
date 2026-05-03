@@ -178,7 +178,7 @@ export function ProcessTransactionDialog({
                 <p className="text-xs text-destructive">{state.fieldErrors.site_id[0]}</p>
               )}
               {sites.length === 0 && (
-                <p className="text-xs text-amber-600 dark:text-amber-400">
+                <p className="text-xs text-warning dark:text-amber-400">
                   등록된 현장이 없습니다. 관리자에게 현장 등록을 요청하세요.
                 </p>
               )}
@@ -197,8 +197,8 @@ export function ProcessTransactionDialog({
           )}
 
           {state?.success && (
-            <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm dark:border-emerald-900 dark:bg-emerald-950">
-              <p className="font-medium text-emerald-700 dark:text-emerald-300">
+            <div className="mt-3 rounded-md border border-emerald-200 bg-success-bg p-3 text-sm dark:border-emerald-900 dark:bg-emerald-950">
+              <p className="font-medium text-success dark:text-emerald-300">
                 처리 완료 · 새 수량 {state.newQuantity?.toLocaleString("ko-KR")}
               </p>
               {state.lowStock && (

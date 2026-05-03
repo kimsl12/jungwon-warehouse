@@ -181,3 +181,44 @@ export async function adminCancelMaterialRequest(
   revalidatePath(`/m/request/${requestId}`);
   return { error: null };
 }
+
+// -----------------------------------------------------------------------------
+// 삭제 — canceled / rejected 상태의 신청만 admin 이 영구 삭제 가능.
+// 출고 이력이 남는 fulfilled / 진행 중인 submitted·approved 는 차단.
+// material_request_items 는 ON DELETE CASCADE 로 함께 삭제됨.
+// -----------------------------------------------------------------------------
+export async function deleteMaterialRequest(
+  requestId: string,
+): Promise<{ error: string | null }> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { error: auth.error };
+
+  if (!uuid.safeParse(requestId).success) return { error: "잘못된 요청입니다." };
+
+  const { data: req, error: fetchError } = await auth.supabase
+    .from("material_requests")
+    .select("status, site_id")
+    .eq("id", requestId)
+    .single();
+
+  if (fetchError || !req) return { error: "신청을 찾을 수 없습니다." };
+
+  if (req.status !== "canceled" && req.status !== "rejected") {
+    return {
+      error:
+        "취소·거절된 신청만 삭제할 수 있습니다. 먼저 신청을 취소·거절하세요.",
+    };
+  }
+
+  const { error } = await auth.supabase
+    .from("material_requests")
+    .delete()
+    .eq("id", requestId);
+
+  if (error) return { error: `삭제 실패: ${error.message}` };
+
+  revalidatePath("/requests");
+  revalidatePath("/m/request");
+  if (req.site_id) revalidatePath(`/sites/${req.site_id}`);
+  return { error: null };
+}

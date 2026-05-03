@@ -43,7 +43,7 @@ export function KpiCard({
         className={cn(
           "text-3xl font-extrabold tabular-nums tracking-tight",
           tone === "warning" && "text-destructive",
-          tone === "positive" && "text-emerald-600",
+          tone === "positive" && "text-success",
           tone === "critical" && "text-secondary-foreground",
         )}
       >

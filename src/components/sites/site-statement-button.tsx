@@ -107,7 +107,7 @@ export function SiteStatementButton({
                   onClick={() => setMode("completion")}
                   className="flex w-full items-center gap-3 rounded-md border bg-background p-3 text-left hover:bg-surface-low transition-colors"
                 >
-                  <FileText className="h-5 w-5 shrink-0 text-emerald-600" />
+                  <FileText className="h-5 w-5 shrink-0 text-success" />
                   <div>
                     <p className="text-sm font-semibold">준공 정산서</p>
                     <p className="text-xs text-muted-foreground">

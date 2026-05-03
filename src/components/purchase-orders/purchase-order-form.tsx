@@ -334,7 +334,7 @@ export function PurchaseOrderForm({ vendors }: { vendors: VendorOption[] }) {
                     <p className="text-xs text-muted-foreground">{p.subcategory ?? "규격 없음"} {p.unit && `· ${p.unit}`}</p>
                   </div>
                   {vendorPriceMap.get(p.id) !== undefined && (
-                    <span className="text-xs tabular-nums text-emerald-700">
+                    <span className="text-xs tabular-nums text-success">
                       등록 단가 {nf.format(vendorPriceMap.get(p.id)!)}원
                     </span>
                   )}
@@ -435,7 +435,7 @@ export function PurchaseOrderForm({ vendors }: { vendors: VendorOption[] }) {
                 {offers.length > 0 && (
                   <div className="px-3 pb-2 text-[11px]">
                     {cheapest && !currentIsCheapest && vendorId && (
-                      <p className="text-amber-700">
+                      <p className="text-warning">
                         💡 최저가 <b>{cheapest.vendor_name}</b>{" "}
                         {nf.format(cheapest.unit_price)}원
                         {offers.find((o) => o.vendor_id === vendorId) && (
@@ -454,7 +454,7 @@ export function PurchaseOrderForm({ vendors }: { vendors: VendorOption[] }) {
                       </p>
                     )}
                     {currentIsCheapest && (
-                      <p className="text-emerald-700">✓ 현재 거래처가 최저가</p>
+                      <p className="text-success">✓ 현재 거래처가 최저가</p>
                     )}
                     {otherOffers.length > 0 && (
                       <details className="mt-0.5 text-muted-foreground">
@@ -469,7 +469,7 @@ export function PurchaseOrderForm({ vendors }: { vendors: VendorOption[] }) {
                                 o.vendor_id === vendorId
                                   ? "font-semibold text-foreground"
                                   : idx === 0
-                                    ? "text-emerald-700"
+                                    ? "text-success"
                                     : ""
                               }
                             >

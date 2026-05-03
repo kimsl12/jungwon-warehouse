@@ -33,8 +33,8 @@ export default async function MobileDonePage({
       <div
         className={
           type === "in"
-            ? "mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-3xl text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400"
-            : "mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 text-3xl text-amber-600 dark:bg-amber-950 dark:text-amber-400"
+            ? "mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-success-bg text-3xl text-success dark:bg-emerald-950 dark:text-emerald-400"
+            : "mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-warning-bg text-3xl text-warning dark:bg-amber-950 dark:text-amber-400"
         }
       >
         ✓

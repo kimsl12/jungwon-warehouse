@@ -60,7 +60,9 @@ export default async function MobileScanPage({
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-bold">품목 선택</h1>
+        <h1 className="font-display text-xl font-semibold tracking-tight">
+          품목 선택
+        </h1>
         <p className="mt-1 text-xs text-muted-foreground">
           입출고 처리할 품목을 검색해서 선택하세요.
         </p>
@@ -71,7 +73,7 @@ export default async function MobileScanPage({
       {isAdmin && (
         <Link
           href="/m/audit"
-          className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-md border border-secondary/30 bg-secondary/5 text-xs font-medium text-secondary active:bg-secondary/10"
+          className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-md bg-brand-50 text-xs font-medium text-brand-700 transition-colors active:bg-brand-100 dark:bg-brand-900/30 dark:text-brand-300"
         >
           <ClipboardCheck className="h-4 w-4" /> 재고 실사 모드
         </Link>
@@ -79,11 +81,11 @@ export default async function MobileScanPage({
 
       <div className="space-y-2">
         {q.length === 0 ? (
-          <p className="rounded-md border bg-background p-6 text-center text-sm text-muted-foreground">
+          <p className="rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground">
             제품명 또는 별칭을 입력하면 품목이 표시됩니다.
           </p>
         ) : products.length === 0 ? (
-          <p className="rounded-md border bg-background p-6 text-center text-sm text-muted-foreground">
+          <p className="rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground">
             검색 결과가 없습니다.
           </p>
         ) : (
@@ -93,25 +95,28 @@ export default async function MobileScanPage({
               <a
                 key={p.id}
                 href={`/m/transaction?product_id=${p.id}`}
-                className="block min-h-[64px] rounded-md border bg-background p-3 active:bg-muted"
+                className="block min-h-[64px] rounded-lg border border-border bg-card p-3 shadow-xs transition-colors active:bg-muted"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">
+                    <p className="truncate font-semibold">
                       {p.name}
                       {p.variant && (
-                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">· {p.variant}</span>
+                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                          · {p.variant}
+                        </span>
                       )}
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {p.category ?? "분류 없음"} · {p.location ?? "위치 미지정"}
+                      {p.category ?? "분류 없음"} ·{" "}
+                      {p.location ?? "위치 미지정"}
                     </p>
                   </div>
                   <div className="text-right">
                     <p
                       className={
                         isLow
-                          ? "text-base font-semibold tabular-nums text-destructive"
+                          ? "text-base font-semibold tabular-nums text-warning"
                           : "text-base font-semibold tabular-nums"
                       }
                     >
@@ -123,7 +128,9 @@ export default async function MobileScanPage({
                       )}
                     </p>
                     {isLow && (
-                      <p className="text-[10px] font-medium text-destructive">재고 부족</p>
+                      <p className="text-[10px] font-medium text-warning">
+                        재고 부족
+                      </p>
                     )}
                   </div>
                 </div>

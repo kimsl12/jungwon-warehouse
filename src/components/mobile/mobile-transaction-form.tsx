@@ -91,7 +91,7 @@ export function MobileTransactionForm({
             onClick={() => setType("out")}
             className={
               type === "out"
-                ? "h-12 rounded-md border-2 border-amber-500 bg-amber-50 font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                ? "h-12 rounded-md border-2 border-warning bg-warning-bg font-semibold text-warning dark:bg-amber-950 dark:text-amber-300"
                 : "h-12 rounded-md border bg-background text-muted-foreground"
             }
           >
@@ -102,7 +102,7 @@ export function MobileTransactionForm({
             onClick={() => setType("in")}
             className={
               type === "in"
-                ? "h-12 rounded-md border-2 border-emerald-500 bg-emerald-50 font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                ? "h-12 rounded-md border-2 border-success bg-success-bg font-semibold text-success dark:bg-emerald-950 dark:text-emerald-300"
                 : "h-12 rounded-md border bg-background text-muted-foreground"
             }
           >
@@ -152,7 +152,7 @@ export function MobileTransactionForm({
           ))}
         </select>
         {sites.length === 0 && (
-          <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+          <p className="mt-1 text-xs text-warning dark:text-amber-400">
             등록된 현장이 없습니다. 관리자에게 요청하세요.
           </p>
         )}
