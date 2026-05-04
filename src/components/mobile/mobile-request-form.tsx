@@ -207,6 +207,7 @@ function CategoryTemplatePicker({
 
   const [category, setCategory] = useState("");
   const [subcategory, setSubcategory] = useState("");
+  const [templateId, setTemplateId] = useState("");
   const [variableValues, setVariableValues] = useState<Record<string, number>>(
     {},
   );
@@ -223,12 +224,27 @@ function CategoryTemplatePicker({
     return out.sort((a, b) => a.localeCompare(b, "ko"));
   }, [categorized, category]);
 
+  const templatesInSubcategory = useMemo(() => {
+    return categorized
+      .filter((t) => t.category === category && t.subcategory === subcategory)
+      .sort((a, b) => a.name.localeCompare(b.name, "ko"));
+  }, [categorized, category, subcategory]);
+
+  // 같은 (대,소) 조합에 템플릿 1개뿐이면 자동 선택
+  useEffect(() => {
+    if (templatesInSubcategory.length === 1) {
+      setTemplateId(templatesInSubcategory[0].id);
+    } else if (
+      templatesInSubcategory.length > 1 &&
+      !templatesInSubcategory.some((t) => t.id === templateId)
+    ) {
+      setTemplateId("");
+    }
+  }, [templatesInSubcategory, templateId]);
+
   const selectedTemplate = useMemo(
-    () =>
-      categorized.find(
-        (t) => t.category === category && t.subcategory === subcategory,
-      ) ?? null,
-    [categorized, category, subcategory],
+    () => templatesInSubcategory.find((t) => t.id === templateId) ?? null,
+    [templatesInSubcategory, templateId],
   );
 
   // 템플릿 변경 시 변수 값 초기화
@@ -270,35 +286,56 @@ function CategoryTemplatePicker({
         <p className="text-xs font-semibold text-info">공용 템플릿 (산출식 기반)</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <select
-          value={category}
-          onChange={(e) => {
-            setCategory(e.target.value);
-            setSubcategory("");
-          }}
-          className="h-11 rounded-md border bg-background px-3 text-sm"
-        >
-          <option value="">대분류 선택…</option>
-          {categories.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-        <select
-          value={subcategory}
-          onChange={(e) => setSubcategory(e.target.value)}
-          disabled={!category}
-          className="h-11 rounded-md border bg-background px-3 text-sm disabled:opacity-50"
-        >
-          <option value="">소분류 선택…</option>
-          {subcategories.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+      <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-2">
+          <select
+            value={category}
+            onChange={(e) => {
+              setCategory(e.target.value);
+              setSubcategory("");
+              setTemplateId("");
+            }}
+            className="h-11 rounded-md border bg-background px-3 text-sm"
+          >
+            <option value="">대분류 선택…</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+          <select
+            value={subcategory}
+            onChange={(e) => {
+              setSubcategory(e.target.value);
+              setTemplateId("");
+            }}
+            disabled={!category}
+            className="h-11 rounded-md border bg-background px-3 text-sm disabled:opacity-50"
+          >
+            <option value="">소분류 선택…</option>
+            {subcategories.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {subcategory && templatesInSubcategory.length > 1 && (
+          <select
+            value={templateId}
+            onChange={(e) => setTemplateId(e.target.value)}
+            className="h-11 w-full rounded-md border bg-background px-3 text-sm"
+          >
+            <option value="">템플릿 선택… ({templatesInSubcategory.length}개)</option>
+            {templatesInSubcategory.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {selectedTemplate &&
