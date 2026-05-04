@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, BookOpen, Minus, Plus, Save, Search, Trash2, X } from "lucide-react";
+import { AlertCircle, BookOpen, Calculator, Minus, Plus, Save, Search, Trash2, X } from "lucide-react";
 
 import {
   createMaterialRequest,
@@ -10,8 +10,16 @@ import {
 } from "@/app/(mobile)/m/request/actions";
 import { createRequestTemplate } from "@/app/(mobile)/m/request/templates/actions";
 import { Button } from "@/components/ui/button";
+import { evaluateFormula } from "@/lib/template-formula";
 
 type SiteOption = { id: string; name: string };
+
+type TemplateVariable = {
+  name: string;
+  label: string;
+  unit: string;
+  default: number;
+};
 
 type RequestLine = {
   product_id: string;
@@ -20,6 +28,10 @@ type RequestLine = {
   unit: string | null;
   quantity: number;
   note: string;
+  /** 산출식으로 만들어진 line — true 면 삭제 막고 0 허용 */
+  fromFormula: boolean;
+  /** 어떤 템플릿에서 왔는지 (메타) */
+  fromTemplateId: string | null;
 };
 
 type Candidate = {
@@ -37,9 +49,17 @@ export type TemplateOption = {
   id: string;
   name: string;
   note: string | null;
-  items: Array<{ product_id: string; requested_quantity: number; note?: string | null }>;
+  items: Array<{
+    product_id: string;
+    requested_quantity: number | null;
+    formula: string | null;
+    note?: string | null;
+  }>;
   is_public: boolean;
   is_mine: boolean;
+  category: string | null;
+  subcategory: string | null;
+  variables: TemplateVariable[] | null;
 };
 
 type ProductMetaMap = Record<
@@ -149,6 +169,224 @@ function TemplatePickerSheet({
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * 공용 템플릿(대/소분류 + 변수) 전용 picker.
+ * 대분류 → 소분류 드롭박스로 템플릿 결정 → 변수 입력 → 자동 계산해서 추가.
+ * 변수가 없는 템플릿도 동일 흐름으로 사용 가능 (변수 입력 단계 스킵).
+ */
+function CategoryTemplatePicker({
+  templates,
+  onApply,
+}: {
+  templates: TemplateOption[];
+  onApply: (
+    template: TemplateOption,
+    computedQuantities: Map<string, number>,
+  ) => void;
+}) {
+  const categorized = useMemo(
+    () => templates.filter((t) => t.is_public && t.category),
+    [templates],
+  );
+
+  const categories = useMemo(() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const t of categorized) {
+      if (t.category && !seen.has(t.category)) {
+        seen.add(t.category);
+        out.push(t.category);
+      }
+    }
+    return out.sort((a, b) => a.localeCompare(b, "ko"));
+  }, [categorized]);
+
+  const [category, setCategory] = useState("");
+  const [subcategory, setSubcategory] = useState("");
+  const [variableValues, setVariableValues] = useState<Record<string, number>>(
+    {},
+  );
+
+  const subcategories = useMemo(() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const t of categorized) {
+      if (t.category === category && t.subcategory && !seen.has(t.subcategory)) {
+        seen.add(t.subcategory);
+        out.push(t.subcategory);
+      }
+    }
+    return out.sort((a, b) => a.localeCompare(b, "ko"));
+  }, [categorized, category]);
+
+  const selectedTemplate = useMemo(
+    () =>
+      categorized.find(
+        (t) => t.category === category && t.subcategory === subcategory,
+      ) ?? null,
+    [categorized, category, subcategory],
+  );
+
+  // 템플릿 변경 시 변수 값 초기화
+  useEffect(() => {
+    if (!selectedTemplate?.variables) {
+      setVariableValues({});
+      return;
+    }
+    setVariableValues(
+      Object.fromEntries(
+        selectedTemplate.variables.map((v) => [v.name, v.default]),
+      ),
+    );
+  }, [selectedTemplate]);
+
+  // 미리보기 — formula 기반 line 의 계산 결과
+  const computed = useMemo(() => {
+    const map = new Map<string, number>();
+    if (!selectedTemplate) return map;
+    for (const it of selectedTemplate.items) {
+      if (it.formula) {
+        const r = evaluateFormula(it.formula, variableValues);
+        map.set(it.product_id, r.ok ? Math.max(0, Math.round(r.value)) : 0);
+      } else if (typeof it.requested_quantity === "number") {
+        map.set(it.product_id, it.requested_quantity);
+      }
+    }
+    return map;
+  }, [selectedTemplate, variableValues]);
+
+  if (categorized.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="rounded-md border bg-info-bg/30 p-3 space-y-3">
+      <div className="flex items-center gap-1.5">
+        <Calculator className="h-4 w-4 text-info" />
+        <p className="text-xs font-semibold text-info">공용 템플릿 (산출식 기반)</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <select
+          value={category}
+          onChange={(e) => {
+            setCategory(e.target.value);
+            setSubcategory("");
+          }}
+          className="h-11 rounded-md border bg-background px-3 text-sm"
+        >
+          <option value="">대분류 선택…</option>
+          {categories.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+        <select
+          value={subcategory}
+          onChange={(e) => setSubcategory(e.target.value)}
+          disabled={!category}
+          className="h-11 rounded-md border bg-background px-3 text-sm disabled:opacity-50"
+        >
+          <option value="">소분류 선택…</option>
+          {subcategories.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {selectedTemplate &&
+        selectedTemplate.variables &&
+        selectedTemplate.variables.length > 0 && (
+          <div className="space-y-2 rounded-md bg-background p-2">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              변수 입력
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {selectedTemplate.variables.map((v) => (
+                <label key={v.name} className="space-y-1">
+                  <span className="block text-[11px] text-foreground">
+                    {v.label}
+                    <span className="ml-1 font-mono text-[10px] text-muted-foreground">
+                      ({v.name})
+                    </span>
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min={0}
+                      value={variableValues[v.name] ?? 0}
+                      onChange={(e) =>
+                        setVariableValues((prev) => ({
+                          ...prev,
+                          [v.name]: Number(e.target.value) || 0,
+                        }))
+                      }
+                      className="h-10 flex-1 rounded border bg-background px-2 text-right text-sm tabular-nums"
+                    />
+                    {v.unit && (
+                      <span className="text-[11px] text-muted-foreground">
+                        {v.unit}
+                      </span>
+                    )}
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+      {selectedTemplate && computed.size > 0 && (
+        <div className="rounded-md bg-background p-2 text-xs">
+          <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            산출 결과 미리보기
+          </p>
+          <ul className="space-y-0.5">
+            {Array.from(computed.entries()).map(([pid, qty]) => {
+              const item = selectedTemplate.items.find(
+                (it) => it.product_id === pid,
+              );
+              return (
+                <li
+                  key={pid}
+                  className="flex items-center justify-between text-[11px]"
+                >
+                  <span className="truncate text-muted-foreground">
+                    {item?.formula ? (
+                      <span className="font-mono">{item.formula}</span>
+                    ) : (
+                      "고정"
+                    )}
+                  </span>
+                  <span className="tabular-nums font-semibold">
+                    {qty.toLocaleString("ko-KR")}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
+      <Button
+        type="button"
+        onClick={() => {
+          if (selectedTemplate) onApply(selectedTemplate, computed);
+        }}
+        disabled={!selectedTemplate}
+        className="w-full"
+      >
+        {selectedTemplate
+          ? `자재 ${selectedTemplate.items.length}개 추가`
+          : "템플릿을 선택하세요"}
+      </Button>
     </div>
   );
 }
@@ -264,6 +502,8 @@ export function MobileRequestForm({
           unit: c.unit,
           quantity: 1,
           note: "",
+          fromFormula: false,
+          fromTemplateId: null,
         },
       ];
     });
@@ -271,12 +511,53 @@ export function MobileRequestForm({
   }
 
   function updateQty(idx: number, next: number) {
-    if (next < 1) return;
+    const min = lines[idx]?.fromFormula ? 0 : 1;
+    if (next < min) return;
     setLines((prev) => prev.map((l, i) => (i === idx ? { ...l, quantity: next } : l)));
   }
 
   function removeLine(idx: number) {
     setLines((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  /**
+   * 산출식 템플릿 적용 — 변수 평가 결과를 받아서 각 line 의 quantity 로 사용.
+   * 같은 product_id 가 이미 있으면 산출 수량으로 대체 (가산 X — 수식 의도와 충돌).
+   */
+  function applyComputedTemplate(
+    tpl: TemplateOption,
+    computedQuantities: Map<string, number>,
+  ) {
+    setLines((prev) => {
+      const next = [...prev];
+      for (const ti of tpl.items) {
+        const meta = productMetaMap[ti.product_id];
+        if (!meta) continue;
+        const qty = computedQuantities.get(ti.product_id) ?? 0;
+        const isFormula = !!ti.formula;
+        const existingIdx = next.findIndex((l) => l.product_id === ti.product_id);
+        if (existingIdx >= 0) {
+          next[existingIdx] = {
+            ...next[existingIdx],
+            quantity: qty,
+            fromFormula: isFormula,
+            fromTemplateId: tpl.id,
+          };
+        } else {
+          next.push({
+            product_id: ti.product_id,
+            name: meta.name,
+            variant: meta.variant,
+            unit: meta.unit,
+            quantity: qty,
+            note: ti.note ?? "",
+            fromFormula: isFormula,
+            fromTemplateId: tpl.id,
+          });
+        }
+      }
+      return next;
+    });
   }
 
   function updateLineNote(idx: number, value: string) {
@@ -295,10 +576,11 @@ export function MobileRequestForm({
         // 메타 정보가 없으면 (제품이 삭제된 경우) 스킵
         if (!meta) continue;
         const existingIdx = next.findIndex((l) => l.product_id === ti.product_id);
+        const qty = ti.requested_quantity ?? 0;
         if (existingIdx >= 0) {
           next[existingIdx] = {
             ...next[existingIdx],
-            quantity: next[existingIdx].quantity + ti.requested_quantity,
+            quantity: next[existingIdx].quantity + qty,
           };
         } else {
           next.push({
@@ -306,8 +588,10 @@ export function MobileRequestForm({
             name: meta.name,
             variant: meta.variant,
             unit: meta.unit,
-            quantity: ti.requested_quantity,
+            quantity: qty,
             note: ti.note ?? "",
+            fromFormula: false,
+            fromTemplateId: tpl.id,
           });
         }
       }
@@ -334,6 +618,7 @@ export function MobileRequestForm({
         items: lines.map((l) => ({
           product_id: l.product_id,
           requested_quantity: l.quantity,
+          formula: null,
           note: l.note.trim() || null,
         })),
       });
@@ -355,8 +640,10 @@ export function MobileRequestForm({
       setError("현장을 선택해주세요.");
       return;
     }
-    if (lines.length === 0) {
-      setError("최소 1개 이상의 자재를 추가해주세요.");
+    // 수량 0 line 은 제출에서 제외 (수식 line 의 0 = "필요 없음" 의미)
+    const submitLines = lines.filter((l) => l.quantity > 0);
+    if (submitLines.length === 0) {
+      setError("수량이 1 이상인 자재를 최소 1개 추가해주세요.");
       return;
     }
 
@@ -366,7 +653,7 @@ export function MobileRequestForm({
         note: note.trim() || null,
         is_urgent: isUrgent,
         urgent_reason: isUrgent ? urgentReason.trim() || null : null,
-        items: lines.map((l) => ({
+        items: submitLines.map((l) => ({
           product_id: l.product_id,
           requested_quantity: l.quantity,
           note: l.note.trim() || null,
@@ -404,8 +691,14 @@ export function MobileRequestForm({
         </select>
       </div>
 
-      {/* 템플릿 바로가기 */}
-      {templates.length > 0 && (
+      {/* 카테고리 기반 공용 템플릿 picker (산출식 지원) */}
+      <CategoryTemplatePicker
+        templates={templates}
+        onApply={(tpl, computed) => applyComputedTemplate(tpl, computed)}
+      />
+
+      {/* 단순 템플릿 묶음 — 개인 + 카테고리 없는 공용 */}
+      {templates.some((t) => !t.is_public || !t.category) && (
         <button
           type="button"
           onClick={() => setTemplateOpen(true)}
@@ -413,7 +706,7 @@ export function MobileRequestForm({
           className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-md border border-secondary/30 bg-secondary/5 text-sm font-medium text-secondary active:bg-secondary/10"
         >
           <BookOpen className="h-4 w-4" />
-          템플릿에서 자재 가져오기 ({templates.length}개)
+          개인·기본 템플릿 가져오기
         </button>
       )}
 
@@ -452,8 +745,16 @@ export function MobileRequestForm({
           </button>
         ) : (
           <div className="mt-1 space-y-2">
-            {lines.map((l, idx) => (
-              <div key={`${l.product_id}-${idx}`} className="rounded-md border bg-background p-3">
+            {lines.map((l, idx) => {
+              const minQty = l.fromFormula ? 0 : 1;
+              return (
+              <div
+                key={`${l.product_id}-${idx}`}
+                className={
+                  "rounded-md border bg-background p-3 " +
+                  (l.fromFormula ? "border-info/40" : "")
+                }
+              >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">
@@ -463,13 +764,23 @@ export function MobileRequestForm({
                           · {l.variant}
                         </span>
                       )}
+                      {l.fromFormula && (
+                        <span className="ml-1.5 inline-block rounded bg-info-bg px-1 py-0.5 text-[9px] font-bold uppercase tracking-wider text-info">
+                          산출
+                        </span>
+                      )}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => removeLine(idx)}
-                    disabled={isSubmitting}
-                    className="shrink-0 rounded p-1 text-muted-foreground active:bg-muted"
+                    disabled={isSubmitting || l.fromFormula}
+                    title={
+                      l.fromFormula
+                        ? "산출식 자재는 수량 0으로 변경하세요 (삭제하면 수식이 깨질 수 있음)"
+                        : "삭제"
+                    }
+                    className="shrink-0 rounded p-1 text-muted-foreground active:bg-muted disabled:opacity-30"
                     aria-label="삭제"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -480,8 +791,8 @@ export function MobileRequestForm({
                   <button
                     type="button"
                     onClick={() => updateQty(idx, l.quantity - 1)}
-                    disabled={isSubmitting || l.quantity <= 1}
-                    className="flex h-11 w-11 items-center justify-center rounded border bg-surface-low active:bg-surface-high"
+                    disabled={isSubmitting || l.quantity <= minQty}
+                    className="flex h-11 w-11 items-center justify-center rounded border bg-surface-low active:bg-surface-high disabled:opacity-30"
                     aria-label="수량 감소"
                   >
                     <Minus className="h-4 w-4" />
@@ -490,13 +801,16 @@ export function MobileRequestForm({
                     type="number"
                     inputMode="numeric"
                     value={l.quantity}
-                    min={1}
+                    min={minQty}
                     onChange={(e) => {
                       const v = Number.parseInt(e.target.value, 10);
-                      if (Number.isFinite(v) && v >= 1) updateQty(idx, v);
+                      if (Number.isFinite(v) && v >= minQty) updateQty(idx, v);
                     }}
                     disabled={isSubmitting}
-                    className="h-11 flex-1 rounded border bg-background px-3 text-center text-base tabular-nums font-semibold"
+                    className={
+                      "h-11 flex-1 rounded border bg-background px-3 text-center text-base tabular-nums font-semibold " +
+                      (l.quantity === 0 ? "text-muted-foreground" : "")
+                    }
                   />
                   <button
                     type="button"
@@ -521,7 +835,8 @@ export function MobileRequestForm({
                   className="mt-2 h-10 w-full rounded border bg-background px-3 text-sm"
                 />
               </div>
-            ))}
+              );
+            })}
             <button
               type="button"
               onClick={openSearch}
@@ -598,10 +913,10 @@ export function MobileRequestForm({
         {isSubmitting ? "제출 중..." : "신청 제출"}
       </Button>
 
-      {/* 템플릿 선택 sheet (다중 선택 가능 — 여러 묶음을 합쳐 추가) */}
+      {/* 단순 템플릿 sheet — 카테고리 없는 공용 + 개인 (가산 모드) */}
       {templateOpen && (
         <TemplatePickerSheet
-          templates={templates}
+          templates={templates.filter((t) => !t.is_public || !t.category)}
           onClose={() => setTemplateOpen(false)}
           onApply={(picked) => {
             for (const t of picked) applyTemplate(t);

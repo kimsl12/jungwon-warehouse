@@ -54,20 +54,60 @@ export default async function MobileRequestNewPage({
   // 템플릿 목록: 공용 + 본인 개인
   const { data: rawTemplates } = await supabase
     .from("request_templates")
-    .select("id, name, note, items, is_public, owner_id, created_by, updated_at")
+    .select(
+      "id, name, note, items, is_public, owner_id, created_by, updated_at, category, subcategory, variables",
+    )
     .or(`is_public.eq.true,owner_id.eq.${user.id}`)
     .order("is_public", { ascending: false })
+    .order("category", { ascending: true, nullsFirst: false })
+    .order("subcategory", { ascending: true, nullsFirst: false })
     .order("updated_at", { ascending: false })
     .limit(50);
 
-  const templates = (rawTemplates ?? []).map((t) => ({
-    id: t.id,
-    name: t.name,
-    note: t.note,
-    items: t.items as Array<{ product_id: string; requested_quantity: number; note?: string | null }>,
-    is_public: t.is_public,
-    is_mine: t.owner_id === user.id || t.created_by === user.id,
-  }));
+  type RawItem = {
+    product_id: string;
+    requested_quantity?: number | null;
+    formula?: string | null;
+    note?: string | null;
+  };
+  type RawVar = {
+    name: string;
+    label: string;
+    unit?: string | null;
+    default?: number;
+  };
+
+  const templates = (rawTemplates ?? []).map((t) => {
+    const vars = Array.isArray(t.variables) ? (t.variables as RawVar[]) : null;
+    return {
+      id: t.id,
+      name: t.name,
+      note: t.note,
+      items: (t.items as RawItem[]).map((it) => ({
+        product_id: it.product_id,
+        requested_quantity:
+          typeof it.requested_quantity === "number"
+            ? it.requested_quantity
+            : null,
+        formula:
+          typeof it.formula === "string" && it.formula.length > 0
+            ? it.formula
+            : null,
+        note: it.note ?? null,
+      })),
+      is_public: t.is_public,
+      is_mine: t.owner_id === user.id || t.created_by === user.id,
+      category: t.category,
+      subcategory: t.subcategory,
+      variables:
+        vars?.map((v) => ({
+          name: v.name,
+          label: v.label,
+          unit: v.unit ?? "",
+          default: typeof v.default === "number" ? v.default : 0,
+        })) ?? null,
+    };
+  });
 
   // "복제" 플로우: from 쿼리가 있으면 기존 신청의 라인을 초기값으로
   let initialLines: Array<{
@@ -77,6 +117,8 @@ export default async function MobileRequestNewPage({
     unit: string | null;
     quantity: number;
     note: string;
+    fromFormula: boolean;
+    fromTemplateId: string | null;
   }> = [];
   let initialSiteId: string | undefined;
   if (fromRequestId) {
@@ -102,6 +144,8 @@ export default async function MobileRequestNewPage({
         unit: it.unit,
         quantity: it.requested_quantity,
         note: it.note ?? "",
+        fromFormula: false,
+        fromTemplateId: null,
       }));
     }
   }
