@@ -17,11 +17,21 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+type TemplateVariable = {
+  name: string;
+  label: string;
+  unit: string;
+  default: number;
+};
+
 type TemplateRow = {
   id: string;
   name: string;
   note: string | null;
   is_public: boolean;
+  category: string | null;
+  subcategory: string | null;
+  variables: TemplateVariable[] | null;
   created_by_name: string;
   can_delete: boolean;
   updated_at: string;
@@ -30,7 +40,8 @@ type TemplateRow = {
     name: string;
     variant: string | null;
     unit: string | null;
-    requested_quantity: number;
+    requested_quantity: number | null;
+    formula: string | null;
   }>;
 };
 
@@ -42,7 +53,13 @@ const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
 });
 const nf = new Intl.NumberFormat("ko-KR");
 
-export function TemplateTable({ rows }: { rows: TemplateRow[] }) {
+export function TemplateTable({
+  rows,
+  isAdmin,
+}: {
+  rows: TemplateRow[];
+  isAdmin: boolean;
+}) {
   const router = useRouter();
   const [deleting, setDeleting] = useState<TemplateRow | null>(null);
   const [editing, setEditing] = useState<TemplateRow | null>(null);
@@ -88,8 +105,30 @@ export function TemplateTable({ rows }: { rows: TemplateRow[] }) {
           >
             <div className="min-w-0">
               <p className="text-sm font-medium">{r.name}</p>
+              {(r.category || r.subcategory) && (
+                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                  {r.category}
+                  {r.subcategory && (
+                    <span className="text-foreground/70"> · {r.subcategory}</span>
+                  )}
+                </p>
+              )}
               {r.note && (
                 <p className="mt-0.5 text-xs text-muted-foreground">{r.note}</p>
+              )}
+              {r.variables && r.variables.length > 0 && (
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {r.variables.map((v) => (
+                    <span
+                      key={v.name}
+                      className="inline-flex items-center gap-1 rounded bg-info-bg px-1.5 py-0.5 text-[10px] text-info"
+                    >
+                      <span className="font-mono">{v.name}</span>
+                      <span className="text-info/80">{v.label}</span>
+                      {v.unit && <span className="text-info/60">({v.unit})</span>}
+                    </span>
+                  ))}
+                </div>
               )}
               <div className="mt-1.5 flex flex-wrap gap-1">
                 {r.items.slice(0, 8).map((it, idx) => (
@@ -102,8 +141,9 @@ export function TemplateTable({ rows }: { rows: TemplateRow[] }) {
                       <span className="text-muted-foreground">· {it.variant}</span>
                     )}
                     <span className="text-muted-foreground tabular-nums">
-                      × {nf.format(it.requested_quantity)}
-                      {it.unit ?? ""}
+                      {it.formula
+                        ? `≈ ${it.formula}`
+                        : `× ${nf.format(it.requested_quantity ?? 0)}${it.unit ?? ""}`}
                     </span>
                   </span>
                 ))}
@@ -160,6 +200,7 @@ export function TemplateTable({ rows }: { rows: TemplateRow[] }) {
 
       <TemplateEditDialog
         template={editing}
+        isAdmin={isAdmin}
         onOpenChange={(next) => {
           if (!next) setEditing(null);
         }}

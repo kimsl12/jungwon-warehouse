@@ -10,8 +10,16 @@ export const dynamic = "force-dynamic";
 
 type TemplateItem = {
   product_id: string;
-  requested_quantity: number;
+  requested_quantity?: number | null;
+  formula?: string | null;
   note?: string | null;
+};
+
+type TemplateVariableJson = {
+  name: string;
+  label: string;
+  unit?: string | null;
+  default?: number;
 };
 
 export default async function RequestTemplatesPage() {
@@ -31,10 +39,12 @@ export default async function RequestTemplatesPage() {
   const { data: templates } = await supabase
     .from("request_templates")
     .select(
-      "id, name, note, items, is_public, owner_id, created_by, updated_at",
+      "id, name, note, items, is_public, owner_id, created_by, updated_at, category, subcategory, variables",
     )
     .or(`is_public.eq.true,owner_id.eq.${user.id}`)
     .order("is_public", { ascending: false })
+    .order("category", { ascending: true, nullsFirst: false })
+    .order("subcategory", { ascending: true, nullsFirst: false })
     .order("updated_at", { ascending: false });
 
   const creatorIds = Array.from(
@@ -77,13 +87,24 @@ export default async function RequestTemplatesPage() {
 
   const rows = (templates ?? []).map((t) => {
     const items = Array.isArray(t.items) ? (t.items as TemplateItem[]) : [];
+    const vars = Array.isArray(t.variables)
+      ? (t.variables as TemplateVariableJson[])
+      : null;
     return {
       id: t.id,
       name: t.name,
       note: t.note,
       is_public: t.is_public,
+      category: t.category,
+      subcategory: t.subcategory,
+      variables:
+        vars?.map((v) => ({
+          name: v.name,
+          label: v.label,
+          unit: v.unit ?? "",
+          default: typeof v.default === "number" ? v.default : 0,
+        })) ?? null,
       created_by_name: creatorMap.get(t.created_by ?? "") ?? "—",
-      // 개인 템플릿은 소유자, 공용 템플릿은 admin 누구든 삭제 가능
       can_delete: t.is_public ? true : t.owner_id === user.id,
       updated_at: t.updated_at,
       items: items.map((it) => {
@@ -93,7 +114,14 @@ export default async function RequestTemplatesPage() {
           name: p?.name ?? "(삭제된 자재)",
           variant: p?.variant ?? null,
           unit: p?.unit ?? null,
-          requested_quantity: it.requested_quantity,
+          requested_quantity:
+            typeof it.requested_quantity === "number"
+              ? it.requested_quantity
+              : null,
+          formula:
+            typeof it.formula === "string" && it.formula.length > 0
+              ? it.formula
+              : null,
         };
       }),
     };
@@ -119,9 +147,9 @@ export default async function RequestTemplatesPage() {
             공용 템플릿은 전체 현장 담당자가, 개인 템플릿은 본인만 사용할 수 있습니다.
           </p>
         </div>
-        <TemplateCreateDialog />
+        <TemplateCreateDialog isAdmin={true} />
       </div>
-      <TemplateTable rows={rows} />
+      <TemplateTable rows={rows} isAdmin={true} />
     </div>
   );
 }
