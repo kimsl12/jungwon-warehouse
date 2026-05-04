@@ -57,6 +57,7 @@ export default async function PurchaseOrderDetailPage({ params }: { params: Para
   const canSendOrCancel = status === "draft";
   const canCancelSent = status === "sent";
   const canReceive = status === "sent" || status === "receiving";
+  const canDelete = status === "draft" || status === "canceled";
   const totalItems = items?.length ?? 0;
   const fulfilledItems = (items ?? []).filter(
     (it) => it.received_quantity >= it.ordered_quantity,
@@ -108,6 +109,7 @@ export default async function PurchaseOrderDetailPage({ params }: { params: Para
             poId={po.id}
             canSend={canSendOrCancel}
             canCancel={canSendOrCancel || canCancelSent}
+            canDelete={canDelete}
             vendorFax={po.vendor?.fax ?? null}
             faxConfigured={isFaxConfigured()}
           />

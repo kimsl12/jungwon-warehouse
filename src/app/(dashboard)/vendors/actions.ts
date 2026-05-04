@@ -213,7 +213,8 @@ export async function deleteVendor(formData: FormData): Promise<{ error: string 
   if (error) {
     if (error.code === "23503") {
       return {
-        error: "이 거래처의 발주 이력이 있어 삭제할 수 없습니다. 비활성화하세요.",
+        error:
+          "이 거래처의 발주 이력이 있어 삭제할 수 없습니다. 발주서 목록에서 작성중·취소 상태의 발주서를 삭제하거나, 진행/완료된 발주가 있다면 거래처를 비활성화하세요.",
       };
     }
     return { error: "삭제에 실패했습니다: " + error.message };

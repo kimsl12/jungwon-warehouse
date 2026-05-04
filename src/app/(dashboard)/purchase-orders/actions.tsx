@@ -60,6 +60,10 @@ const poFaxSchema = z.object({
   po_id: z.string().uuid(),
 });
 
+const poDeleteSchema = z.object({
+  po_id: z.string().uuid(),
+});
+
 export type PoFormState = {
   error: string | null;
   fieldErrors?: Record<string, string[] | undefined>;
@@ -342,4 +346,45 @@ export async function sendPurchaseOrderFax(
 
   revalidatePath(`/purchase-orders/${po.id}`);
   return { error: null, ok: true };
+}
+
+// -----------------------------------------------------------------------------
+// deletePurchaseOrder — 작성중(draft) / 취소(canceled) 상태만 영구 삭제 가능.
+// 진행 중(sent/receiving)·완료(received)는 발주·입고 이력 보존을 위해 차단.
+// purchase_order_items 는 ON DELETE CASCADE 로 자동 정리, 입고 transactions
+// 는 PO FK 가 없어 별개로 보존됨 (재고 변동 이력 유지).
+// -----------------------------------------------------------------------------
+export async function deletePurchaseOrder(
+  formData: FormData,
+): Promise<{ error: string | null }> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { error: auth.error };
+
+  const parsed = poDeleteSchema.safeParse({ po_id: formData.get("po_id") });
+  if (!parsed.success) return { error: "잘못된 요청입니다." };
+
+  const { data: po, error: fetchError } = await auth.supabase
+    .from("purchase_orders")
+    .select("status")
+    .eq("id", parsed.data.po_id)
+    .single();
+
+  if (fetchError || !po) return { error: "발주서를 찾을 수 없습니다." };
+
+  if (po.status !== "draft" && po.status !== "canceled") {
+    return {
+      error:
+        "작성중·취소 상태의 발주서만 삭제할 수 있습니다. 먼저 발주서를 취소하세요.",
+    };
+  }
+
+  const { error } = await auth.supabase
+    .from("purchase_orders")
+    .delete()
+    .eq("id", parsed.data.po_id);
+
+  if (error) return { error: "삭제 실패: " + error.message };
+
+  revalidatePath("/purchase-orders");
+  return { error: null };
 }
