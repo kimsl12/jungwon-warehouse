@@ -763,6 +763,15 @@ export type Database = {
       }
     }
     Functions: {
+      adjust_product_stock: {
+        Args: {
+          p_new_quantity: number
+          p_product_id: string
+          p_reason: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       approve_material_request: {
         Args: { p_request_id: string }
         Returns: undefined

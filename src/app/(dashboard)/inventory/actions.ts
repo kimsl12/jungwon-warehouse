@@ -209,6 +209,75 @@ export async function updateProduct(
 }
 
 // -----------------------------------------------------------------------------
+// adjustProductStock — admin 전용 재고 직접 보정 (입고/출고 ≠).
+// 시스템 도입 초기 또는 실재고 정합성 맞출 때만 사용. transactions 에는 안
+// 남고 activity_logs 에 'adjust' 로 기록됨.
+// -----------------------------------------------------------------------------
+const adjustStockSchema = z.object({
+  product_id: z.string().uuid(),
+  new_quantity: z.coerce.number().int().min(0, "수량은 0 이상이어야 합니다."),
+  reason: z
+    .string()
+    .trim()
+    .min(1, "보정 사유를 입력해주세요.")
+    .max(200, "사유는 200자 이하로 입력해주세요."),
+});
+
+export type AdjustStockState = {
+  error: string | null;
+  fieldErrors?: Record<string, string[] | undefined>;
+  success?: boolean;
+} | null;
+
+export async function adjustProductStock(
+  _prev: AdjustStockState,
+  formData: FormData,
+): Promise<AdjustStockState> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { error: auth.error };
+
+  const parsed = adjustStockSchema.safeParse({
+    product_id: formData.get("product_id"),
+    new_quantity: formData.get("new_quantity"),
+    reason: formData.get("reason"),
+  });
+
+  if (!parsed.success) {
+    return {
+      error: "입력값을 확인해주세요.",
+      fieldErrors: z.flattenError(parsed.error).fieldErrors,
+    };
+  }
+
+  const { error } = await auth.supabase.rpc("adjust_product_stock", {
+    p_product_id: parsed.data.product_id,
+    p_new_quantity: parsed.data.new_quantity,
+    p_reason: parsed.data.reason,
+    p_user_id: auth.user.id,
+  });
+
+  if (error) {
+    if (error.message.includes("NOT_AUTHORIZED")) {
+      return { error: "관리자 권한이 필요합니다." };
+    }
+    if (error.message.includes("PRODUCT_NOT_FOUND")) {
+      return { error: "품목을 찾을 수 없습니다." };
+    }
+    if (error.message.includes("INVALID_QUANTITY")) {
+      return { error: "수량은 0 이상의 정수여야 합니다." };
+    }
+    if (error.message.includes("REASON_REQUIRED")) {
+      return { error: "보정 사유를 입력해주세요." };
+    }
+    return { error: "재고 보정 실패: " + error.message };
+  }
+
+  revalidatePath("/inventory");
+  revalidatePath("/overview");
+  return { error: null, success: true };
+}
+
+// -----------------------------------------------------------------------------
 // deleteProduct
 // -----------------------------------------------------------------------------
 export async function deleteProduct(formData: FormData): Promise<{ error: string | null }> {

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { History } from "lucide-react";
 
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { ProductAliases } from "@/components/inventory/product-aliases";
 import { ProductFormFields } from "@/components/inventory/product-form-fields";
+import { StockAdjustSection } from "@/components/inventory/stock-adjust-section";
 import type { Database } from "@/lib/database.types";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
@@ -31,6 +33,7 @@ export function ProductEditDialog({
   onOpenChange: (open: boolean) => void;
   isAdmin?: boolean;
 }) {
+  const router = useRouter();
   const [state, setState] = useState<ProductFormState>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -70,6 +73,20 @@ export function ProductEditDialog({
             includeQuantity={false}
             disabled={isPending}
           />
+          {isAdmin && (
+            <div className="mt-4 border-t pt-4">
+              <StockAdjustSection
+                productId={product.id}
+                productName={product.name}
+                currentQuantity={product.quantity}
+                unit={product.unit}
+                onAdjusted={() => {
+                  onOpenChange(false);
+                  router.refresh();
+                }}
+              />
+            </div>
+          )}
           {isAdmin && (
             <div className="mt-4 border-t pt-4">
               <ProductAliases productId={product.id} />
