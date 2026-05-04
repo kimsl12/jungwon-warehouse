@@ -1,4 +1,4 @@
-import { Box } from "lucide-react";
+import { Box, CornerDownRight } from "lucide-react";
 
 import { ProductRowActions } from "@/components/inventory/product-row-actions";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -8,6 +8,15 @@ import type { Database } from "@/lib/database.types";
 type Product = Database["public"]["Tables"]["products"]["Row"];
 
 export type SiteOption = { id: string; name: string };
+
+function VariantChip({ value }: { value: string | null }) {
+  if (!value) return null;
+  return (
+    <span className="inline-flex items-center rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+      {value}
+    </span>
+  );
+}
 
 export function InventoryTable({
   products,
@@ -45,7 +54,7 @@ export function InventoryTable({
             </tr>
           </thead>
           <tbody>
-            {products.map((p) => {
+            {products.map((p, i) => {
               const status =
                 p.quantity === 0
                   ? { tone: "danger" as const, label: "소진" }
@@ -55,27 +64,36 @@ export function InventoryTable({
               const availability = availabilityMap?.[p.id];
               const showPending = availability && availability.pending > 0;
 
+              const isFirstOfGroup =
+                i === 0 || products[i - 1].name !== p.name;
+
               return (
                 <tr
                   key={p.id}
-                  className="border-t border-border transition-colors hover:bg-muted/40"
+                  className={
+                    "transition-colors hover:bg-muted/40 " +
+                    (isFirstOfGroup ? "border-t border-border" : "")
+                  }
                 >
                   <td className="px-5 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="inline-flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-brand-600 dark:text-brand-300">
-                        <Box className="size-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="font-semibold text-foreground">
-                          {p.name}
+                    {isFirstOfGroup ? (
+                      <div className="flex items-center gap-3">
+                        <div className="inline-flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-brand-600 dark:text-brand-300">
+                          <Box className="size-4" />
                         </div>
-                        {p.variant && (
-                          <div className="mt-0.5 text-[11.5px] text-muted-foreground">
-                            {p.variant}
-                          </div>
-                        )}
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                          <span className="font-semibold text-foreground">
+                            {p.name}
+                          </span>
+                          <VariantChip value={p.variant} />
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="flex items-center gap-2 pl-12">
+                        <CornerDownRight className="size-3.5 shrink-0 text-muted-foreground/60" />
+                        <VariantChip value={p.variant} />
+                      </div>
+                    )}
                   </td>
                   <td className="px-3 py-3 text-muted-foreground">
                     {p.category ?? "—"}
