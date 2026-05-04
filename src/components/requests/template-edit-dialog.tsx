@@ -110,7 +110,7 @@ export function TemplateEditDialog({ template, isAdmin, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(next) => !next && close()}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>템플릿 수정</DialogTitle>
           <DialogDescription>

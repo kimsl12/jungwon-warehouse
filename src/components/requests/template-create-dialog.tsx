@@ -76,7 +76,7 @@ export function TemplateCreateDialog({ isAdmin }: { isAdmin: boolean }) {
       <DialogTrigger render={<Button />}>
         <Plus className="h-4 w-4" /> 새 템플릿
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>새 자재 신청 템플릿</DialogTitle>
           <DialogDescription>

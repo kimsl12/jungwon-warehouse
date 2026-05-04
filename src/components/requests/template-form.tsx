@@ -323,6 +323,89 @@ export function TemplateForm({
           </div>
         )}
 
+        {/* 공용 전용: 수식 도움말 (펼치기) */}
+        {showPublicFields && (
+          <details className="rounded border border-info/40 bg-info-bg/30 p-3 text-xs">
+            <summary className="cursor-pointer select-none font-medium text-info">
+              수식 사용법 · 허용 토큰 (펼치기)
+            </summary>
+            <div className="mt-3 space-y-2">
+              <div>
+                <p className="font-semibold text-foreground">변수</p>
+                <p className="text-muted-foreground">
+                  아래 "변수" 섹션에서 정의한 이름을 그대로 사용 (예:{" "}
+                  <code className="rounded bg-background px-1">L</code>,{" "}
+                  <code className="rounded bg-background px-1">N</code>).
+                </p>
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">연산자</p>
+                <p className="text-muted-foreground">
+                  <code className="rounded bg-background px-1">+</code>{" "}
+                  <code className="rounded bg-background px-1">-</code>{" "}
+                  <code className="rounded bg-background px-1">*</code>{" "}
+                  <code className="rounded bg-background px-1">/</code>{" "}
+                  <code className="rounded bg-background px-1">%</code> (나머지),
+                  괄호{" "}
+                  <code className="rounded bg-background px-1">( )</code>
+                </p>
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">함수</p>
+                <p className="text-muted-foreground">
+                  <code className="rounded bg-background px-1">ceil(x)</code>{" "}
+                  올림 ·{" "}
+                  <code className="rounded bg-background px-1">floor(x)</code>{" "}
+                  내림 ·{" "}
+                  <code className="rounded bg-background px-1">round(x)</code>{" "}
+                  반올림 ·{" "}
+                  <code className="rounded bg-background px-1">abs(x)</code> 절댓값
+                  ·{" "}
+                  <code className="rounded bg-background px-1">min(a, b…)</code>{" "}
+                  최솟값 ·{" "}
+                  <code className="rounded bg-background px-1">max(a, b…)</code>{" "}
+                  최댓값
+                </p>
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">예시</p>
+                <ul className="space-y-0.5 text-muted-foreground">
+                  <li>
+                    <code className="rounded bg-background px-1">L*0.5</code>{" "}
+                    — 길이의 절반 (1m당 0.5개)
+                  </li>
+                  <li>
+                    <code className="rounded bg-background px-1">ceil(L/3)</code>{" "}
+                    — 3m 1본 기준 올림 (배관 본수)
+                  </li>
+                  <li>
+                    <code className="rounded bg-background px-1">
+                      ceil(L*1.1)+2
+                    </code>{" "}
+                    — 안전계수 10% + 끝단 마감 2개
+                  </li>
+                  <li>
+                    <code className="rounded bg-background px-1">
+                      max(0, ceil(L/3)-1)
+                    </code>{" "}
+                    — 음수 방지 (커플링: 본수-1, 0 미만이면 0)
+                  </li>
+                  <li>
+                    <code className="rounded bg-background px-1">
+                      ceil(L/0.6) + N*4
+                    </code>{" "}
+                    — 60cm 간격 새들 + 분기마다 4개 추가
+                  </li>
+                </ul>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                ⚠ 그 외 문자(세미콜론, 등호, 영문 함수명 외 식별자 등)는 보안상
+                거부됩니다. 결과가 음수면 신청 시 0으로 처리됩니다.
+              </p>
+            </div>
+          </details>
+        )}
+
         {/* 공용 전용: 변수 정의 */}
         {showPublicFields && (
           <div className="rounded border border-dashed border-secondary/40 bg-secondary/5 p-3">
