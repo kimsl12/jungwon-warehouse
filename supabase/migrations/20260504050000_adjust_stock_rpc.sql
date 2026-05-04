@@ -1,5 +1,11 @@
 -- 재고 보정(adjust) RPC — 입출고 transactions 와 분리된 admin 전용
 -- 직접 quantity 세팅. 시스템 도입 초기 또는 실재고 정합성 맞출 때 사용.
+
+-- activity_logs.action 에 'adjust' 추가 (기존: create/update/delete/in/out)
+ALTER TABLE public.activity_logs DROP CONSTRAINT IF EXISTS activity_logs_action_check;
+ALTER TABLE public.activity_logs ADD CONSTRAINT activity_logs_action_check
+  CHECK (action IN ('create', 'update', 'delete', 'in', 'out', 'adjust'));
+
 --
 -- 핵심 분리 원칙:
 --   - transactions 에 row 를 만들지 않는다 (입출고 통계와 섞이지 않게).
