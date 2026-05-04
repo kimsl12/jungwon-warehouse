@@ -433,6 +433,7 @@ export type Database = {
       }
       request_templates: {
         Row: {
+          category: string | null
           created_at: string
           created_by: string | null
           id: string
@@ -441,9 +442,12 @@ export type Database = {
           name: string
           note: string | null
           owner_id: string | null
+          subcategory: string | null
           updated_at: string
+          variables: Json | null
         }
         Insert: {
+          category?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -452,9 +456,12 @@ export type Database = {
           name: string
           note?: string | null
           owner_id?: string | null
+          subcategory?: string | null
           updated_at?: string
+          variables?: Json | null
         }
         Update: {
+          category?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -463,7 +470,9 @@ export type Database = {
           name?: string
           note?: string | null
           owner_id?: string | null
+          subcategory?: string | null
           updated_at?: string
+          variables?: Json | null
         }
         Relationships: []
       }
