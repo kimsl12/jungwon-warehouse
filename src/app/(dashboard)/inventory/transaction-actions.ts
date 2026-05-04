@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 const processTransactionSchema = z
   .object({
     product_id: z.string().uuid(),
-    type: z.enum(["in", "out"]),
+    type: z.enum(["in", "out", "loss"]),
     quantity: z.coerce.number().int().positive("수량은 1 이상이어야 합니다."),
     note: z.string().trim().max(500).optional().or(z.literal("")),
     site_id: z.string().uuid().optional().or(z.literal("")),

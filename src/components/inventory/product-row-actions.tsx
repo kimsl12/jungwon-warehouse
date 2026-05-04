@@ -40,14 +40,14 @@ export function ProductRowActions({
   sites: SiteOption[];
 }) {
   const [processOpen, setProcessOpen] = useState(false);
-  const [processType, setProcessType] = useState<"in" | "out">("in");
+  const [processType, setProcessType] = useState<"in" | "out" | "loss">("in");
   const [variantOpen, setVariantOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  function openProcess(type: "in" | "out") {
+  function openProcess(type: "in" | "out" | "loss") {
     setProcessType(type);
     setProcessOpen(true);
   }
@@ -80,6 +80,8 @@ export function ProductRowActions({
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => openProcess("in")}>입고 처리</DropdownMenuItem>
           <DropdownMenuItem onClick={() => openProcess("out")}>출고 처리</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => openProcess("loss")}>분실 처리</DropdownMenuItem>
           {isAdmin && (
             <>
               <DropdownMenuSeparator />

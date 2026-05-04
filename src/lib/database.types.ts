@@ -577,6 +577,7 @@ export type Database = {
           related_tx_id: string | null
           site_id: string | null
           type: string
+          vendor_id: string | null
         }
         Insert: {
           canceled_at?: string | null
@@ -591,6 +592,7 @@ export type Database = {
           related_tx_id?: string | null
           site_id?: string | null
           type: string
+          vendor_id?: string | null
         }
         Update: {
           canceled_at?: string | null
@@ -605,6 +607,7 @@ export type Database = {
           related_tx_id?: string | null
           site_id?: string | null
           type?: string
+          vendor_id?: string | null
         }
         Relationships: [
           {
@@ -626,6 +629,13 @@ export type Database = {
             columns: ["site_id"]
             isOneToOne: false
             referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
             referencedColumns: ["id"]
           },
         ]
@@ -763,6 +773,17 @@ export type Database = {
       }
     }
     Functions: {
+      get_vendor_inbound_by_period: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          vendor_id: string
+          vendor_name: string
+          total_quantity: number
+          total_amount: number
+          po_count: number
+          received_po_count: number
+        }[]
+      }
       adjust_product_stock: {
         Args: {
           p_new_quantity: number

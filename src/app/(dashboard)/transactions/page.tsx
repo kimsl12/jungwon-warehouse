@@ -9,11 +9,12 @@ import { createClient } from "@/lib/supabase/server";
 const PAGE_SIZE = 30;
 
 type SearchParams = Promise<{
-  type?: "in" | "out";
+  type?: "in" | "out" | "loss";
   product_id?: string;
   user_id?: string;
   category?: string;
   site_id?: string;
+  vendor_id?: string;
   from?: string;
   to?: string;
   page?: string;
@@ -48,17 +49,19 @@ export default async function TransactionsPage({
       created_at,
       created_by,
       site_id,
+      vendor_id,
       canceled_at,
       related_tx_id,
       products!inner(id, name, category, unit, variant),
-      sites(id, name)
+      sites(id, name),
+      vendors(id, name)
     `,
       { count: "exact" },
     )
     .order("created_at", { ascending: false })
     .range(fromIdx, toIdx);
 
-  if (params.type === "in" || params.type === "out") {
+  if (params.type === "in" || params.type === "out" || params.type === "loss") {
     query = query.eq("type", params.type);
   }
   if (params.product_id) {
@@ -73,6 +76,9 @@ export default async function TransactionsPage({
   if (params.site_id) {
     query = query.eq("site_id", params.site_id);
   }
+  if (params.vendor_id) {
+    query = query.eq("vendor_id", params.vendor_id);
+  }
   if (params.from) {
     query = query.gte("created_at", params.from);
   }
@@ -84,13 +90,20 @@ export default async function TransactionsPage({
   }
 
   // Fetch dropdown options in parallel
-  const [transactionsResult, productsResult, categoriesResult, profilesResult, sitesResult] =
-    await Promise.all([
+  const [
+    transactionsResult,
+    productsResult,
+    categoriesResult,
+    profilesResult,
+    sitesResult,
+    vendorsResult,
+  ] = await Promise.all([
       query,
       supabase.from("products").select("id, name").order("name"),
       supabase.from("products").select("category").not("category", "is", null),
       supabase.from("profiles").select("id, name").order("name"),
       supabase.from("sites").select("id, name").eq("active", true).order("name"),
+      supabase.from("vendors").select("id, name").eq("active", true).order("name"),
     ]);
 
   const transactions = transactionsResult.data ?? [];
@@ -119,11 +132,12 @@ export default async function TransactionsPage({
   // Build the export URL with the same filter params so users export
   // exactly what's on screen.
   const exportParams = new URLSearchParams();
-  if (params.type === "in" || params.type === "out") exportParams.set("type", params.type);
+  if (params.type === "in" || params.type === "out" || params.type === "loss") exportParams.set("type", params.type);
   if (params.product_id) exportParams.set("product_id", params.product_id);
   if (params.user_id) exportParams.set("user_id", params.user_id);
   if (params.category) exportParams.set("category", params.category);
   if (params.site_id) exportParams.set("site_id", params.site_id);
+  if (params.vendor_id) exportParams.set("vendor_id", params.vendor_id);
   if (params.from) exportParams.set("from", params.from);
   if (params.to) exportParams.set("to", params.to);
   const exportHref = exportParams.toString()
@@ -178,12 +192,14 @@ export default async function TransactionsPage({
         categories={categories}
         profiles={profilesResult.data ?? []}
         sites={sitesResult.data ?? []}
+        vendors={vendorsResult.data ?? []}
         initial={{
           type: params.type ?? "",
           product_id: params.product_id ?? "",
           user_id: params.user_id ?? "",
           category: params.category ?? "",
           site_id: params.site_id ?? "",
+          vendor_id: params.vendor_id ?? "",
           from: params.from ?? "",
           to: params.to ?? "",
         }}

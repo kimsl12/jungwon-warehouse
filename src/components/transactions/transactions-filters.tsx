@@ -13,6 +13,7 @@ type Initial = {
   user_id: string;
   category: string;
   site_id: string;
+  vendor_id: string;
   from: string;
   to: string;
 };
@@ -22,12 +23,14 @@ export function TransactionsFilters({
   categories,
   profiles,
   sites,
+  vendors,
   initial,
 }: {
   products: Option[];
   categories: string[];
   profiles: Option[];
   sites: { id: string; name: string }[];
+  vendors: { id: string; name: string }[];
   initial: Initial;
 }) {
   const router = useRouter();
@@ -53,12 +56,12 @@ export function TransactionsFilters({
   }
 
   function handleReset() {
-    setState({ type: "", product_id: "", user_id: "", category: "", site_id: "", from: "", to: "" });
+    setState({ type: "", product_id: "", user_id: "", category: "", site_id: "", vendor_id: "", from: "", to: "" });
     startTransition(() => router.push("/transactions"));
   }
 
   const hasFilter =
-    state.type || state.product_id || state.user_id || state.category || state.site_id || state.from || state.to;
+    state.type || state.product_id || state.user_id || state.category || state.site_id || state.vendor_id || state.from || state.to;
 
   const selectClass =
     "h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -77,6 +80,7 @@ export function TransactionsFilters({
             <option value="">전체</option>
             <option value="in">입고</option>
             <option value="out">출고</option>
+            <option value="loss">분실</option>
           </select>
         </div>
 
@@ -143,6 +147,23 @@ export function TransactionsFilters({
             {sites.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="vendor-tx">거래처 (입고만 매칭)</Label>
+          <select
+            id="vendor-tx"
+            className={selectClass}
+            value={state.vendor_id}
+            onChange={(e) => update("vendor_id", e.target.value)}
+          >
+            <option value="">전체</option>
+            {vendors.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.name}
               </option>
             ))}
           </select>

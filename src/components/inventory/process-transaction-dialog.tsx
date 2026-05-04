@@ -34,9 +34,9 @@ export function ProcessTransactionDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sites: SiteOption[];
-  initialType?: "in" | "out";
+  initialType?: "in" | "out" | "loss";
 }) {
-  const [type, setType] = useState<"in" | "out">(initialType);
+  const [type, setType] = useState<"in" | "out" | "loss">(initialType);
   const [siteId, setSiteId] = useState<string>("");
   const [state, setState] = useState<ProcessTransactionState>(null);
   const [isPending, startTransition] = useTransition();
@@ -102,13 +102,13 @@ export function ProcessTransactionDialog({
           <div className="grid gap-4">
             <div className="space-y-1.5">
               <Label>구분</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => setType("in")}
                   disabled={isPending}
                   className={cn(
-                    "rounded-lg border px-4 py-3 text-sm font-medium transition",
+                    "rounded-lg border px-3 py-3 text-sm font-medium transition",
                     type === "in"
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-input text-muted-foreground hover:bg-muted",
@@ -121,7 +121,7 @@ export function ProcessTransactionDialog({
                   onClick={() => setType("out")}
                   disabled={isPending}
                   className={cn(
-                    "rounded-lg border px-4 py-3 text-sm font-medium transition",
+                    "rounded-lg border px-3 py-3 text-sm font-medium transition",
                     type === "out"
                       ? "border-destructive bg-destructive/10 text-destructive"
                       : "border-input text-muted-foreground hover:bg-muted",
@@ -129,7 +129,26 @@ export function ProcessTransactionDialog({
                 >
                   출고
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setType("loss")}
+                  disabled={isPending}
+                  className={cn(
+                    "rounded-lg border px-3 py-3 text-sm font-medium transition",
+                    type === "loss"
+                      ? "border-warning bg-warning-bg text-warning"
+                      : "border-input text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  분실
+                </button>
               </div>
+              {type === "loss" && (
+                <p className="text-[11px] text-muted-foreground">
+                  분실은 출고와 분리되어 통계에서 별도 손실로 집계됩니다. 현장은
+                  옵셔널입니다.
+                </p>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -154,7 +173,7 @@ export function ProcessTransactionDialog({
               <Label htmlFor="site">
                 현장{" "}
                 {type === "out" && <span className="text-destructive">*</span>}
-                {type === "in" && (
+                {type !== "out" && (
                   <span className="text-xs text-muted-foreground">(선택)</span>
                 )}
               </Label>

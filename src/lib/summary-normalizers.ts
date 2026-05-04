@@ -14,8 +14,10 @@ export type DailyChartPoint = {
   label: string;
   in: number;
   out: number;
+  loss: number;
   inCount: number;
   outCount: number;
+  lossCount: number;
 };
 
 export type MonthlyChartPoint = {
@@ -25,8 +27,10 @@ export type MonthlyChartPoint = {
   label: string;
   in: number;
   out: number;
+  loss: number;
   inCount: number;
   outCount: number;
+  lossCount: number;
 };
 
 type DailyRow = {
@@ -51,7 +55,10 @@ export function normalizeDailySummary(
   rows: DailyRow[],
   referenceDate: Date = new Date(),
 ): DailyChartPoint[] {
-  const map = new Map<string, { in: number; out: number; inCount: number; outCount: number }>();
+  const map = new Map<
+    string,
+    { in: number; out: number; loss: number; inCount: number; outCount: number; lossCount: number }
+  >();
 
   const today = new Date(referenceDate);
   today.setHours(0, 0, 0, 0);
@@ -59,7 +66,7 @@ export function normalizeDailySummary(
     const d = new Date(today);
     d.setDate(today.getDate() - i);
     const key = formatYmd(d);
-    map.set(key, { in: 0, out: 0, inCount: 0, outCount: 0 });
+    map.set(key, { in: 0, out: 0, loss: 0, inCount: 0, outCount: 0, lossCount: 0 });
   }
 
   for (const row of rows) {
@@ -75,6 +82,10 @@ export function normalizeDailySummary(
       entry.out = Number(row.total_quantity ?? 0);
       entry.outCount = Number(row.transaction_count ?? 0);
     }
+    if (row.type === "loss") {
+      entry.loss = Number(row.total_quantity ?? 0);
+      entry.lossCount = Number(row.transaction_count ?? 0);
+    }
   }
 
   return Array.from(map.entries()).map(([day, v]) => {
@@ -84,8 +95,10 @@ export function normalizeDailySummary(
       label: `${m}/${d}`,
       in: v.in,
       out: v.out,
+      loss: v.loss,
       inCount: v.inCount,
       outCount: v.outCount,
+      lossCount: v.lossCount,
     };
   });
 }
@@ -97,12 +110,15 @@ export function normalizeMonthlySummary(
   rows: MonthlyRow[],
   referenceDate: Date = new Date(),
 ): MonthlyChartPoint[] {
-  const map = new Map<string, { in: number; out: number; inCount: number; outCount: number }>();
+  const map = new Map<
+    string,
+    { in: number; out: number; loss: number; inCount: number; outCount: number; lossCount: number }
+  >();
 
   for (let i = 11; i >= 0; i--) {
     const d = new Date(referenceDate.getFullYear(), referenceDate.getMonth() - i, 1);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    map.set(key, { in: 0, out: 0, inCount: 0, outCount: 0 });
+    map.set(key, { in: 0, out: 0, loss: 0, inCount: 0, outCount: 0, lossCount: 0 });
   }
 
   for (const row of rows) {
@@ -119,6 +135,10 @@ export function normalizeMonthlySummary(
       entry.out = Number(row.total_quantity ?? 0);
       entry.outCount = Number(row.transaction_count ?? 0);
     }
+    if (row.type === "loss") {
+      entry.loss = Number(row.total_quantity ?? 0);
+      entry.lossCount = Number(row.transaction_count ?? 0);
+    }
   }
 
   return Array.from(map.entries()).map(([key, v]) => ({
@@ -126,8 +146,10 @@ export function normalizeMonthlySummary(
     label: key,
     in: v.in,
     out: v.out,
+    loss: v.loss,
     inCount: v.inCount,
     outCount: v.outCount,
+    lossCount: v.lossCount,
   }));
 }
 

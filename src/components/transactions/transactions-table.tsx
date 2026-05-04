@@ -109,10 +109,12 @@ export function TransactionsTable({
                       "inline-flex items-center rounded px-2 py-0.5 text-xs font-medium",
                       tx.type === "in"
                         ? "bg-success-bg text-success dark:bg-emerald-950 dark:text-emerald-300"
-                        : "bg-warning-bg text-warning dark:bg-amber-950 dark:text-amber-300",
+                        : tx.type === "loss"
+                          ? "bg-danger-bg text-danger dark:bg-red-950 dark:text-red-300"
+                          : "bg-warning-bg text-warning dark:bg-amber-950 dark:text-amber-300",
                     )}
                   >
-                    {tx.type === "in" ? "입고" : "출고"}
+                    {tx.type === "in" ? "입고" : tx.type === "loss" ? "분실" : "출고"}
                   </span>
                   {isCanceled && (
                     <span className="ml-1.5 inline-flex items-center rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground no-underline">

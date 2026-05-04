@@ -13,11 +13,11 @@ import type { Database } from "@/lib/database.types";
 
 export type ProcessTransactionArgs = {
   p_product_id: string;
-  p_type: "in" | "out";
+  p_type: "in" | "out" | "loss";
   p_quantity: number;
   p_note: string | null;
   p_user_id: string | null;
-  /** Required when p_type === "out", optional otherwise */
+  /** Required when p_type === "out", optional for "in" and "loss" */
   p_site_id: string | null;
 };
 

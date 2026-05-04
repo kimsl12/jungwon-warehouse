@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowDownToLine, ArrowUpFromLine, TrendingUp } from "lucide-react";
+import { AlertTriangle, ArrowDownToLine, ArrowUpFromLine, TrendingUp } from "lucide-react";
 
 import { MonthlyTransactionsChart } from "@/components/dashboard/monthly-transactions-chart";
 import {
@@ -26,6 +26,15 @@ type OutgoingBySiteRow = {
   site_name: string | null;
   transaction_count: number;
   total_quantity: number;
+};
+
+type VendorInboundRow = {
+  vendor_id: string;
+  vendor_name: string;
+  total_quantity: number;
+  total_amount: number;
+  po_count: number;
+  received_po_count: number;
 };
 
 function isYmd(value: string | undefined): value is string {
@@ -61,8 +70,14 @@ export default async function ReportsPage({ searchParams }: { searchParams: Sear
 
   const supabase = await createClient();
 
-  const [monthlyResult, topOutgoingResult, outByUserResult, outBySiteResult, profilesResult] =
-    await Promise.all([
+  const [
+    monthlyResult,
+    topOutgoingResult,
+    outByUserResult,
+    outBySiteResult,
+    vendorInboundResult,
+    profilesResult,
+  ] = await Promise.all([
       supabase.from("monthly_transaction_summary").select("month, type, total_quantity, transaction_count"),
       supabase.from("top_products_by_outgoing").select("product_id, name, category, total_outgoing"),
       // New RPCs added in migration 20260422120000. Cast because types.ts is
@@ -81,6 +96,13 @@ export default async function ReportsPage({ searchParams }: { searchParams: Sear
         p_from: pFrom,
         p_to: pTo,
       }),
+      (supabase.rpc as unknown as (
+        fn: string,
+        args: Record<string, string>,
+      ) => Promise<{ data: VendorInboundRow[] | null }>)("get_vendor_inbound_by_period", {
+        p_from: pFrom,
+        p_to: pTo,
+      }),
       supabase.from("profiles").select("id, name"),
     ]);
 
@@ -93,9 +115,12 @@ export default async function ReportsPage({ searchParams }: { searchParams: Sear
 
   const outByUser = outByUserResult.data ?? [];
   const outBySite = outBySiteResult.data ?? [];
+  const vendorInbound = vendorInboundResult.data ?? [];
+  const nf = new Intl.NumberFormat("ko-KR");
 
   const totalIn12mo = monthlyData.reduce((s, m) => s + m.in, 0);
   const totalOut12mo = monthlyData.reduce((s, m) => s + m.out, 0);
+  const totalLoss12mo = monthlyData.reduce((s, m) => s + m.loss, 0);
   const currentMonth = monthlyData[monthlyData.length - 1];
   const previousMonth = monthlyData[monthlyData.length - 2];
   const monthOverMonthOut =
@@ -111,7 +136,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Sear
         최근 12개월 입출고 추이와 담당자·현장별 출고 집계
       </p>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <KPICard
           label="12개월 입고"
           value={totalIn12mo.toLocaleString("ko-KR")}
@@ -123,6 +148,12 @@ export default async function ReportsPage({ searchParams }: { searchParams: Sear
           value={totalOut12mo.toLocaleString("ko-KR")}
           icon={ArrowUpFromLine}
           iconAccent="brand"
+        />
+        <KPICard
+          label="12개월 분실"
+          value={totalLoss12mo.toLocaleString("ko-KR")}
+          icon={AlertTriangle}
+          iconAccent="warning"
         />
         <KPICard
           label="이번 달 출고"
@@ -203,6 +234,57 @@ export default async function ReportsPage({ searchParams }: { searchParams: Sear
                     </Link>
                   );
                 })}
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-lg border border-border bg-card p-5 shadow-xs lg:col-span-2">
+            <div className="mb-3 flex items-baseline justify-between">
+              <h4 className="text-sm font-bold text-muted-foreground">
+                거래처별 입고 (PO 기반)
+              </h4>
+              <Link
+                href={`/purchase-orders?status=received`}
+                prefetch={false}
+                className="text-[11px] font-medium text-secondary hover:underline"
+              >
+                발주서 목록 →
+              </Link>
+            </div>
+            {vendorInbound.length === 0 ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                선택 기간에 입고된 발주서가 없습니다.
+              </p>
+            ) : (
+              <div className="grid grid-cols-[1fr_120px_140px_100px] gap-3 text-xs">
+                <div className="contents text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                  <span>거래처</span>
+                  <span className="text-right">수량</span>
+                  <span className="text-right">금액 (원)</span>
+                  <span className="text-right">PO 건수</span>
+                </div>
+                {vendorInbound.map((row) => (
+                  <Link
+                    key={row.vendor_id}
+                    href={`/vendors/${row.vendor_id}`}
+                    prefetch={false}
+                    className="contents group"
+                  >
+                    <span className="border-t border-border/60 py-2 text-sm font-medium text-foreground group-hover:underline">
+                      {row.vendor_name}
+                    </span>
+                    <span className="border-t border-border/60 py-2 text-right text-sm tabular-nums">
+                      {nf.format(Number(row.total_quantity ?? 0))}
+                    </span>
+                    <span className="border-t border-border/60 py-2 text-right text-sm font-semibold tabular-nums">
+                      {nf.format(Number(row.total_amount ?? 0))}
+                    </span>
+                    <span className="border-t border-border/60 py-2 text-right text-xs text-muted-foreground tabular-nums">
+                      {nf.format(Number(row.received_po_count ?? 0))}/
+                      {nf.format(Number(row.po_count ?? 0))}
+                    </span>
+                  </Link>
+                ))}
               </div>
             )}
           </div>
