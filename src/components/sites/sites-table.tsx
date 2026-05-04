@@ -27,9 +27,27 @@ type Site = {
   note: string | null;
   active: boolean;
   created_at: string;
+  start_date: string | null;
+  end_date: string | null;
   assigneeIds: string[];
   assigneeNames: string[];
 };
+
+const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
+  timeZone: "Asia/Seoul",
+  year: "2-digit",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+function formatDate(d: string | null): string {
+  if (!d) return "—";
+  // d 는 YYYY-MM-DD (date 컬럼). new Date 가 UTC 자정으로 해석할 수 있어
+  // 명시적으로 yyyy/mm/dd 분해 후 Date 생성.
+  const [y, m, day] = d.split("-").map(Number);
+  if (!y || !m || !day) return d;
+  return dateFormatter.format(new Date(y, m - 1, day));
+}
 
 export function SitesTable({
   sites,
@@ -75,7 +93,7 @@ export function SitesTable({
     });
   }
 
-  const GRID = "grid-cols-[1.3fr_1fr_1fr_90px_220px]";
+  const GRID = "grid-cols-[1.2fr_1fr_90px_90px_1fr_90px_220px]";
 
   return (
     <>
@@ -86,6 +104,8 @@ export function SitesTable({
         >
           <span>현장명</span>
           <span>담당자</span>
+          <span>착공일</span>
+          <span>준공일</span>
           <span>메모</span>
           <span>상태</span>
           <span className="text-right">작업</span>
@@ -123,6 +143,12 @@ export function SitesTable({
                 </div>
               )}
             </div>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {formatDate(site.start_date)}
+            </span>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {formatDate(site.end_date)}
+            </span>
             <span className="text-xs text-muted-foreground truncate">{site.note ?? "—"}</span>
             <span>
               {site.active ? (

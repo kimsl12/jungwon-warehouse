@@ -8,15 +8,34 @@ import { createClient } from "@/lib/supabase/server";
 // -----------------------------------------------------------------------------
 // Schemas
 // -----------------------------------------------------------------------------
-const siteCreateSchema = z.object({
+const dateField = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "올바른 날짜 형식(YYYY-MM-DD)이 아닙니다.")
+  .optional()
+  .or(z.literal(""));
+
+const siteBaseObject = z.object({
   name: z.string().trim().min(1, "현장명을 입력해주세요."),
   address: z.string().trim().optional().or(z.literal("")),
   note: z.string().trim().max(500).optional().or(z.literal("")),
+  start_date: dateField,
+  end_date: dateField,
 });
 
-const siteUpdateSchema = siteCreateSchema.extend({
-  id: z.string().uuid(),
-});
+const dateOrderRefine = (v: { start_date?: string; end_date?: string }) => {
+  if (!v.start_date || !v.end_date) return true;
+  return v.start_date <= v.end_date;
+};
+const dateOrderError = {
+  message: "준공일은 착공일과 같거나 그 이후여야 합니다.",
+  path: ["end_date"],
+};
+
+const siteCreateSchema = siteBaseObject.refine(dateOrderRefine, dateOrderError);
+
+const siteUpdateSchema = siteBaseObject
+  .extend({ id: z.string().uuid() })
+  .refine(dateOrderRefine, dateOrderError);
 
 const assigneeIdsSchema = z.array(z.string().uuid());
 
@@ -131,6 +150,8 @@ export async function createSite(
     name: formData.get("name"),
     address: formData.get("address"),
     note: formData.get("note"),
+    start_date: formData.get("start_date"),
+    end_date: formData.get("end_date"),
   });
   if (!parsed.success) {
     return {
@@ -147,6 +168,8 @@ export async function createSite(
       name: parsed.data.name,
       address: emptyToNull(parsed.data.address ?? null),
       note: emptyToNull(parsed.data.note ?? null),
+      start_date: parsed.data.start_date ? parsed.data.start_date : null,
+      end_date: parsed.data.end_date ? parsed.data.end_date : null,
     })
     .select("id")
     .single();
@@ -188,6 +211,8 @@ export async function updateSite(
     name: formData.get("name"),
     address: formData.get("address"),
     note: formData.get("note"),
+    start_date: formData.get("start_date"),
+    end_date: formData.get("end_date"),
   });
   if (!parsed.success) {
     return {
@@ -204,6 +229,8 @@ export async function updateSite(
       name: parsed.data.name,
       address: emptyToNull(parsed.data.address ?? null),
       note: emptyToNull(parsed.data.note ?? null),
+      start_date: parsed.data.start_date ? parsed.data.start_date : null,
+      end_date: parsed.data.end_date ? parsed.data.end_date : null,
     })
     .eq("id", parsed.data.id);
 

@@ -473,9 +473,11 @@ export type Database = {
           address: string | null
           contact: string | null
           created_at: string
+          end_date: string | null
           id: string
           name: string
           note: string | null
+          start_date: string | null
           updated_at: string
         }
         Insert: {
@@ -483,9 +485,11 @@ export type Database = {
           address?: string | null
           contact?: string | null
           created_at?: string
+          end_date?: string | null
           id?: string
           name: string
           note?: string | null
+          start_date?: string | null
           updated_at?: string
         }
         Update: {
@@ -493,9 +497,11 @@ export type Database = {
           address?: string | null
           contact?: string | null
           created_at?: string
+          end_date?: string | null
           id?: string
           name?: string
           note?: string | null
+          start_date?: string | null
           updated_at?: string
         }
         Relationships: []

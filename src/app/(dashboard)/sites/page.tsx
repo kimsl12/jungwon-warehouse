@@ -27,9 +27,12 @@ export default async function SitesPage() {
   const [sitesResult, usersResult, assignmentsResult] = await Promise.all([
     supabase
       .from("sites")
-      .select("id, name, address, note, active, created_at")
+      .select(
+        "id, name, address, note, active, created_at, start_date, end_date",
+      )
       .order("active", { ascending: false })
-      .order("name"),
+      .order("start_date", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false }),
     // 현장 담당자 후보 = role='user' 프로필만
     supabase
       .from("profiles")

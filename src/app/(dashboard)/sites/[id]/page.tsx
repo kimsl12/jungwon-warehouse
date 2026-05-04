@@ -52,7 +52,7 @@ export default async function SiteDetailPage({ params }: { params: Params }) {
   const { data: site } = await supabase
     .from("sites")
     .select(
-      "id, name, address, contact, note, active, created_at, updated_at",
+      "id, name, address, contact, note, active, created_at, updated_at, start_date, end_date",
     )
     .eq("id", id)
     .maybeSingle();
@@ -152,6 +152,8 @@ export default async function SiteDetailPage({ params }: { params: Params }) {
         </div>
 
         <dl className="grid grid-cols-2 gap-y-2 gap-x-6 text-sm pt-3 border-t">
+          <InfoRow label="착공일" value={formatSiteDate(site.start_date)} />
+          <InfoRow label="준공일" value={formatSiteDate(site.end_date)} />
           <InfoRow label="주소" value={site.address} span2 />
           <InfoRow label="현장 연락처" value={site.contact} />
           <InfoRow label="메모" value={site.note} />
@@ -334,6 +336,13 @@ export default async function SiteDetailPage({ params }: { params: Params }) {
       />
     </div>
   );
+}
+
+function formatSiteDate(d: string | null | undefined): string | null {
+  if (!d) return null;
+  const [y, m, day] = d.split("-").map(Number);
+  if (!y || !m || !day) return d;
+  return dateOnlyFormatter.format(new Date(y, m - 1, day));
 }
 
 function InfoRow({

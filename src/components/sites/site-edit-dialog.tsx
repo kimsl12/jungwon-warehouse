@@ -23,6 +23,8 @@ type Site = {
   name: string;
   address: string | null;
   note: string | null;
+  start_date: string | null;
+  end_date: string | null;
   assigneeIds: string[];
 };
 
