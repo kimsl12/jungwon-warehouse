@@ -12,6 +12,7 @@ export type ChatMessageView = {
   content: string;
   pending?: boolean;
   sources?: GroundingSource[];
+  imagesPreview?: { url: string; filename: string }[];
 };
 
 function hostnameOf(uri: string): string {
@@ -57,8 +58,25 @@ export function ChatMessageRow({ message }: { message: ChatMessageView }) {
             <span className="animate-pulse [animation-delay:400ms]">●</span>
           </span>
         ) : isUser ? (
-          <div className="whitespace-pre-wrap break-words">
-            {message.content}
+          <div className="space-y-1.5">
+            {message.imagesPreview && message.imagesPreview.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {message.imagesPreview.map((img, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={`${img.url}-${i}`}
+                    src={img.url}
+                    alt={img.filename}
+                    className="size-20 rounded border border-border object-cover"
+                  />
+                ))}
+              </div>
+            )}
+            {message.content && (
+              <div className="whitespace-pre-wrap break-words">
+                {message.content}
+              </div>
+            )}
           </div>
         ) : (
           <>

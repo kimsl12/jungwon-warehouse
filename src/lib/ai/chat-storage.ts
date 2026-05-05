@@ -6,6 +6,8 @@ const MAX_MESSAGES = 50;
 export type StoredMessage = ChatMessage & {
   ts: number;
   sources?: GroundingSource[];
+  /** Memory-only image previews (object URLs). Not persisted to localStorage. */
+  imagesPreview?: { url: string; filename: string }[];
 };
 
 export function loadHistory(): StoredMessage[] {
@@ -31,7 +33,13 @@ export function loadHistory(): StoredMessage[] {
 export function saveHistory(messages: StoredMessage[]): void {
   if (typeof window === "undefined") return;
   try {
-    const trimmed = messages.slice(-MAX_MESSAGES);
+    // 이미지(base64)는 저장 안 함 — localStorage 5MB 한도 빨리 소진 방지.
+    // 페이지 새로고침 후엔 텍스트 + 출처만 유지됨.
+    const trimmed = messages.slice(-MAX_MESSAGES).map((m) => {
+      const { imagesPreview: _imagesPreview, ...rest } = m;
+      void _imagesPreview;
+      return rest;
+    });
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
   } catch {
     // QuotaExceededError 등 — 조용히 실패. 다음 mount 시 빈 히스토리.

@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, AlertCircle } from "lucide-react";
+import { AlertCircle, Camera, Sparkles } from "lucide-react";
 
 const EXAMPLES = [
   "HFIX 4㎟ 전선의 정격 허용전류와 KEC 기준 색상 규정",
@@ -32,6 +32,10 @@ export function WelcomeGuide({
           KEC·KS 표준·전기공사업법·소방시설법·정보통신공사업법 등 사내에서 자주
           마주치는 규정과 시공 가이드를 답변합니다. 가능한 한 조항 번호와 표
           번호를 함께 인용합니다.
+        </p>
+        <p className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-[11px] text-muted-foreground">
+          <Camera className="h-3 w-3" />
+          자재·분전반·도면 사진 첨부 가능 (최대 3장)
         </p>
       </div>
 

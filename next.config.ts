@@ -15,6 +15,14 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/pdf/delivery": ["./src/fonts/**/*", "./public/jungwon-logo.png"],
   },
+
+  // AI 챗봇 이미지 업로드(최대 3장 × 클라이언트 리사이즈) 위해 server action
+  // body 제한 상향. 기본 1MB → 5MB.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "5mb",
+    },
+  },
 };
 
 export default nextConfig;

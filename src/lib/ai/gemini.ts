@@ -51,8 +51,14 @@ const SYSTEM_PROMPT_BODY = `당신은 정원전기 사내 직원에게 답하는
 - 활선 작업·고압 점검·소방 점검 등 자격자 영역에 대해 "직접 하라"고 권하지 않음. 자격(전기기능사·전기공사기사·소방안전관리자 등)과 차단·검전·접지 절차 함께 안내.
 - 부동산·세무·노무·법률 분쟁 같은 비전공 영역은 답변 거부: "이 부분은 본 챗봇 범위 외입니다."
 
-[사진·도면]
-이 챗봇은 텍스트만 처리합니다. 사용자가 사진·도면 첨부했다고 가정하거나 "여기 사진 보니" 같은 입력이 오면: "사진은 처리할 수 없습니다. 도면이라면 핵심 수치(부하·전압·길이·전선 굵기)를 텍스트로 적어주세요."
+[이미지 입력]
+이 챗봇은 텍스트와 이미지(최대 3장)를 함께 처리합니다.
+- 잘 처리: 자재 사진(전선·차단기·등기구·소방 감지기 등), 분전반·전기실 사진, 자재 라벨·명판·각인 사진.
+- 부분적: 도면 분석 — 한국 도면 양식·범례 인식 한계가 있습니다. 단정 X, 일반 가이드만 제공하고 핵심 수치(부하·전압·길이·전선 굵기)는 사용자에게 되묻기.
+- 부분적: 시공 사진 — 육안 가능 범위 안에서 일반 가이드. 정밀 시공 검사는 자격자(전기기능사 이상·소방안전관리자 등) 영역.
+- 모르는 자재 사진을 받으면 명판·라벨·각인을 우선 읽고, 그 정보로 사양을 추정합니다. 추정이 어려우면 추가 정보(전압·용도·설치 위치·정격 표기)를 되묻기.
+- 위험 설비(고압·활선·소방 작동·차단기 외함 개방 등) 사진은 안전 절차 + 자격자 의뢰 안내를 함께.
+- 이미지가 흐릿하거나 한글 손글씨·복잡한 도면이면 솔직히 "이미지 인식이 어렵습니다. 더 선명한 사진 또는 라벨 텍스트를 직접 적어주세요"로 안내.
 `;
 
 function buildSystemPrompt(): string {
@@ -68,9 +74,16 @@ function buildSystemPrompt(): string {
 ${SYSTEM_PROMPT_BODY}`;
 }
 
+export type ChatImage = {
+  mimeType: string;
+  /** Base64-encoded raw bytes (no data: URL prefix). */
+  data: string;
+};
+
 export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
+  images?: ChatImage[];
 };
 
 export type GroundingSource = {
@@ -91,10 +104,23 @@ function getClient(): GoogleGenAI {
 }
 
 function toContents(messages: ChatMessage[]): Content[] {
-  return messages.map((m) => ({
-    role: m.role === "user" ? "user" : "model",
-    parts: [{ text: m.content }],
-  }));
+  return messages.map((m) => {
+    const parts: NonNullable<Content["parts"]> = [];
+    if (m.images && m.images.length > 0) {
+      for (const img of m.images) {
+        parts.push({
+          inlineData: { mimeType: img.mimeType, data: img.data },
+        });
+      }
+    }
+    if (m.content || parts.length === 0) {
+      parts.push({ text: m.content });
+    }
+    return {
+      role: m.role === "user" ? "user" : "model",
+      parts,
+    };
+  });
 }
 
 export type GenerateResult = {
