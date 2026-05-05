@@ -327,7 +327,7 @@ export function ChatPanel({ className }: { className?: string }) {
             placeholder="질문을 입력하세요. (Enter 전송, Shift+Enter 줄바꿈)"
             disabled={pending}
             rows={2}
-            className="min-h-[44px] resize-none text-sm"
+            className="min-h-[44px] resize-none text-[15px] md:text-sm"
           />
           <Button
             type="button"

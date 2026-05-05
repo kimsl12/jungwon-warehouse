@@ -45,7 +45,7 @@ export function ChatMessageRow({ message }: { message: ChatMessageView }) {
       </div>
       <div
         className={cn(
-          "max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed",
+          "max-w-[85%] rounded-lg px-3 py-2 text-[15px] leading-relaxed md:text-sm",
           isUser
             ? "bg-primary/10 text-foreground"
             : "border border-border bg-card text-foreground",
@@ -93,7 +93,7 @@ export function ChatMessageRow({ message }: { message: ChatMessageView }) {
 
 function MarkdownBody({ content }: { content: string }) {
   return (
-    <div className="break-words [&_*]:text-sm [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2 [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-[12px] [&_code]:font-medium [&_code]:text-foreground [&_h1]:mt-2 [&_h1]:text-base [&_h1]:font-bold [&_h2]:mt-2 [&_h2]:text-[15px] [&_h2]:font-bold [&_h3]:mt-2 [&_h3]:text-sm [&_h3]:font-bold [&_li]:my-0.5 [&_ol]:my-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-1 [&_pre]:overflow-x-auto [&_pre]:rounded [&_pre]:bg-muted [&_pre]:p-2 [&_strong]:font-semibold [&_strong]:text-foreground [&_table]:my-2 [&_table]:w-full [&_table]:border-collapse [&_table]:text-xs [&_td]:border [&_td]:border-border [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-border [&_th]:bg-muted/40 [&_th]:px-2 [&_th]:py-1 [&_th]:font-semibold [&_ul]:my-1 [&_ul]:list-disc [&_ul]:pl-5">
+    <div className="break-words [&_*]:text-[15px] md:[&_*]:text-sm [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2 [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-[13px] md:[&_code]:text-[12px] [&_code]:font-medium [&_code]:text-foreground [&_h1]:mt-2 [&_h1]:text-[17px] md:[&_h1]:text-base [&_h1]:font-bold [&_h2]:mt-2 [&_h2]:text-[16px] md:[&_h2]:text-[15px] [&_h2]:font-bold [&_h3]:mt-2 [&_h3]:text-[15px] md:[&_h3]:text-sm [&_h3]:font-bold [&_li]:my-0.5 [&_ol]:my-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-1 [&_pre]:overflow-x-auto [&_pre]:rounded [&_pre]:bg-muted [&_pre]:p-2 [&_strong]:font-semibold [&_strong]:text-foreground [&_table]:my-2 [&_table]:w-full [&_table]:border-collapse [&_table]:text-[13px] md:[&_table]:text-xs [&_td]:border [&_td]:border-border [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-border [&_th]:bg-muted/40 [&_th]:px-2 [&_th]:py-1 [&_th]:font-semibold [&_ul]:my-1 [&_ul]:list-disc [&_ul]:pl-5">
       <div className="overflow-x-auto">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}

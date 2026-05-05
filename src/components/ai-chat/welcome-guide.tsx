@@ -24,23 +24,23 @@ export function WelcomeGuide({
   return (
     <div className="space-y-5 px-1 py-2">
       <div className="rounded-lg border border-border bg-surface-low p-4">
-        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
+        <div className="mb-2 flex items-center gap-2 text-[15px] font-semibold text-foreground md:text-sm">
           <Sparkles className="h-4 w-4 text-primary" />
           <span>AI에게 물어보기 — 전기·공사 도우미</span>
         </div>
-        <p className="text-xs leading-relaxed text-muted-foreground">
+        <p className="text-[13px] leading-relaxed text-muted-foreground md:text-xs">
           KEC·KS 표준·전기공사업법·소방시설법·정보통신공사업법 등 사내에서 자주
           마주치는 규정과 시공 가이드를 답변합니다. 가능한 한 조항 번호와 표
           번호를 함께 인용합니다.
         </p>
-        <p className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-[11px] text-muted-foreground">
+        <p className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-[12px] text-muted-foreground md:text-[11px]">
           <Camera className="h-3 w-3" />
           자재·분전반·도면 사진 첨부 가능 (최대 3장)
         </p>
       </div>
 
       <div>
-        <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+        <div className="mb-2 text-[12px] font-semibold uppercase tracking-widest text-muted-foreground md:text-xs">
           이런 질문이 잘 됩니다
         </div>
         <ul className="space-y-1.5">
@@ -49,7 +49,7 @@ export function WelcomeGuide({
               <button
                 type="button"
                 onClick={() => onPickExample(q)}
-                className="block w-full rounded-md border border-border bg-card px-3 py-2 text-left text-sm text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5"
+                className="block w-full rounded-md border border-border bg-card px-3 py-2 text-left text-[15px] text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 md:text-sm"
               >
                 {q}
               </button>
@@ -59,11 +59,11 @@ export function WelcomeGuide({
       </div>
 
       <div>
-        <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+        <div className="mb-2 flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-widest text-muted-foreground md:text-xs">
           <AlertCircle className="h-3.5 w-3.5" />
           답변하지 않는 항목
         </div>
-        <ul className="space-y-1 rounded-md border border-dashed border-border bg-muted/20 p-3 text-xs text-muted-foreground">
+        <ul className="space-y-1 rounded-md border border-dashed border-border bg-muted/20 p-3 text-[13px] text-muted-foreground md:text-xs">
           {FORBIDDEN.map((q) => (
             <li key={q} className="flex gap-1.5">
               <span aria-hidden>·</span>

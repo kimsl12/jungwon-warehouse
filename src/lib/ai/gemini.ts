@@ -157,8 +157,36 @@ async function callModel(model: string, messages: ChatMessage[]) {
       // AI 가 자체 판단하여 google_search 호출 (학습 데이터로 충분하면 미사용,
       // 시점 의존·최신 정보 필요 시 호출). 검색 결과는 groundingMetadata 로 회수.
       tools: [{ googleSearch: {} }],
+      // Thinking 자체는 사용 (답변 품질에 도움) 하되, 응답 텍스트에는 미포함.
+      // 모델이 "tool_code print(...)" "thought The user..." 같은 사고 과정을
+      // 텍스트로 흘리는 케이스 방지.
+      thinkingConfig: {
+        includeThoughts: false,
+      },
     },
   });
+}
+
+// thinking trace 가 part 로 섞여 들어오는 케이스 안전망. SDK 가 처리하지 못한
+// 경우 직접 필터링.
+function extractAnswerText(response: GenContentResponse): string {
+  const parts = response.candidates?.[0]?.content?.parts ?? [];
+  const texts: string[] = [];
+  for (const part of parts) {
+    const p = part as { thought?: boolean; text?: string };
+    if (p.thought) continue;
+    if (typeof p.text === "string" && p.text.length > 0) texts.push(p.text);
+  }
+  let text = texts.length > 0 ? texts.join("") : (response.text ?? "");
+
+  // 마지막 안전망: tool_code 블록 + thought 블록이 텍스트에 들어왔을 때 제거.
+  // (실제 답변 시작 전에 한정 — 답변 본문 도중의 단어는 건드리지 않음)
+  text = text.replace(
+    /^[\s\S]*?(?:tool_code\s+print\([^)]*\)|thought\s+The user[^\n]*)[\s\S]*?\n\n/m,
+    "",
+  );
+  text = text.replace(/^\s*Here's a plan:[\s\S]*?\n\n/m, "");
+  return text.trim();
 }
 
 type GenContentResponse = Awaited<ReturnType<typeof callModel>>;
@@ -196,7 +224,7 @@ export async function generateChatReply(
     response = await callModel(FALLBACK_MODEL, messages);
   }
 
-  const text = response.text ?? "";
+  const text = extractAnswerText(response);
   const usage = response.usageMetadata;
   const sources = extractSources(response);
   return {
