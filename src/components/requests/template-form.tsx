@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import {
@@ -159,6 +159,16 @@ export function TemplateForm({
 
   function removeLine(product_id: string) {
     setLines((prev) => prev.filter((l) => l.product_id !== product_id));
+  }
+
+  function moveLine(idx: number, direction: -1 | 1) {
+    setLines((prev) => {
+      const target = idx + direction;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[target]] = [next[target], next[idx]];
+      return next;
+    });
   }
 
   // ─────── Variables ───────
@@ -550,7 +560,7 @@ export function TemplateForm({
 
           {lines.length > 0 && (
             <ul className="mt-3 space-y-2 rounded border p-2">
-              {lines.map((l) => {
+              {lines.map((l, idx) => {
                 const mode = l.formula !== null ? "formula" : "fixed";
                 let preview: string | null = null;
                 if (mode === "formula" && l.formula) {
@@ -565,8 +575,31 @@ export function TemplateForm({
                     className="space-y-1.5 rounded bg-surface-low px-3 py-2"
                   >
                     <div className="flex items-center gap-2">
+                      <div className="flex flex-col">
+                        <button
+                          type="button"
+                          onClick={() => moveLine(idx, -1)}
+                          disabled={isPending || idx === 0}
+                          aria-label="위로 이동"
+                          className="rounded px-1 text-muted-foreground hover:bg-surface-high disabled:opacity-20"
+                        >
+                          <ChevronUp className="h-3 w-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveLine(idx, 1)}
+                          disabled={isPending || idx === lines.length - 1}
+                          aria-label="아래로 이동"
+                          className="rounded px-1 text-muted-foreground hover:bg-surface-high disabled:opacity-20"
+                        >
+                          <ChevronDown className="h-3 w-3" />
+                        </button>
+                      </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium">
+                          <span className="mr-1.5 inline-block w-5 text-right text-[10px] font-mono text-muted-foreground tabular-nums">
+                            {idx + 1}.
+                          </span>
                           {l.name}
                           {l.variant && (
                             <span className="ml-1 text-muted-foreground">
