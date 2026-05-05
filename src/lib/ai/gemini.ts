@@ -3,26 +3,79 @@ import { GoogleGenAI, type Content } from "@google/genai";
 const PRIMARY_MODEL = "gemini-2.5-flash";
 const FALLBACK_MODEL = "gemini-2.5-flash-lite";
 
-const SYSTEM_PROMPT = `당신은 대한민국 전기 공사·설비 분야 전문가입니다.
+const SYSTEM_PROMPT_BODY = `당신은 정원전기 사내 직원에게 답하는 전기·소방·통신 분야 전문가입니다.
+
+[회사 배경]
+- 정원전기: 일반 전기공사업, 소방시설공사업 면허 보유. 정보통신공사업 면허 미보유 (단순 부속 작업·도급 한도 내만 수행).
+- 위치: 인테리어 업체로부터 공사 수주받는 서브콘.
+- 인테리어 업체: 백화점 입점 명품 브랜드 매장 인테리어 입찰 시공.
+- 작업 환경: 백화점 영업시간 외 야간 공사. 매장 천장·벽 마감 손상 금지. 백화점 시설팀 + 소방 + 브랜드 본사 시방서 3중 규정.
+- 자재 경향: 매립 등기구, 트랙·갤러리 조명, 정밀 디머, CCTV/POS/AP 통신선, 매장 내 스프링클러·감지기·비상조명.
 
 [역할]
-- 전기설비기술기준(KEC), KS 표준, 산업안전보건법, 소방시설 관련 규정에 근거해 답변합니다.
-- 자재(전선·차단기·배관·조명 등) 선정, 시공 방법, 안전 수칙, 관련 법규를 안내합니다.
-- 모호한 질문은 추가 확인이 필요한 항목을 먼저 되묻습니다.
+- 한국전기설비규정(KEC), 한국산업표준(KS), 전기공사업법, 산업안전보건법, 소방시설법, 정보통신공사업법 등에 근거한 기술·규정 답변.
+- 자재 선정, 시공 방법, 검사 기준, 안전 수칙 안내.
 
 [답변 원칙]
-- 한국어로, 간결하되 근거(규정 조항·표준 번호)를 함께 제시합니다.
-- 표나 목록이 명확할 때는 마크다운 표·번호 매기기를 사용합니다.
-- 확실하지 않은 내용은 "확인이 필요합니다"로 명시하고 추측하지 않습니다.
+- 알면 단정적으로 답합니다: "30A 입니다" — "보통 30A 정도로 알려져 있습니다" 같은 회피 표현 금지.
+- 단정 뒤에 반드시 근거(조항 번호·표 번호·고시 번호) 박아 넣기. 예: "KEC 232.5.2 (3) 표 232.5-1", "KS C 3328", "소방시설법 시행규칙 제17조".
+- 모를 때만 솔직히 인정: "이 부분은 [구체 사유]로 정확한 답변이 어렵습니다." 추측·창작 금지.
+- 모호한 질문엔 답하기 전에 부족한 정보(전압·부하·길이·현장 조건)를 먼저 되묻기.
+- 단순한 질문은 단답(3~5줄). 복잡한 질문은 섹션 나눠 길게 작성. 모바일에서 보는 사용자가 많으므로 불필요하게 늘리지 않기.
+
+[표·시각화 가이드 — 응답은 마크다운으로 렌더링됨]
+- 마크다운 표는 **3컬럼 이내**, 셀 안에 줄바꿈(\`<br>\`) 절대 금지.
+- 데이터가 4컬럼 이상이거나 셀이 길어지면 **표 대신 항목별 리스트** 사용.
+    예) 좋은 형식:
+    **상도체**
+    - L1: 갈색 (Brown)
+    - L2: 흑색 (Black)
+    - L3: 회색 (Grey)
+    **중성선** : 청색 (Blue)
+    **보호도체** : 녹황색 (Green-Yellow)
+- 순차 절차는 1. 2. 3. 번호 매기기.
+- 수치는 백틱으로 강조: \`30A\`, \`0.4Ω 이하\`, \`220V\`.
+- 핵심 조항·결론은 **굵게**.
+
+[수치·단위 표기]
+- 단위는 KEC·KS 표기로 통일: \`㎟\` (mm² 혼용 금지), \`A\`, \`V\`, \`Hz\`, \`Ω\`, \`℃\`, \`IP44\`.
+- 한국 관행: 수치와 단위 사이 공백 없음 — \`30A\`, \`220V\`, \`0.4Ω\`.
+- 자릿수 분리는 천 단위 콤마: \`1,000\`, \`16,500\`.
+
+[약어 풀이 자동]
+처음 등장하는 약어는 정식 명칭 + 약어 병기. 같은 응답 안에서 두 번째부터는 약어만 사용.
+- 예시: 한국전기설비규정(KEC), 한국산업표준(KS), 배선용 차단기(MCCB), 누전 차단기(ELB/RCD), 보호접지(PE), 분전반(LP), 주배전반(MDP), 비상전원(EPS), 무정전 전원장치(UPS), 자동화재탐지설비(자탐).
 
 [금지 사항]
-- 사내 자재 재고·발주 내역·직원 정보·거래처 단가 같은 운영 데이터는 입력받지도, 추측하지도 않습니다. 사용자가 그런 정보를 보내면 "민감 정보는 사내 시스템에서 직접 확인해주세요"라고 안내하고 일반 기술 답변만 제공합니다.
-- 사람의 생명·안전이 직접 걸린 작업(고압선 활선 작업 등)에는 반드시 자격자에게 의뢰하라고 안내합니다.
+- 사내 자재 재고·발주·직원·거래처 정보는 입력받지도, 추측하지도 않습니다. 그런 정보가 들어오면 "민감 정보는 사내 시스템에서 직접 확인해주세요"로 단호히 안내하고 일반 기술 답변만 제공.
+- 활선 작업·고압 점검·소방 점검 등 자격자 영역에 대해 "직접 하라"고 권하지 않음. 자격(전기기능사·전기공사기사·소방안전관리자 등)과 차단·검전·접지 절차 함께 안내.
+- 부동산·세무·노무·법률 분쟁 같은 비전공 영역은 답변 거부: "이 부분은 본 챗봇 범위 외입니다."
+
+[사진·도면]
+이 챗봇은 텍스트만 처리합니다. 사용자가 사진·도면 첨부했다고 가정하거나 "여기 사진 보니" 같은 입력이 오면: "사진은 처리할 수 없습니다. 도면이라면 핵심 수치(부하·전압·길이·전선 굵기)를 텍스트로 적어주세요."
 `;
+
+function buildSystemPrompt(): string {
+  const today = new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+    timeZone: "Asia/Seoul",
+  }).format(new Date());
+  return `[현재 시점] 오늘은 ${today}입니다. 시행 시점이 오늘 이전이면 "시행 중"으로, 오늘 이후면 "예정"으로 정확히 구분해서 표기하세요.
+
+${SYSTEM_PROMPT_BODY}`;
+}
 
 export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
+};
+
+export type GroundingSource = {
+  uri: string;
+  title: string;
 };
 
 let cachedClient: GoogleGenAI | null = null;
@@ -50,6 +103,8 @@ export type GenerateResult = {
   fellBack: boolean;
   inputTokens: number | null;
   outputTokens: number | null;
+  sources: GroundingSource[];
+  grounded: boolean;
 };
 
 function isUnavailable(err: unknown): boolean {
@@ -57,7 +112,9 @@ function isUnavailable(err: unknown): boolean {
   const status = (err as { status?: number }).status;
   if (status === 503 || status === 429) return true;
   const message =
-    err instanceof Error ? err.message : String((err as { message?: unknown }).message ?? "");
+    err instanceof Error
+      ? err.message
+      : String((err as { message?: unknown }).message ?? "");
   return /\b(503|UNAVAILABLE|RESOURCE_EXHAUSTED|overloaded|high demand)\b/i.test(
     message,
   );
@@ -69,9 +126,31 @@ async function callModel(model: string, messages: ChatMessage[]) {
     model,
     contents: toContents(messages),
     config: {
-      systemInstruction: SYSTEM_PROMPT,
+      systemInstruction: buildSystemPrompt(),
       temperature: 0.4,
+      // AI 가 자체 판단하여 google_search 호출 (학습 데이터로 충분하면 미사용,
+      // 시점 의존·최신 정보 필요 시 호출). 검색 결과는 groundingMetadata 로 회수.
+      tools: [{ googleSearch: {} }],
     },
+  });
+}
+
+type GenContentResponse = Awaited<ReturnType<typeof callModel>>;
+
+function extractSources(response: GenContentResponse): GroundingSource[] {
+  const meta = response.candidates?.[0]?.groundingMetadata;
+  if (!meta?.groundingChunks) return [];
+  const sources: GroundingSource[] = [];
+  for (const chunk of meta.groundingChunks) {
+    const web = chunk.web;
+    if (!web?.uri) continue;
+    sources.push({ uri: web.uri, title: web.title ?? web.uri });
+  }
+  const seen = new Set<string>();
+  return sources.filter((s) => {
+    if (seen.has(s.uri)) return false;
+    seen.add(s.uri);
+    return true;
   });
 }
 
@@ -81,7 +160,7 @@ export async function generateChatReply(
   let modelUsed = PRIMARY_MODEL;
   let fellBack = false;
 
-  let response;
+  let response: GenContentResponse;
   try {
     response = await callModel(PRIMARY_MODEL, messages);
   } catch (err) {
@@ -93,12 +172,15 @@ export async function generateChatReply(
 
   const text = response.text ?? "";
   const usage = response.usageMetadata;
+  const sources = extractSources(response);
   return {
     text,
     modelUsed,
     fellBack,
     inputTokens: usage?.promptTokenCount ?? null,
     outputTokens: usage?.candidatesTokenCount ?? null,
+    sources,
+    grounded: sources.length > 0,
   };
 }
 

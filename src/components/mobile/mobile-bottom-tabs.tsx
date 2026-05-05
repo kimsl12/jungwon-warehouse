@@ -9,6 +9,7 @@ import {
   HardHat,
   Package,
   Plus,
+  Sparkles,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -21,11 +22,13 @@ const ADMIN_TABS: Tab[] = [
   { href: "/m/inbound", label: "입고", icon: ArrowDownToLine },
   { href: "/m/outbound", label: "출고", icon: ArrowUpFromLine },
   { href: "/m/sites", label: "현장", icon: HardHat },
+  { href: "/m/ai-chat", label: "AI", icon: Sparkles },
 ];
 
 const USER_TABS: Tab[] = [
   { href: "/m/request", label: "내 신청", icon: ClipboardList },
   { href: "/m/request/new", label: "새 신청", icon: Plus },
+  { href: "/m/ai-chat", label: "AI", icon: Sparkles },
 ];
 
 export function MobileBottomTabs({ role }: { role: "admin" | "user" }) {

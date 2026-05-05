@@ -1,7 +1,11 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { generateChatReply, type ChatMessage } from "./gemini";
+import {
+  generateChatReply,
+  type ChatMessage,
+  type GroundingSource,
+} from "./gemini";
 
 const MAX_USER_MESSAGE_CHARS = 4000;
 const MAX_HISTORY_MESSAGES = 20;
@@ -21,6 +25,8 @@ export type AskGeminiSuccess = {
   text: string;
   modelUsed: string;
   fellBack: boolean;
+  grounded: boolean;
+  sources: GroundingSource[];
   userUsed: number;
   userLimit: number;
   isAdmin: boolean;
@@ -106,6 +112,8 @@ export async function askGemini(
     text: result.text,
     modelUsed: result.modelUsed,
     fellBack: result.fellBack,
+    grounded: result.grounded,
+    sources: result.sources,
     userUsed: quota.user_used + 1,
     userLimit: quota.user_limit,
     isAdmin: quota.is_admin,

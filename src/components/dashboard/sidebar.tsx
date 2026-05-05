@@ -18,6 +18,7 @@ import {
   Warehouse,
 } from "lucide-react";
 
+import { AIChatSheet } from "@/components/ai-chat/ai-chat-sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
@@ -89,6 +90,17 @@ export function DashboardSidebar({
           );
         })}
       </nav>
+
+      <div className="border-t border-sidebar-border px-2 py-2">
+        <AIChatSheet
+          trigger={
+            <span className="flex h-9 w-full items-center gap-2.5 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground">
+              <Sparkles className="size-[18px] shrink-0 text-primary" />
+              <span className="flex-1 truncate text-left">AI에게 물어보기</span>
+            </span>
+          }
+        />
+      </div>
 
       <div className="flex items-center gap-2.5 border-t border-sidebar-border p-3">
         <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
