@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   MapPin,
   Package,
+  Sparkles,
   Users,
   Warehouse,
 } from "lucide-react";
@@ -39,6 +40,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/vendors", label: "거래처 관리", icon: Building2, adminOnly: true },
   { href: "/users", label: "사용자", icon: Users, adminOnly: true },
   { href: "/activity-log", label: "활동 로그", icon: FileText, adminOnly: true },
+  { href: "/ai-usage", label: "AI 사용량", icon: Sparkles, adminOnly: true },
 ];
 
 export function DashboardSidebar({
