@@ -44,6 +44,36 @@ export type Database = {
         }
         Relationships: []
       }
+      gemini_usage_log: {
+        Row: {
+          created_at: string
+          fell_back: boolean
+          id: string
+          model_used: string
+          prompt_tokens: number | null
+          response_tokens: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          fell_back?: boolean
+          id?: string
+          model_used: string
+          prompt_tokens?: number | null
+          response_tokens?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          fell_back?: boolean
+          id?: string
+          model_used?: string
+          prompt_tokens?: number | null
+          response_tokens?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       material_request_items: {
         Row: {
           fulfilled_quantity: number
@@ -105,7 +135,7 @@ export type Database = {
           canceled_at: string | null
           canceled_by: string | null
           created_at: string
-          created_by: string
+          created_by: string | null
           fulfilled_at: string | null
           id: string
           is_urgent: boolean
@@ -123,7 +153,7 @@ export type Database = {
           canceled_at?: string | null
           canceled_by?: string | null
           created_at?: string
-          created_by: string
+          created_by?: string | null
           fulfilled_at?: string | null
           id?: string
           is_urgent?: boolean
@@ -141,7 +171,7 @@ export type Database = {
           canceled_at?: string | null
           canceled_by?: string | null
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           fulfilled_at?: string | null
           id?: string
           is_urgent?: boolean
@@ -782,17 +812,6 @@ export type Database = {
       }
     }
     Functions: {
-      get_vendor_inbound_by_period: {
-        Args: { p_from: string; p_to: string }
-        Returns: {
-          vendor_id: string
-          vendor_name: string
-          total_quantity: number
-          total_amount: number
-          po_count: number
-          received_po_count: number
-        }[]
-      }
       adjust_product_stock: {
         Args: {
           p_new_quantity: number
@@ -814,6 +833,7 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: undefined
       }
+      check_gemini_quota: { Args: never; Returns: Json }
       create_material_request: {
         Args: {
           p_is_urgent?: boolean
@@ -845,6 +865,17 @@ export type Database = {
       fulfill_material_request_items: {
         Args: { p_fulfillments: Json; p_request_id: string; p_user_id: string }
         Returns: Json
+      }
+      gemini_usage_daily: {
+        Args: { p_days?: number }
+        Returns: {
+          day: string
+          fell_back_calls: number
+          flash_calls: number
+          flash_lite_calls: number
+          total_calls: number
+          unique_users: number
+        }[]
       }
       generate_po_number: { Args: never; Returns: string }
       get_dashboard_alert_counts: { Args: never; Returns: Json }
@@ -898,6 +929,17 @@ export type Database = {
         }[]
       }
       get_products_summary: { Args: never; Returns: Json }
+      get_vendor_inbound_by_period: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          po_count: number
+          received_po_count: number
+          total_amount: number
+          total_quantity: number
+          vendor_id: string
+          vendor_name: string
+        }[]
+      }
       is_admin: { Args: never; Returns: boolean }
       is_site_assigned: { Args: { p_site_id: string }; Returns: boolean }
       natural_sort_key: { Args: { input: string }; Returns: string }
@@ -915,6 +957,15 @@ export type Database = {
       receive_purchase_order_items: {
         Args: { p_po_id: string; p_receipts: Json; p_user_id: string }
         Returns: Json
+      }
+      record_gemini_usage: {
+        Args: {
+          p_fell_back: boolean
+          p_model_used: string
+          p_prompt_tokens: number
+          p_response_tokens: number
+        }
+        Returns: string
       }
       record_stock_audit: {
         Args: {

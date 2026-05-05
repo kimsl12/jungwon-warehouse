@@ -62,12 +62,14 @@ export default async function AdminRequestDetailPage({ params }: { params: Param
     .eq("request_id", id)
     .order("sort_order", { ascending: true });
 
-  // requester 이름
-  const { data: requesterProfile } = await supabase
-    .from("profiles")
-    .select("name, title, phone")
-    .eq("id", request.created_by)
-    .single();
+  // requester 이름 (created_by 가 null 인 경우 — 사용자 삭제 후)
+  const { data: requesterProfile } = request.created_by
+    ? await supabase
+        .from("profiles")
+        .select("name, title, phone")
+        .eq("id", request.created_by)
+        .single()
+    : { data: null };
 
   const meta = STATUS_META[request.status] ?? STATUS_META.submitted;
 

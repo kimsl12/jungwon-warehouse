@@ -267,7 +267,7 @@ export default async function RequestsPage({ searchParams }: { searchParams: Sea
                   )}
                 </div>
                 <span className="text-sm text-muted-foreground truncate">
-                  {profileMap.get(r.created_by) ?? "—"}
+                  {(r.created_by && profileMap.get(r.created_by)) ?? "—"}
                 </span>
                 <span className="text-right text-sm tabular-nums">
                   {nf.format(progress.fulfilled)} / {nf.format(progress.total)}

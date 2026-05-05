@@ -89,7 +89,11 @@ export default async function SiteDetailPage({ params }: { params: Params }) {
     .limit(10);
 
   const requesterIds = Array.from(
-    new Set((requests ?? []).map((r) => r.created_by)),
+    new Set(
+      (requests ?? [])
+        .map((r) => r.created_by)
+        .filter((v): v is string => v !== null),
+    ),
   );
   const { data: requesters } = requesterIds.length
     ? await supabase.from("profiles").select("id, name").in("id", requesterIds)
@@ -256,7 +260,7 @@ export default async function SiteDetailPage({ params }: { params: Params }) {
                       {r.note ?? "—"}
                     </span>
                     <span className="text-[11px] text-muted-foreground shrink-0">
-                      {requesterMap.get(r.created_by) ?? "—"}
+                      {(r.created_by && requesterMap.get(r.created_by)) ?? "—"}
                     </span>
                   </Link>
                 </li>

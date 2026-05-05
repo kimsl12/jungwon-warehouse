@@ -56,11 +56,12 @@ export async function GET(
       )
       .eq("request_id", id)
       .order("sort_order", { ascending: true }),
+    // created_by 가 null (사용자 삭제) 인 경우 더미 UUID 로 0건 반환
     supabase
       .from("profiles")
       .select("name, title, phone")
-      .eq("id", request.created_by)
-      .single(),
+      .eq("id", request.created_by ?? "00000000-0000-0000-0000-000000000000")
+      .maybeSingle(),
   ]);
 
   if (itemsResult.error) {
