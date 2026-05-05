@@ -199,6 +199,12 @@ function extractAnswerText(response: GenContentResponse): string {
     "",
   );
   text = text.replace(/^\s*Here's a plan:[\s\S]*?\n\n/m, "");
+
+  // <br> HTML 태그를 평문 구분자로 치환. react-markdown 은 raw HTML 렌더링
+  // 안 하므로 그냥 두면 "<br>" 가 그대로 보인다. 시스템 프롬프트에서 금지했지만
+  // 모델이 표 셀 안에서 가끔 사용 — 안전망으로 인라인 가운뎃점(·)으로 치환.
+  text = text.replace(/<br\s*\/?>/gi, " · ");
+
   return text.trim();
 }
 
