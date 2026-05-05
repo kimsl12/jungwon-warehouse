@@ -380,38 +380,6 @@ function CategoryTemplatePicker({
           </div>
         )}
 
-      {selectedTemplate && computed.size > 0 && (
-        <div className="rounded-md bg-background p-2 text-xs">
-          <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            산출 결과 미리보기
-          </p>
-          <ul className="space-y-0.5">
-            {Array.from(computed.entries()).map(([pid, qty]) => {
-              const item = selectedTemplate.items.find(
-                (it) => it.product_id === pid,
-              );
-              return (
-                <li
-                  key={pid}
-                  className="flex items-center justify-between text-[11px]"
-                >
-                  <span className="truncate text-muted-foreground">
-                    {item?.formula ? (
-                      <span className="font-mono">{item.formula}</span>
-                    ) : (
-                      "고정"
-                    )}
-                  </span>
-                  <span className="tabular-nums font-semibold">
-                    {qty.toLocaleString("ko-KR")}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      )}
-
       <Button
         type="button"
         onClick={() => {
