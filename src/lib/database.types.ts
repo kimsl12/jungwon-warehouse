@@ -49,6 +49,7 @@ export type Database = {
           created_at: string
           fell_back: boolean
           id: string
+          image_generated: boolean
           model_used: string
           prompt_tokens: number | null
           response_tokens: number | null
@@ -58,6 +59,7 @@ export type Database = {
           created_at?: string
           fell_back?: boolean
           id?: string
+          image_generated?: boolean
           model_used: string
           prompt_tokens?: number | null
           response_tokens?: number | null
@@ -67,6 +69,7 @@ export type Database = {
           created_at?: string
           fell_back?: boolean
           id?: string
+          image_generated?: boolean
           model_used?: string
           prompt_tokens?: number | null
           response_tokens?: number | null
@@ -873,6 +876,7 @@ export type Database = {
           fell_back_calls: number
           flash_calls: number
           flash_lite_calls: number
+          image_calls: number
           total_calls: number
           unique_users: number
         }[]
@@ -961,6 +965,7 @@ export type Database = {
       record_gemini_usage: {
         Args: {
           p_fell_back: boolean
+          p_image_generated?: boolean
           p_model_used: string
           p_prompt_tokens: number
           p_response_tokens: number

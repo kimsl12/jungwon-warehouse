@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import {
   generateChatReply,
+  generateImageReply,
   type ChatImage,
   type ChatMessage,
   type GroundingSource,
@@ -17,6 +18,39 @@ const ALLOWED_IMAGE_MIME = new Set([
   "image/png",
   "image/webp",
 ]);
+
+// 사용자가 명시적으로 시각화·이미지 생성을 요청한 경우만 트리거.
+// 도메인 가드는 IMAGE_SYSTEM_PROMPT 가 추가로 한 번 더 처리.
+const IMAGE_TRIGGER_KEYWORDS = [
+  "그려줘",
+  "그려 줘",
+  "그려달라",
+  "그려 달라",
+  "그림으로",
+  "그림 으로",
+  "그려보",
+  "도식 그",
+  "도면 그",
+  "결선도 그",
+  "회로도 그",
+  "구성도 그",
+  "배선도 그",
+  "이미지 만들",
+  "이미지 생성",
+  "그림 보여",
+  "그림으로 보여",
+  "도식화",
+  "다이어그램으로",
+];
+
+function shouldGenerateImage(text: string): boolean {
+  // Phase 6 이미지 생성은 무료 티어 한도 0 으로 비활성 (2026-05-06 확인).
+  // 결제 활성화 시 Vercel 환경변수 GEMINI_IMAGE_GENERATION_ENABLED=true 등록만 하면
+  // 즉시 동작. 코드 자산은 보존.
+  if (process.env.GEMINI_IMAGE_GENERATION_ENABLED !== "true") return false;
+  const lower = text.toLowerCase();
+  return IMAGE_TRIGGER_KEYWORDS.some((k) => lower.includes(k.toLowerCase()));
+}
 
 type QuotaResult = {
   allowed: boolean;
@@ -35,6 +69,8 @@ export type AskGeminiSuccess = {
   fellBack: boolean;
   grounded: boolean;
   sources: GroundingSource[];
+  /** AI 가 생성한 이미지(들). 보통 0~1장. base64. */
+  generatedImages: ChatImage[];
   userUsed: number;
   userLimit: number;
   isAdmin: boolean;
@@ -121,28 +157,80 @@ export async function askGemini(
     },
   ];
 
-  let result;
+  // 사용자가 명시적으로 시각화 요청 시 이미지 모델도 병렬 호출.
+  // 도메인 가드는 IMAGE_SYSTEM_PROMPT 가 추가로 처리.
+  const wantImage = shouldGenerateImage(trimmed);
+
+  type TextOk = Awaited<ReturnType<typeof generateChatReply>>;
+  type ImageOk = Awaited<ReturnType<typeof generateImageReply>>;
+  let textResult: TextOk;
+  let imageResult: ImageOk = {
+    images: [],
+    text: "",
+    modelUsed: "",
+    inputTokens: null,
+    outputTokens: null,
+  };
+  let imageError: string | null = null;
   try {
-    result = await generateChatReply(messages);
+    if (wantImage) {
+      const [t, i] = await Promise.all([
+        generateChatReply(messages),
+        generateImageReply(trimmed, images).catch((e) => {
+          imageError = e instanceof Error ? e.message : String(e);
+          return null;
+        }),
+      ]);
+      textResult = t;
+      if (i) imageResult = i;
+    } else {
+      textResult = await generateChatReply(messages);
+    }
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     return { ok: false, error: "API_ERROR", message };
   }
 
+  // 텍스트 모델 사용량 기록
   await supabase.rpc("record_gemini_usage", {
-    p_model_used: result.modelUsed,
-    p_fell_back: result.fellBack,
-    p_prompt_tokens: result.inputTokens ?? 0,
-    p_response_tokens: result.outputTokens ?? 0,
+    p_model_used: textResult.modelUsed,
+    p_fell_back: textResult.fellBack,
+    p_prompt_tokens: textResult.inputTokens ?? 0,
+    p_response_tokens: textResult.outputTokens ?? 0,
+    p_image_generated: false,
   });
+
+  // 이미지 모델 호출이 있었으면 별도 기록 (성공·실패 무관)
+  if (wantImage) {
+    await supabase.rpc("record_gemini_usage", {
+      p_model_used: imageResult.modelUsed || "gemini-2.5-flash-image",
+      p_fell_back: false,
+      p_prompt_tokens: imageResult.inputTokens ?? 0,
+      p_response_tokens: imageResult.outputTokens ?? 0,
+      p_image_generated: imageResult.images.length > 0,
+    });
+  }
+
+  // 이미지 모델 텍스트 응답(캡션 또는 거부 사유)을 본문 끝에 부드럽게 합침
+  let composedText = textResult.text;
+  if (imageResult.text) {
+    composedText = composedText
+      ? `${composedText}\n\n---\n\n${imageResult.text}`
+      : imageResult.text;
+  } else if (wantImage && imageResult.images.length === 0 && imageError) {
+    composedText = composedText
+      ? `${composedText}\n\n---\n\n이미지 생성에 실패했습니다.`
+      : "이미지 생성에 실패했습니다.";
+  }
 
   return {
     ok: true,
-    text: result.text,
-    modelUsed: result.modelUsed,
-    fellBack: result.fellBack,
-    grounded: result.grounded,
-    sources: result.sources,
+    text: composedText,
+    modelUsed: textResult.modelUsed,
+    fellBack: textResult.fellBack,
+    grounded: textResult.grounded,
+    sources: textResult.sources,
+    generatedImages: imageResult.images,
     userUsed: quota.user_used + 1,
     userLimit: quota.user_limit,
     isAdmin: quota.is_admin,

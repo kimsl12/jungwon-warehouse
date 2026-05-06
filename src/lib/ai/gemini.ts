@@ -2,6 +2,35 @@ import { GoogleGenAI, type Content } from "@google/genai";
 
 const PRIMARY_MODEL = "gemini-2.5-flash";
 const FALLBACK_MODEL = "gemini-2.5-flash-lite";
+const IMAGE_MODEL = "gemini-2.5-flash-image";
+
+const IMAGE_SYSTEM_PROMPT = `당신은 정원전기 사내 챗봇의 이미지 생성 보조 모델입니다. 사용자 요청을 받아 단순한 참고용 일러스트를 생성합니다.
+
+[허용 주제 — 정원전기 업무에 직결되는 시각 자료만]
+- 전기 회로도, 결선도, 분전반 구조도, 배선도
+- 자재 일러스트 (전선·차단기·등기구·소방 감지기·CCTV·통신선·접지 등)
+- 시공 절차 일러스트 (배선·접지·천장·매립 작업 등)
+- KEC·KS·소방시설법·정보통신공사업법 관련 시각화
+
+[금지 주제 — 다음 요청에는 이미지를 생성하지 말고 짧은 한국어 텍스트로 거부 사유 안내]
+- 사람 얼굴·신체·인종 식별 가능한 이미지
+- 동물·풍경·예술·음식·로고·캐릭터·브랜드 이미지
+- 정원전기 사내 자재 재고·발주·직원·거래처 관련
+- 무기·폭력·성적·정치 콘텐츠
+- 백화점 매장 외관·인테리어 디자인·명품 브랜드 로고
+- 위 [허용 주제] 와 무관한 일반 이미지 (예: 풍경, 인물, 음식, 풍자 그림)
+
+[스타일]
+- 단순 다이어그램 / 기술 일러스트 스타일. CAD 정밀 도면 흉내 X.
+- 깔끔한 선 + 흰색 또는 연한 배경.
+- 영어 라벨 권장 (한글 라벨은 폰트 깨짐 잦음).
+- 가로 비율 16:9 또는 4:3 (모바일 가독성).
+
+[응답 형식]
+- 이미지 1장만 생성 (다중 이미지 X).
+- 별도 텍스트 설명은 1~2줄로 짧게.
+- 결과는 참고용 일러스트임을 명시.
+`;
 
 const SYSTEM_PROMPT_BODY = `당신은 정원전기 사내 직원에게 답하는 전기·소방·통신 분야 전문가입니다.
 
@@ -259,3 +288,70 @@ export async function generateChatReply(
 
 export const GEMINI_PRIMARY_MODEL = PRIMARY_MODEL;
 export const GEMINI_FALLBACK_MODEL = FALLBACK_MODEL;
+export const GEMINI_IMAGE_MODEL = IMAGE_MODEL;
+
+// =====================================================
+// 이미지 생성 (Phase 6 — Nano Banana)
+// =====================================================
+
+export type GenerateImageResult = {
+  /** 모델이 생성한 이미지 (보통 0~1장). */
+  images: ChatImage[];
+  /** 생성 결과에 동봉된 짧은 텍스트 (참고용 캡션 또는 거부 사유). */
+  text: string;
+  modelUsed: string;
+  inputTokens: number | null;
+  outputTokens: number | null;
+};
+
+export async function generateImageReply(
+  userPrompt: string,
+  attachedImages: ChatImage[] = [],
+): Promise<GenerateImageResult> {
+  const ai = getClient();
+  const parts: NonNullable<Content["parts"]> = [];
+  for (const img of attachedImages) {
+    parts.push({ inlineData: { mimeType: img.mimeType, data: img.data } });
+  }
+  parts.push({ text: userPrompt });
+
+  const response = await ai.models.generateContent({
+    model: IMAGE_MODEL,
+    contents: [{ role: "user", parts }],
+    config: {
+      systemInstruction: IMAGE_SYSTEM_PROMPT,
+      // Nano Banana 는 이미지 응답 + 텍스트 동봉 가능
+      responseModalities: ["IMAGE", "TEXT"],
+    },
+  });
+
+  const responseParts = response.candidates?.[0]?.content?.parts ?? [];
+  const images: ChatImage[] = [];
+  const textChunks: string[] = [];
+  for (const part of responseParts) {
+    const p = part as {
+      inlineData?: { mimeType?: string; data?: string };
+      text?: string;
+      thought?: boolean;
+    };
+    if (p.thought) continue;
+    if (p.inlineData?.data) {
+      images.push({
+        mimeType: p.inlineData.mimeType ?? "image/png",
+        data: p.inlineData.data,
+      });
+    }
+    if (typeof p.text === "string" && p.text.length > 0) {
+      textChunks.push(p.text);
+    }
+  }
+
+  const usage = response.usageMetadata;
+  return {
+    images,
+    text: textChunks.join("").trim(),
+    modelUsed: IMAGE_MODEL,
+    inputTokens: usage?.promptTokenCount ?? null,
+    outputTokens: usage?.candidatesTokenCount ?? null,
+  };
+}

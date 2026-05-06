@@ -6,8 +6,10 @@ const MAX_MESSAGES = 50;
 export type StoredMessage = ChatMessage & {
   ts: number;
   sources?: GroundingSource[];
-  /** Memory-only image previews (object URLs). Not persisted to localStorage. */
+  /** Memory-only image previews (object URLs) for user-attached images. */
   imagesPreview?: { url: string; filename: string }[];
+  /** Memory-only AI-generated images as data: URLs. Not persisted. */
+  generatedImageUrls?: string[];
 };
 
 export function loadHistory(): StoredMessage[] {
@@ -36,8 +38,15 @@ export function saveHistory(messages: StoredMessage[]): void {
     // 이미지(base64)는 저장 안 함 — localStorage 5MB 한도 빨리 소진 방지.
     // 페이지 새로고침 후엔 텍스트 + 출처만 유지됨.
     const trimmed = messages.slice(-MAX_MESSAGES).map((m) => {
-      const { imagesPreview: _imagesPreview, ...rest } = m;
-      void _imagesPreview;
+      const {
+        imagesPreview: _ip,
+        generatedImageUrls: _gi,
+        images: _im,
+        ...rest
+      } = m;
+      void _ip;
+      void _gi;
+      void _im;
       return rest;
     });
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));

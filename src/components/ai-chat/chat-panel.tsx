@@ -180,11 +180,18 @@ export function ChatPanel({ className }: { className?: string }) {
         // 사용자가 다시 첨부해야 함 — 보안상 단순함이 우선.
         return;
       }
+      const generatedUrls =
+        result.generatedImages && result.generatedImages.length > 0
+          ? result.generatedImages.map(
+              (img) => `data:${img.mimeType};base64,${img.data}`,
+            )
+          : undefined;
       const assistantMsg: StoredMessage = {
         role: "assistant",
         content: result.text,
         ts: Date.now(),
         sources: result.sources.length > 0 ? result.sources : undefined,
+        generatedImageUrls: generatedUrls,
       };
       setMessages((prev) => [...prev, assistantMsg]);
     });
@@ -207,6 +214,7 @@ export function ChatPanel({ className }: { className?: string }) {
     content: m.content,
     sources: m.sources,
     imagesPreview: m.imagesPreview,
+    generatedImageUrls: m.generatedImageUrls,
   }));
   if (pending) view.push({ role: "assistant", content: "", pending: true });
 

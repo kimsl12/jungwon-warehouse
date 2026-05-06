@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, ExternalLink, User } from "lucide-react";
+import { Bot, Download, ExternalLink, User } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -13,6 +13,7 @@ export type ChatMessageView = {
   pending?: boolean;
   sources?: GroundingSource[];
   imagesPreview?: { url: string; filename: string }[];
+  generatedImageUrls?: string[];
 };
 
 function hostnameOf(uri: string): string {
@@ -80,6 +81,10 @@ export function ChatMessageRow({ message }: { message: ChatMessageView }) {
           </div>
         ) : (
           <>
+            {message.generatedImageUrls &&
+              message.generatedImageUrls.length > 0 && (
+                <GeneratedImages urls={message.generatedImageUrls} />
+              )}
             <MarkdownBody content={message.content} />
             {message.sources && message.sources.length > 0 && (
               <SourcesRow sources={message.sources} />
@@ -106,6 +111,47 @@ function MarkdownBody({ content }: { content: string }) {
           {content}
         </ReactMarkdown>
       </div>
+    </div>
+  );
+}
+
+function GeneratedImages({ urls }: { urls: string[] }) {
+  function download(url: string, idx: number) {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `jungwon-ai-${Date.now()}-${idx + 1}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+  return (
+    <div className="mb-2 space-y-2">
+      {urls.map((url, i) => (
+        <div
+          key={i}
+          className="relative overflow-hidden rounded-md border border-border"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={url}
+            alt={`AI 생성 이미지 ${i + 1}`}
+            className="w-full"
+            loading="lazy"
+          />
+          <button
+            type="button"
+            onClick={() => download(url, i)}
+            className="absolute right-1.5 top-1.5 inline-flex items-center gap-1 rounded bg-black/60 px-2 py-1 text-[11px] text-white hover:bg-black/80"
+            aria-label="이미지 다운로드"
+          >
+            <Download className="h-3 w-3" />
+            저장
+          </button>
+        </div>
+      ))}
+      <p className="text-[11px] text-muted-foreground">
+        참고용 일러스트입니다. 정확한 시공 도면은 사무실 CAD 를 사용하세요.
+      </p>
     </div>
   );
 }

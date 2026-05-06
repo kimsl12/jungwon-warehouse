@@ -53,16 +53,18 @@ export default async function AIUsagePage() {
   // 오늘 호출 row 들 (사용자별 집계 + 토큰 합계용)
   const { data: todayRowsRaw } = await supabase
     .from("gemini_usage_log")
-    .select("user_id, prompt_tokens, response_tokens")
+    .select("user_id, prompt_tokens, response_tokens, image_generated")
     .gte("created_at", todayStart);
   const todayRows = todayRowsRaw ?? [];
 
   const userCounts = new Map<string, number>();
   let todayPromptTokens = 0;
   let todayResponseTokens = 0;
+  let todayImageCalls = 0;
   todayRows.forEach((r) => {
     todayPromptTokens += r.prompt_tokens ?? 0;
     todayResponseTokens += r.response_tokens ?? 0;
+    if (r.image_generated) todayImageCalls += 1;
     const id = r.user_id;
     if (!id) return;
     userCounts.set(id, (userCounts.get(id) ?? 0) + 1);
@@ -155,7 +157,7 @@ export default async function AIUsagePage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-md border bg-card p-4">
           <div className="text-xs uppercase tracking-widest text-muted-foreground">
             오늘 전체 호출
@@ -205,6 +207,24 @@ export default async function AIUsagePage() {
             평균 {todayTotal > 0
               ? Math.round(todayTotalTokens / todayTotal).toLocaleString("ko-KR")
               : 0} tokens/호출
+          </div>
+        </div>
+
+        <div className="rounded-md border bg-card p-4">
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">
+            오늘 이미지 생성
+          </div>
+          <div className="mt-2 text-3xl font-bold tracking-tight">
+            {todayImageCalls.toLocaleString("ko-KR")}
+            <span className="ml-1 text-base font-normal text-muted-foreground">
+              회
+            </span>
+          </div>
+          <div className="mt-2 text-[11px] text-muted-foreground">
+            전체 호출 중 {todayTotal > 0
+              ? ((todayImageCalls / todayTotal) * 100).toFixed(1)
+              : "0.0"}
+            % 가 이미지 생성
           </div>
         </div>
       </div>
