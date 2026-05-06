@@ -1,13 +1,18 @@
 import { Type } from "@google/genai";
-import type { ChatTool } from "./types";
+import type { ChatTool, ToolRole } from "./types";
 
 type PageEntry = {
   path: string;
   label: string;
-  /** 모바일 전용 또는 모바일 대안 경로 */
+  /** 모바일 대안 경로 (있으면 user 에게 우선 안내) */
   mobilePath?: string;
-  /** admin 만 접근 가능 */
-  admin?: boolean;
+  /**
+   * 접근 가능한 역할.
+   * 미들웨어 정책: user 는 /m/request*, /m/ai-chat, /api/* 만 접근 가능.
+   * 따라서 navigate_to 안내도 그 정책과 일치시켜야 헛된 안내가 안 됨.
+   * 미지정 시 admin only.
+   */
+  allowedRoles?: readonly ToolRole[];
 };
 
 const PAGE_MAP: Record<string, PageEntry> = {
@@ -34,19 +39,23 @@ const PAGE_MAP: Record<string, PageEntry> = {
     path: "/requests",
     label: "자재 요청 페이지",
     mobilePath: "/m/request",
+    // user 도 자기 자재 요청 페이지는 접근 가능 (mobile_path 로 안내).
+    allowedRoles: ["user", "admin"],
   },
   reports: { path: "/reports", label: "리포트 페이지" },
   overview: { path: "/overview", label: "대시보드" },
   scan: { path: "/m/scan", label: "모바일 자재 검색" },
   audit: { path: "/m/audit", label: "재고 실사" },
-  activity_log: {
-    path: "/activity-log",
-    label: "활동 로그 페이지",
-    admin: true,
-  },
-  users: { path: "/users", label: "사용자 관리 페이지", admin: true },
-  ai_usage: { path: "/ai-usage", label: "AI 사용량 페이지", admin: true },
+  activity_log: { path: "/activity-log", label: "활동 로그 페이지" },
+  users: { path: "/users", label: "사용자 관리 페이지" },
+  ai_usage: { path: "/ai-usage", label: "AI 사용량 페이지" },
 };
+
+function appendFilter(path: string, filter?: string): string {
+  if (!filter) return path;
+  const sep = path.includes("?") ? "&" : "?";
+  return `${path}${sep}${filter}`;
+}
 
 export const navigateToTool: ChatTool = {
   declaration: {
@@ -82,19 +91,25 @@ export const navigateToTool: ChatTool = {
         available_keys: Object.keys(PAGE_MAP),
       };
     }
-    if (target.admin && ctx.userRole !== "admin") {
-      return { ok: false, error: "이 페이지는 admin 권한이 필요합니다." };
+    const allowed = target.allowedRoles ?? ["admin"];
+    if (!allowed.includes(ctx.userRole)) {
+      return {
+        ok: false,
+        error: `이 페이지는 ${allowed.join("/")} 권한이 필요합니다. user 권한으로 안내 가능한 페이지는 '자재 요청 (requests)' 입니다.`,
+      };
     }
-    let path = target.path;
-    if (filter) {
-      const sep = path.includes("?") ? "&" : "?";
-      path = `${path}${sep}${filter}`;
-    }
+    // user 는 미들웨어 정책상 데스크톱 경로 접근 불가. mobile_path 우선.
+    const primaryPath =
+      ctx.userRole === "user" && target.mobilePath
+        ? target.mobilePath
+        : target.path;
     return {
       ok: true,
       label: target.label,
-      path,
-      mobile_path: target.mobilePath ?? null,
+      path: appendFilter(primaryPath, filter),
+      mobile_path: target.mobilePath
+        ? appendFilter(target.mobilePath, filter)
+        : null,
     };
   },
 };
