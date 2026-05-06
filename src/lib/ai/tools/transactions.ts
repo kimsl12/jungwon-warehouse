@@ -55,8 +55,7 @@ export const findRecentTransactionsTool: ChatTool = {
         `id, type, quantity, note, created_at, created_by,
          products!transactions_product_id_fkey ( name, variant, unit ),
          sites!transactions_site_id_fkey ( name ),
-         vendors!transactions_vendor_id_fkey ( name ),
-         profiles:created_by ( name )`,
+         vendors!transactions_vendor_id_fkey ( name )`,
       )
       .gte("created_at", since.toISOString())
       .is("canceled_at", null)
@@ -85,6 +84,25 @@ export const findRecentTransactionsTool: ChatTool = {
       });
     }
 
+    // created_by 별칭 join 은 Supabase FK 추론 불안정 — 별도 매핑.
+    const userIds = Array.from(
+      new Set(
+        rows
+          .map((r) => r.created_by)
+          .filter((v): v is string => typeof v === "string"),
+      ),
+    );
+    const profileMap = new Map<string, string | null>();
+    if (userIds.length > 0) {
+      const { data: profiles } = await ctx.supabase
+        .from("profiles")
+        .select("id, name")
+        .in("id", userIds);
+      for (const p of profiles ?? []) {
+        profileMap.set(p.id, p.name ?? null);
+      }
+    }
+
     return {
       ok: true,
       count: rows.length,
@@ -96,7 +114,6 @@ export const findRecentTransactionsTool: ChatTool = {
           | null;
         const site = r.sites as { name?: string } | null;
         const vendor = r.vendors as { name?: string } | null;
-        const profile = r.profiles as { name?: string } | null;
         return {
           date: r.created_at?.slice(0, 10) ?? null,
           type: r.type,
@@ -106,7 +123,7 @@ export const findRecentTransactionsTool: ChatTool = {
           unit: p?.unit ?? null,
           site: site?.name ?? null,
           vendor: vendor?.name ?? null,
-          user: profile?.name ?? null,
+          user: r.created_by ? profileMap.get(r.created_by) ?? null : null,
           note: r.note ?? null,
         };
       }),

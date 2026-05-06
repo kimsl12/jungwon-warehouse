@@ -78,8 +78,7 @@ export const getActivityLogTool: ChatTool = {
     let query = ctx.supabase
       .from("activity_logs")
       .select(
-        `id, action, table_name, record_id, details, created_at,
-         profiles:user_id ( name, email )`,
+        "id, action, table_name, record_id, details, created_at, user_id",
       )
       .gte("created_at", since.toISOString())
       .order("created_at", { ascending: false })
@@ -92,21 +91,39 @@ export const getActivityLogTool: ChatTool = {
     const { data, error } = await query;
     if (error) return { ok: false, error: error.message };
 
+    // activity_logs.user_id 와 profiles.id 사이에 직접 FK 가 없어서
+    // Supabase 자동 join 이 불가. 별도 쿼리로 매핑.
+    const userIds = Array.from(
+      new Set(
+        (data ?? [])
+          .map((r) => r.user_id)
+          .filter((v): v is string => typeof v === "string"),
+      ),
+    );
+    const profileMap = new Map<string, { name: string | null }>();
+    if (userIds.length > 0) {
+      const { data: profiles } = await ctx.supabase
+        .from("profiles")
+        .select("id, name")
+        .in("id", userIds);
+      for (const p of profiles ?? []) {
+        profileMap.set(p.id, { name: p.name ?? null });
+      }
+    }
+
     return {
       ok: true,
       count: data?.length ?? 0,
       since: since.toISOString().slice(0, 10),
       truncated: (data?.length ?? 0) === LOG_LIMIT,
       logs: (data ?? []).map((r) => {
-        const p = r.profiles as
-          | { name?: string; email?: string | null }
-          | null;
+        const profile = r.user_id ? profileMap.get(r.user_id) : null;
         return {
           time: r.created_at,
           action: r.action,
           table: r.table_name,
           record_id: r.record_id,
-          user: p?.name ?? "(시스템)",
+          user: profile?.name ?? "(시스템)",
           details_summary: summarizeDetails(r.details),
         };
       }),

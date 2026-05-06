@@ -62,10 +62,9 @@ export const findRequestStatusTool: ChatTool = {
     let query = ctx.supabase
       .from("material_requests")
       .select(
-        `id, status, is_urgent, urgent_reason, note, created_at, approved_at, fulfilled_at,
+        `id, status, is_urgent, urgent_reason, note, created_at, approved_at, fulfilled_at, created_by,
          sites!material_requests_site_id_fkey ( name ),
-         material_request_items ( requested_quantity, fulfilled_quantity ),
-         profiles:created_by ( name )`,
+         material_request_items ( requested_quantity, fulfilled_quantity )`,
       )
       .gte("created_at", since.toISOString())
       .order("created_at", { ascending: false })
@@ -92,6 +91,25 @@ export const findRequestStatusTool: ChatTool = {
       });
     }
 
+    // created_by → profiles.name 별도 매핑 (직접 FK 추론 불가)
+    const userIds = Array.from(
+      new Set(
+        rows
+          .map((r) => r.created_by)
+          .filter((v): v is string => typeof v === "string"),
+      ),
+    );
+    const profileMap = new Map<string, string | null>();
+    if (userIds.length > 0) {
+      const { data: profiles } = await ctx.supabase
+        .from("profiles")
+        .select("id, name")
+        .in("id", userIds);
+      for (const p of profiles ?? []) {
+        profileMap.set(p.id, p.name ?? null);
+      }
+    }
+
     return {
       ok: true,
       count: rows.length,
@@ -111,14 +129,15 @@ export const findRequestStatusTool: ChatTool = {
           0,
         );
         const s = r.sites as { name?: string } | null;
-        const profile = r.profiles as { name?: string } | null;
         return {
           id: r.id,
           site: s?.name ?? null,
           status: r.status,
           is_urgent: r.is_urgent,
           urgent_reason: r.urgent_reason ?? null,
-          requester: profile?.name ?? null,
+          requester: r.created_by
+            ? profileMap.get(r.created_by) ?? null
+            : null,
           item_count: items.length,
           total_requested: totalRequested,
           total_fulfilled: totalFulfilled,
