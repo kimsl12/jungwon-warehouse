@@ -1,5 +1,6 @@
 import { Type } from "@google/genai";
 import type { ChatTool } from "./types";
+import { searchProductIdsByTokens } from "./search-utils";
 
 const MAX_RESULTS = 20;
 const MAX_DAYS = 90;
@@ -49,6 +50,23 @@ export const findRecentTransactionsTool: ChatTool = {
     const since = new Date();
     since.setDate(since.getDate() - days);
 
+    // 품목 키워드 → 토큰 분리 + 별칭 매칭으로 product_id 집합 확보.
+    // DB 단에서 .in() 으로 필터링.
+    const matchedProductIds = productKeyword
+      ? await searchProductIdsByTokens(ctx.supabase, productKeyword)
+      : null;
+
+    if (matchedProductIds && matchedProductIds.size === 0) {
+      return {
+        ok: true,
+        count: 0,
+        since: since.toISOString().slice(0, 10),
+        truncated: false,
+        keyword_used: productKeyword,
+        transactions: [],
+      };
+    }
+
     let query = ctx.supabase
       .from("transactions")
       .select(
@@ -68,21 +86,14 @@ export const findRecentTransactionsTool: ChatTool = {
     if (onlyMine) {
       query = query.eq("created_by", ctx.userId);
     }
+    if (matchedProductIds) {
+      query = query.in("product_id", Array.from(matchedProductIds));
+    }
 
     const { data, error } = await query;
     if (error) return { ok: false, error: error.message };
 
-    let rows = data ?? [];
-    if (productKeyword) {
-      const lower = productKeyword.toLowerCase();
-      rows = rows.filter((r) => {
-        const p = r.products as { name?: string; variant?: string } | null;
-        return (
-          p?.name?.toLowerCase().includes(lower) ||
-          p?.variant?.toLowerCase().includes(lower)
-        );
-      });
-    }
+    const rows = data ?? [];
 
     // created_by 별칭 join 은 Supabase FK 추론 불안정 — 별도 매핑.
     const userIds = Array.from(
@@ -108,6 +119,7 @@ export const findRecentTransactionsTool: ChatTool = {
       count: rows.length,
       since: since.toISOString().slice(0, 10),
       truncated: rows.length === MAX_RESULTS,
+      keyword_used: productKeyword || null,
       transactions: rows.map((r) => {
         const p = r.products as
           | { name?: string; variant?: string | null; unit?: string | null }

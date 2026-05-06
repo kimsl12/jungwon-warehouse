@@ -1,5 +1,6 @@
 import { Type } from "@google/genai";
 import type { ChatTool } from "./types";
+import { searchProductIdsByTokens } from "./search-utils";
 
 const MAX_RESULTS = 15;
 
@@ -35,6 +36,22 @@ export const searchInventoryTool: ChatTool = {
       typeof args.category === "string" ? args.category.trim() : "";
     const onlyLowStock = args.only_low_stock === true;
 
+    // 키워드 → 토큰 분리 + product_aliases 매칭. 모든 토큰이 매칭되는
+    // product_id 의 교집합. 키워드 비어있으면 null (필터 안 씀).
+    const matchedIds = keyword
+      ? await searchProductIdsByTokens(ctx.supabase, keyword)
+      : null;
+
+    if (matchedIds && matchedIds.size === 0) {
+      return {
+        ok: true,
+        count: 0,
+        truncated: false,
+        keyword_used: keyword,
+        products: [],
+      };
+    }
+
     let query = ctx.supabase
       .from("products")
       .select(
@@ -43,11 +60,8 @@ export const searchInventoryTool: ChatTool = {
       .order("name", { ascending: true })
       .limit(MAX_RESULTS);
 
-    if (keyword) {
-      const like = `%${keyword}%`;
-      query = query.or(
-        `name.ilike.${like},variant.ilike.${like},category.ilike.${like},subcategory.ilike.${like}`,
-      );
+    if (matchedIds) {
+      query = query.in("id", Array.from(matchedIds));
     }
     if (category) {
       query = query.eq("category", category);
@@ -65,6 +79,7 @@ export const searchInventoryTool: ChatTool = {
       ok: true,
       count: products.length,
       truncated: products.length === MAX_RESULTS,
+      keyword_used: keyword || null,
       products: products.map((p) => ({
         name: p.name,
         variant: p.variant ?? null,
