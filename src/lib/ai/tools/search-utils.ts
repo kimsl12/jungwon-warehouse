@@ -11,13 +11,21 @@ type Supa = SupabaseClient<Database>;
  * - products: name, variant, category, subcategory
  * - product_aliases: alias
  *
- * 토큰 1글자는 매칭이 광범위해서 무시. 키워드가 비어있거나 의미 있는
- * 토큰이 없으면 null (= 필터 적용하지 않음을 의미) 반환.
+ * 토큰 분리 단계:
+ * 1) 공백·콤마·가운뎃점·슬래시로 1차 분리
+ * 2) 각 부분을 한글/영문/숫자 경계에서 추가 분리
+ *    예) "36부싱" → ["36", "부싱"], "HFIX4" → ["hfix", "4"]
+ *
+ * 한글·영문 1글자는 매칭이 광범위해 제외. 숫자 1글자는 보존
+ * (예: "HFIX4" 의 "4" 는 자재 구분에 의미가 큼).
+ *
+ * 키워드가 비어있거나 의미 있는 토큰이 없으면 null 반환 (= 필터 안 함).
  *
  * 사용 예:
- *   "22 부싱"  → ["22", "부싱"] → 둘 다 매칭하는 자재만
- *   "와이콘"   → product_aliases.alias = "와이콘" 등록되어 있으면 매칭
- *   "HFIX 4스" → ["hfix", "4스"] → 둘 다 매칭하는 자재
+ *   "22 부싱" / "22부싱" / "부싱22" → ["22", "부싱"] → 둘 다 매칭
+ *   "36부싱"  → ["36", "부싱"] → "부싱 36mm" 매칭
+ *   "와이콘"   → product_aliases.alias = "와이콘" 등록 시 매칭
+ *   "HFIX 4스" → ["hfix", "4", "스"] 중 "스" 1글자 한글이라 제외 → ["hfix", "4"]
  */
 export async function searchProductIdsByTokens(
   supabase: Supa,
@@ -28,8 +36,9 @@ export async function searchProductIdsByTokens(
       keyword
         .toLowerCase()
         .split(/[\s,·\/]+/)
+        .flatMap((part) => part.match(/[가-힣]+|[a-z]+|[0-9]+/g) ?? [])
         .map((t) => t.trim())
-        .filter((t) => t.length >= 2),
+        .filter((t) => t.length >= 2 || /^\d$/.test(t)),
     ),
   );
   if (tokens.length === 0) return null;
