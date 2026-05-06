@@ -52,17 +52,18 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user) {
-    // user 역할(현장 담당자)은 /m/request/* 와 /api/* 만 허용.
+    // user 역할(현장 담당자)은 /m/request/*, /m/ai-chat, /api/* 만 허용.
     // 그 외 경로로 접근하면 /m/request 로 리다이렉트한다.
     //
-    // 역할 조회는 추가 DB 왕복 1회이지만, 이미 user-home 경로이거나 루트('/')
+    // 역할 조회는 추가 DB 왕복 1회이지만, 이미 user-allowed 경로이거나 루트('/')
     // 페이지는 자체 리다이렉트를 하므로 필요한 경우에만 조회해서 최소화.
-    const isUserHomePath = path === "/m/request" || path.startsWith("/m/request/");
+    const isUserAllowedPath =
+      path.startsWith("/m/request") || path.startsWith("/m/ai-chat");
     const isApiPath = path.startsWith("/api/");
     const isRootPath = path === "/";
 
     let role: string | null = null;
-    if (isAuthRoute || (!isUserHomePath && !isApiPath && !isRootPath)) {
+    if (isAuthRoute || (!isUserAllowedPath && !isApiPath && !isRootPath)) {
       const { data: profile } = await supabase
         .from("profiles")
         .select("role")
@@ -77,7 +78,7 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    if (role === "user" && !isUserHomePath && !isApiPath && !isRootPath) {
+    if (role === "user" && !isUserAllowedPath && !isApiPath && !isRootPath) {
       const url = request.nextUrl.clone();
       url.pathname = "/m/request";
       return NextResponse.redirect(url);
