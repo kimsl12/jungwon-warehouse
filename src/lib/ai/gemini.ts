@@ -1,8 +1,18 @@
 import { GoogleGenAI, type Content } from "@google/genai";
+import {
+  getToolByName,
+  type ChatTool,
+  type ToolCallSummary,
+  type ToolContext,
+  type ToolRole,
+} from "./tools";
 
 const PRIMARY_MODEL = "gemini-2.5-flash";
 const FALLBACK_MODEL = "gemini-2.5-flash-lite";
 const IMAGE_MODEL = "gemini-2.5-flash-image";
+
+/** function call 무한 루프 방지. 5회 안에 답변 못 만들면 강제 종료. */
+const MAX_TOOL_ITERATIONS = 5;
 
 const IMAGE_SYSTEM_PROMPT = `당신은 정원전기 사내 챗봇의 이미지 생성 보조 모델입니다. 사용자 요청을 받아 단순한 참고용 일러스트를 생성합니다.
 
@@ -103,7 +113,10 @@ const SYSTEM_PROMPT_BODY = `당신은 정원전기 사내 직원에게 답하는
 - 이미지가 흐릿하거나 한글 손글씨·복잡한 도면이면 솔직히 "이미지 인식이 어렵습니다. 더 선명한 사진 또는 라벨 텍스트를 직접 적어주세요"로 안내.
 `;
 
-function buildSystemPrompt(): string {
+function buildSystemPrompt(opts: {
+  role?: ToolRole;
+  toolNames?: string[];
+} = {}): string {
   const today = new Intl.DateTimeFormat("ko-KR", {
     year: "numeric",
     month: "long",
@@ -111,9 +124,31 @@ function buildSystemPrompt(): string {
     weekday: "long",
     timeZone: "Asia/Seoul",
   }).format(new Date());
-  return `[현재 시점] 오늘은 ${today}입니다. 시행 시점이 오늘 이전이면 "시행 중"으로, 오늘 이후면 "예정"으로 정확히 구분해서 표기하세요.
+  const base = `[현재 시점] 오늘은 ${today}입니다. 시행 시점이 오늘 이전이면 "시행 중"으로, 오늘 이후면 "예정"으로 정확히 구분해서 표기하세요.
 
 ${SYSTEM_PROMPT_BODY}`;
+
+  if (!opts.role || !opts.toolNames || opts.toolNames.length === 0) {
+    return base;
+  }
+
+  const permission = `
+
+[권한 · 사내 데이터 함수]
+현재 사용자 권한: ${opts.role}
+사용 가능한 함수: ${opts.toolNames.join(", ")}
+
+[함수 호출 가이드]
+- 재고·거래처·현장·발주서·입출고·자재 요청·사용자·활동 로그 등 사내 데이터 질문은 반드시 위 함수를 호출해 답하세요. 추측 금지.
+- 페이지 이동 요청 ("ㅇㅇ 페이지 가고 싶어", "ㅇㅇ 보여줘") 은 navigate_to 호출 후 받은 \`path\` 를 마크다운 링크로 답변에 포함하세요. 형식: \`[페이지명 →](/경로)\`. 모바일 사용자라면 \`mobile_path\` 가 있으면 우선 사용.
+- 함수 결과는 마크다운 표(3컬럼 이내) 또는 항목별 리스트로 정리하세요. 표 셀 안 줄바꿈 금지.
+- 함수가 빈 결과를 반환하면 솔직히 "검색 결과가 없습니다" 라고 답하고 비슷한 다른 검색어 1~2개를 제안하세요.
+- 함수 결과의 원본 데이터(이름·수량·날짜·금액·상태)를 임의로 수정·과장하지 마세요. 모르는 필드는 추측 금지.
+- 변경 작업(등록·수정·삭제·승인·출고 처리·재고 조정·발주 발송 등)은 절대 수행하지 마세요. 관련 페이지로 이동 안내만 합니다.
+- 본인 권한을 벗어난 함수는 호출하지 마세요. 권한 초과 요청에는 "이 작업은 admin 권한이 필요합니다" 로 답하세요.
+- 사내 데이터 답변에 회사 환경 부연 설명(백화점·야간 공사 등) 자동 추가 금지. 사용자가 명시 질문하지 않는 한 데이터만 답합니다.`;
+
+  return base + permission;
 }
 
 export type ChatImage = {
@@ -173,6 +208,12 @@ export type GenerateResult = {
   outputTokens: number | null;
   sources: GroundingSource[];
   grounded: boolean;
+  toolCalls: ToolCallSummary[];
+};
+
+export type GenerateChatOptions = {
+  tools?: ChatTool[];
+  toolContext?: ToolContext;
 };
 
 function isUnavailable(err: unknown): boolean {
@@ -188,17 +229,44 @@ function isUnavailable(err: unknown): boolean {
   );
 }
 
-async function callModel(model: string, messages: ChatMessage[]) {
+type CallModelOptions = {
+  /** function calling 활성화 시 함수 선언 등록 */
+  tools?: ChatTool[];
+  /** 시스템 프롬프트 권한 섹션 주입용 */
+  role?: ToolRole;
+  /**
+   * function calling 과 googleSearch 는 한 번의 호출에서 동시 사용이 불안정합니다.
+   * 사내 데이터 함수 호출 후 마지막 자연어 답변에서는 grounding 을 켜고,
+   * 함수 호출 단계에서는 끕니다.
+   */
+  enableGoogleSearch?: boolean;
+};
+
+async function callModel(
+  model: string,
+  contents: Content[],
+  options: CallModelOptions = {},
+) {
   const ai = getClient();
+  const sdkTools: Array<Record<string, unknown>> = [];
+  if (options.tools && options.tools.length > 0) {
+    sdkTools.push({
+      functionDeclarations: options.tools.map((t) => t.declaration),
+    });
+  } else if (options.enableGoogleSearch !== false) {
+    // 함수 도구 없을 때만 grounding 사용 — 충돌 회피.
+    sdkTools.push({ googleSearch: {} });
+  }
   return ai.models.generateContent({
     model,
-    contents: toContents(messages),
+    contents,
     config: {
-      systemInstruction: buildSystemPrompt(),
+      systemInstruction: buildSystemPrompt({
+        role: options.role,
+        toolNames: options.tools?.map((t) => t.declaration.name ?? "") ?? [],
+      }),
       temperature: 0.4,
-      // AI 가 자체 판단하여 google_search 호출 (학습 데이터로 충분하면 미사용,
-      // 시점 의존·최신 정보 필요 시 호출). 검색 결과는 groundingMetadata 로 회수.
-      tools: [{ googleSearch: {} }],
+      tools: sdkTools.length > 0 ? sdkTools : undefined,
       // Thinking 자체는 사용 (답변 품질에 도움) 하되, 응답 텍스트에는 미포함.
       // 모델이 "tool_code print(...)" "thought The user..." 같은 사고 과정을
       // 텍스트로 흘리는 케이스 방지.
@@ -256,33 +324,150 @@ function extractSources(response: GenContentResponse): GroundingSource[] {
   });
 }
 
-export async function generateChatReply(
-  messages: ChatMessage[],
-): Promise<GenerateResult> {
-  let modelUsed = PRIMARY_MODEL;
-  let fellBack = false;
+type CallResult = Awaited<ReturnType<typeof callModel>>;
 
-  let response: GenContentResponse;
+async function callWithFallback(
+  contents: Content[],
+  options: CallModelOptions,
+): Promise<{ response: CallResult; modelUsed: string; fellBack: boolean }> {
   try {
-    response = await callModel(PRIMARY_MODEL, messages);
+    const response = await callModel(PRIMARY_MODEL, contents, options);
+    return { response, modelUsed: PRIMARY_MODEL, fellBack: false };
   } catch (err) {
     if (!isUnavailable(err)) throw err;
-    modelUsed = FALLBACK_MODEL;
-    fellBack = true;
-    response = await callModel(FALLBACK_MODEL, messages);
+    const response = await callModel(FALLBACK_MODEL, contents, options);
+    return { response, modelUsed: FALLBACK_MODEL, fellBack: true };
+  }
+}
+
+type FunctionCallPart = {
+  functionCall?: { name?: string; args?: Record<string, unknown> };
+};
+
+function extractFunctionCalls(
+  response: GenContentResponse,
+): Array<{ name: string; args: Record<string, unknown> }> {
+  const parts = response.candidates?.[0]?.content?.parts ?? [];
+  const calls: Array<{ name: string; args: Record<string, unknown> }> = [];
+  for (const raw of parts) {
+    const part = raw as FunctionCallPart;
+    if (part.functionCall?.name) {
+      calls.push({
+        name: part.functionCall.name,
+        args: part.functionCall.args ?? {},
+      });
+    }
+  }
+  return calls;
+}
+
+export async function generateChatReply(
+  messages: ChatMessage[],
+  options: GenerateChatOptions = {},
+): Promise<GenerateResult> {
+  const tools = options.tools ?? [];
+  const ctx = options.toolContext;
+  const role = ctx?.userRole;
+
+  // function calling 활성 — 도구가 있고 ctx 가 있을 때만.
+  const useTools = tools.length > 0 && !!ctx;
+
+  const contents: Content[] = toContents(messages);
+  const toolCalls: ToolCallSummary[] = [];
+  let aggregatedModelUsed = PRIMARY_MODEL;
+  let aggregatedFellBack = false;
+  let lastResponse: CallResult | null = null;
+
+  if (useTools) {
+    for (let iter = 0; iter < MAX_TOOL_ITERATIONS; iter++) {
+      const { response, modelUsed, fellBack } = await callWithFallback(
+        contents,
+        { tools, role, enableGoogleSearch: false },
+      );
+      aggregatedModelUsed = modelUsed;
+      aggregatedFellBack = aggregatedFellBack || fellBack;
+      lastResponse = response;
+
+      const calls = extractFunctionCalls(response);
+      if (calls.length === 0) break;
+
+      // 모델 응답을 대화에 추가
+      const modelParts = response.candidates?.[0]?.content?.parts;
+      if (modelParts && modelParts.length > 0) {
+        contents.push({ role: "model", parts: modelParts });
+      }
+
+      // 함수 실행 + 결과 수집
+      const toolResponseParts: Content["parts"] = [];
+      for (const call of calls) {
+        const tool = getToolByName(call.name);
+        if (!tool || !tool.roles.includes(role!)) {
+          toolResponseParts!.push({
+            functionResponse: {
+              name: call.name,
+              response: { error: "권한 없음 또는 미등록 함수" },
+            },
+          });
+          toolCalls.push({ name: call.name, args: call.args, ok: false });
+          continue;
+        }
+        try {
+          const result = await tool.execute(call.args, ctx!);
+          toolResponseParts!.push({
+            functionResponse: {
+              name: call.name,
+              response: (result ?? {}) as Record<string, unknown>,
+            },
+          });
+          toolCalls.push({ name: call.name, args: call.args, ok: true });
+        } catch (e) {
+          const message = e instanceof Error ? e.message : String(e);
+          toolResponseParts!.push({
+            functionResponse: {
+              name: call.name,
+              response: { error: message },
+            },
+          });
+          toolCalls.push({ name: call.name, args: call.args, ok: false });
+        }
+      }
+      contents.push({ role: "user", parts: toolResponseParts });
+    }
+
+    // 루프 끝났는데 마지막 응답이 여전히 functionCall 만 들어있으면
+    // 강제로 텍스트 답변 한 번 더 — tools 없이.
+    if (lastResponse && extractFunctionCalls(lastResponse).length > 0) {
+      const forced = await callWithFallback(contents, {
+        tools: undefined,
+        role,
+        enableGoogleSearch: false,
+      });
+      aggregatedModelUsed = forced.modelUsed;
+      aggregatedFellBack = aggregatedFellBack || forced.fellBack;
+      lastResponse = forced.response;
+    }
+  } else {
+    const { response, modelUsed, fellBack } = await callWithFallback(contents, {
+      enableGoogleSearch: true,
+    });
+    aggregatedModelUsed = modelUsed;
+    aggregatedFellBack = fellBack;
+    lastResponse = response;
   }
 
-  const text = extractAnswerText(response);
-  const usage = response.usageMetadata;
-  const sources = extractSources(response);
+  const finalResponse = lastResponse!;
+  const text = extractAnswerText(finalResponse);
+  const usage = finalResponse.usageMetadata;
+  const sources = extractSources(finalResponse);
   return {
     text,
-    modelUsed,
-    fellBack,
+    modelUsed: aggregatedModelUsed,
+    fellBack: aggregatedFellBack,
     inputTokens: usage?.promptTokenCount ?? null,
     outputTokens: usage?.candidatesTokenCount ?? null,
     sources,
     grounded: sources.length > 0,
+    toolCalls,
   };
 }
 

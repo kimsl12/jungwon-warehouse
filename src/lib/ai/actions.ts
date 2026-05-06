@@ -8,6 +8,7 @@ import {
   type ChatMessage,
   type GroundingSource,
 } from "./gemini";
+import { getToolsForRole, type ToolContext, type ToolRole } from "./tools";
 
 const MAX_USER_MESSAGE_CHARS = 4000;
 const MAX_HISTORY_MESSAGES = 20;
@@ -161,6 +162,16 @@ export async function askGemini(
   // 도메인 가드는 IMAGE_SYSTEM_PROMPT 가 추가로 처리.
   const wantImage = shouldGenerateImage(trimmed);
 
+  // 사내 데이터 함수 호출용 도구·컨텍스트. role 은 quota 응답으로 결정.
+  const role: ToolRole = quota.is_admin ? "admin" : "user";
+  const tools = getToolsForRole(role);
+  const toolContext: ToolContext = {
+    supabase,
+    userId: user.id,
+    userRole: role,
+  };
+  const chatOptions = { tools, toolContext };
+
   type TextOk = Awaited<ReturnType<typeof generateChatReply>>;
   type ImageOk = Awaited<ReturnType<typeof generateImageReply>>;
   let textResult: TextOk;
@@ -175,7 +186,7 @@ export async function askGemini(
   try {
     if (wantImage) {
       const [t, i] = await Promise.all([
-        generateChatReply(messages),
+        generateChatReply(messages, chatOptions),
         generateImageReply(trimmed, images).catch((e) => {
           imageError = e instanceof Error ? e.message : String(e);
           return null;
@@ -184,7 +195,7 @@ export async function askGemini(
       textResult = t;
       if (i) imageResult = i;
     } else {
-      textResult = await generateChatReply(messages);
+      textResult = await generateChatReply(messages, chatOptions);
     }
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
