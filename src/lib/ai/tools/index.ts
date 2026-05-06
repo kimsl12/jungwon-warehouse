@@ -7,6 +7,9 @@ import { searchSiteTool, getSiteDetailsTool } from "./sites";
 import { findPurchaseOrderTool } from "./purchase-orders";
 import { findRequestStatusTool } from "./requests";
 import { getMyQuotaTool } from "./usage";
+import { findUserTool, findUserTransactionsTool } from "./admin-users";
+import { getActivityLogTool } from "./admin-activity";
+import { getChatbotUsageStatsTool } from "./admin-usage";
 
 export type { ChatTool, ToolRole, ToolContext, ToolCallSummary } from "./types";
 
@@ -22,6 +25,10 @@ const ALL_TOOLS: readonly ChatTool[] = [
   findPurchaseOrderTool,
   findRequestStatusTool,
   getMyQuotaTool,
+  findUserTool,
+  findUserTransactionsTool,
+  getActivityLogTool,
+  getChatbotUsageStatsTool,
 ];
 
 export function getToolsForRole(role: ToolRole): ChatTool[] {
