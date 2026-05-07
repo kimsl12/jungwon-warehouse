@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { notifyNewMaterialRequest } from "@/lib/push/notify";
 import { createClient } from "@/lib/supabase/server";
 
 // -----------------------------------------------------------------------------
@@ -73,7 +74,31 @@ export async function createMaterialRequest(
 
   revalidatePath("/m/request");
   revalidatePath("/requests");
-  return { ok: true, request_id: data as unknown as string };
+
+  const requestId = data as unknown as string;
+
+  // admin 전체에게 푸시 알림 — 실패해도 신청은 이미 성공이라 무시.
+  try {
+    const [siteResult, profileResult] = await Promise.all([
+      supabase
+        .from("sites")
+        .select("name")
+        .eq("id", parsed.data.site_id)
+        .single(),
+      supabase.from("profiles").select("name").eq("id", user.id).single(),
+    ]);
+    await notifyNewMaterialRequest({
+      requestId,
+      siteName: siteResult.data?.name ?? null,
+      submitterName: profileResult.data?.name ?? null,
+      itemCount: parsed.data.items.length,
+      isUrgent: parsed.data.is_urgent ?? false,
+    });
+  } catch (e) {
+    console.error("[push] 자재 신청 알림 발송 실패:", e);
+  }
+
+  return { ok: true, request_id: requestId };
 }
 
 // -----------------------------------------------------------------------------
