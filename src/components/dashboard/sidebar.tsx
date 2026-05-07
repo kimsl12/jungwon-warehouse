@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import { AIChatSheet } from "@/components/ai-chat/ai-chat-sheet";
+import { NotificationToggle } from "@/components/dashboard/notification-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
@@ -91,7 +92,7 @@ export function DashboardSidebar({
         })}
       </nav>
 
-      <div className="border-t border-sidebar-border px-2 py-2">
+      <div className="space-y-1 border-t border-sidebar-border px-2 py-2">
         <AIChatSheet
           trigger={
             <span className="flex h-9 w-full items-center gap-2.5 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground">
@@ -100,6 +101,7 @@ export function DashboardSidebar({
             </span>
           }
         />
+        {isAdmin && <NotificationToggle />}
       </div>
 
       <div className="flex items-center gap-2.5 border-t border-sidebar-border p-3">
