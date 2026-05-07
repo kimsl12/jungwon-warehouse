@@ -87,10 +87,10 @@ export async function sendToSubscriptions(
 }
 
 /**
- * service_role 클라이언트 — admin 전체 발송 시 RLS 우회 필요.
- * 호출자 세션의 supabase 클라이언트는 본인 row 만 보이므로 별도 클라이언트가 필수.
+ * service_role 클라이언트 — admin 전체 발송 / low_stock_notified_log 기록 등
+ * RLS 우회가 필요한 작업용. 호출자 세션 클라이언트로는 본인 row 만 보이므로 별도.
  */
-function createServiceClient() {
+export function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
@@ -107,7 +107,7 @@ export async function sendToAllAdmins(
   payload: PushPayload,
 ): Promise<{ sent: number; failed: number; admins: number }> {
   ensureConfigured();
-  const svc = createServiceClient();
+  const svc = getServiceClient();
 
   const { data: admins } = await svc
     .from("profiles")

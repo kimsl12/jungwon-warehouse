@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { tryNotifyLowStock } from "@/lib/push/low-stock";
 import { callProcessTransaction } from "@/lib/supabase/rpc";
 import { createClient } from "@/lib/supabase/server";
 
@@ -93,6 +94,15 @@ export async function processTransaction(
   revalidatePath("/inventory");
   revalidatePath("/transactions");
   revalidatePath("/overview");
+
+  // 재고 부족 진입 시 admin 전체 푸시 (KST 일별 디듀프). 발송 실패해도 트랜잭션 성공 유지.
+  if (result?.low_stock) {
+    try {
+      await tryNotifyLowStock(parsed.data.product_id);
+    } catch (e) {
+      console.error("[push] 재고 부족 알림 발송 실패:", e);
+    }
+  }
 
   return {
     error: null,

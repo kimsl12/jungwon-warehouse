@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { tryNotifyLowStock } from "@/lib/push/low-stock";
 import { createClient } from "@/lib/supabase/server";
 
 async function requireAdmin() {
@@ -150,6 +151,31 @@ export async function fulfillMaterialRequest(
   revalidatePath(`/m/request/${parsed.data.request_id}`);
   revalidatePath("/inventory");
   revalidatePath("/transactions");
+
+  // fulfill 로 출고된 품목 중 재고 부족 진입한 것이 있으면 admin 푸시.
+  // tryNotifyLowStock 가 KST 일별 디듀프 + 현재 부족 여부 재확인 자체 처리.
+  try {
+    const { data: items } = await auth.supabase
+      .from("material_request_items")
+      .select("product_id")
+      .in(
+        "id",
+        parsed.data.fulfillments.map((f) => f.item_id),
+      );
+    const productIds = Array.from(
+      new Set((items ?? []).map((i) => i.product_id as string)),
+    );
+    await Promise.all(
+      productIds.map((pid) =>
+        tryNotifyLowStock(pid).catch((e) =>
+          console.error("[push] 재고 부족 알림 실패:", e),
+        ),
+      ),
+    );
+  } catch (e) {
+    console.error("[push] fulfill 후 재고 부족 알림 검사 실패:", e);
+  }
+
   return {
     ok: true,
     status: result.status,
