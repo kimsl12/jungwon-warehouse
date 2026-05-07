@@ -56,6 +56,7 @@ export const searchInventoryTool: ChatTool = {
       .from("products")
       .select(
         "id, name, variant, category, subcategory, unit, quantity, min_quantity, location",
+        { count: "exact" },
       )
       .order("name", { ascending: true })
       .limit(MAX_RESULTS);
@@ -67,7 +68,7 @@ export const searchInventoryTool: ChatTool = {
       query = query.eq("category", category);
     }
 
-    const { data, error } = await query;
+    const { data, count: totalCount, error } = await query;
     if (error) return { ok: false, error: error.message };
 
     let products = data ?? [];
@@ -75,10 +76,17 @@ export const searchInventoryTool: ChatTool = {
       products = products.filter((p) => p.quantity <= p.min_quantity);
     }
 
+    const total = totalCount ?? products.length;
+    const isTruncated = total > products.length && !onlyLowStock;
+
     return {
       ok: true,
       count: products.length,
-      truncated: products.length === MAX_RESULTS,
+      total_count: total,
+      truncated: isTruncated,
+      truncation_warning: isTruncated
+        ? `전체 ${total}건 중 ${products.length}건만 반환. 답변에 명시하고 [재고 페이지 →](/inventory) 안내.`
+        : null,
       keyword_used: keyword || null,
       products: products.map((p) => ({
         name: p.name,

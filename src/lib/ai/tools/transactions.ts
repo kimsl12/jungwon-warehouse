@@ -2,7 +2,7 @@ import { Type } from "@google/genai";
 import type { ChatTool } from "./types";
 import { searchProductIdsByTokens } from "./search-utils";
 
-const MAX_RESULTS = 20;
+const MAX_RESULTS = 50;
 const MAX_DAYS = 90;
 
 export const findRecentTransactionsTool: ChatTool = {
@@ -74,6 +74,7 @@ export const findRecentTransactionsTool: ChatTool = {
          products!transactions_product_id_fkey ( name, variant, unit ),
          sites!transactions_site_id_fkey ( name ),
          vendors!transactions_vendor_id_fkey ( name )`,
+        { count: "exact" },
       )
       .gte("created_at", since.toISOString())
       .is("canceled_at", null)
@@ -90,7 +91,7 @@ export const findRecentTransactionsTool: ChatTool = {
       query = query.in("product_id", Array.from(matchedProductIds));
     }
 
-    const { data, error } = await query;
+    const { data, count: totalCount, error } = await query;
     if (error) return { ok: false, error: error.message };
 
     const rows = data ?? [];
@@ -114,11 +115,18 @@ export const findRecentTransactionsTool: ChatTool = {
       }
     }
 
+    const total = totalCount ?? rows.length;
+    const isTruncated = total > rows.length;
+
     return {
       ok: true,
       count: rows.length,
+      total_count: total,
       since: since.toISOString().slice(0, 10),
-      truncated: rows.length === MAX_RESULTS,
+      truncated: isTruncated,
+      truncation_warning: isTruncated
+        ? `필터 조건 전체 ${total}건 중 최근 ${rows.length}건만 반환했습니다. 답변에 반드시 '전체 ${total}건 중 ${rows.length}건' 표시하고, 전체는 [입출고 내역 페이지 →](/transactions) 안내. '이게 전부' 라고 단정 금지.`
+        : null,
       keyword_used: productKeyword || null,
       transactions: rows.map((r) => {
         const p = r.products as

@@ -65,6 +65,7 @@ export const findRequestStatusTool: ChatTool = {
         `id, status, is_urgent, urgent_reason, note, created_at, approved_at, fulfilled_at, created_by,
          sites!material_requests_site_id_fkey ( name ),
          material_request_items ( requested_quantity, fulfilled_quantity )`,
+        { count: "exact" },
       )
       .gte("created_at", since.toISOString())
       .order("created_at", { ascending: false })
@@ -79,7 +80,7 @@ export const findRequestStatusTool: ChatTool = {
       query = query.eq("is_urgent", true);
     }
 
-    const { data, error } = await query;
+    const { data, count: totalCount, error } = await query;
     if (error) return { ok: false, error: error.message };
 
     let rows = data ?? [];
@@ -110,10 +111,17 @@ export const findRequestStatusTool: ChatTool = {
       }
     }
 
+    const total = siteKeyword ? rows.length : (totalCount ?? rows.length);
+    const isTruncated = !siteKeyword && total > rows.length;
+
     return {
       ok: true,
       count: rows.length,
-      truncated: rows.length === LIMIT,
+      total_count: total,
+      truncated: isTruncated,
+      truncation_warning: isTruncated
+        ? `전체 ${total}건 중 ${rows.length}건만 반환. [자재 요청 페이지 →](/requests) 안내.`
+        : null,
       since: since.toISOString().slice(0, 10),
       requests: rows.map((r) => {
         const items = (r.material_request_items ?? []) as unknown as Array<{

@@ -62,6 +62,7 @@ export const findPurchaseOrderTool: ChatTool = {
         `id, po_number, status, order_date, due_date, sent_at, completed_at, ship_to,
          vendors!purchase_orders_vendor_id_fkey ( name, contact_person ),
          purchase_order_items ( ordered_quantity, received_quantity, unit_price )`,
+        { count: "exact" },
       )
       .gte("order_date", since.toISOString().slice(0, 10))
       .order("order_date", { ascending: false })
@@ -74,10 +75,12 @@ export const findPurchaseOrderTool: ChatTool = {
       query = query.eq("status", status);
     }
 
-    const { data, error } = await query;
+    const { data, count: totalCount, error } = await query;
     if (error) return { ok: false, error: error.message };
 
     let rows = data ?? [];
+    // vendor_keyword 는 클라이언트 필터라 total_count 와 어긋날 수 있음.
+    // 단순화: vendor 필터 적용 시 total_count = 표시 건수.
     if (vendorKeyword) {
       const lower = vendorKeyword.toLowerCase();
       rows = rows.filter((r) => {
@@ -86,10 +89,17 @@ export const findPurchaseOrderTool: ChatTool = {
       });
     }
 
+    const total = vendorKeyword ? rows.length : (totalCount ?? rows.length);
+    const isTruncated = !vendorKeyword && total > rows.length;
+
     return {
       ok: true,
       count: rows.length,
-      truncated: rows.length === LIMIT,
+      total_count: total,
+      truncated: isTruncated,
+      truncation_warning: isTruncated
+        ? `전체 ${total}건 중 ${rows.length}건만 반환. [발주서 페이지 →](/purchase-orders) 안내.`
+        : null,
       since: since.toISOString().slice(0, 10),
       orders: rows.map((r) => {
         const items = (r.purchase_order_items ??
