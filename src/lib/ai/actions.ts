@@ -11,7 +11,9 @@ import {
 import { getToolsForRole, type ToolContext, type ToolRole } from "./tools";
 
 const MAX_USER_MESSAGE_CHARS = 4000;
-const MAX_HISTORY_MESSAGES = 20;
+// 긴 대화에서 history 누적이 TPM/TPD 한도 초과 유발하는 패턴 발견 (2026-05-07).
+// 20 → 10 으로 단축. 컨텍스트 약간 잃지만 토큰 spike 방지가 우선.
+const MAX_HISTORY_MESSAGES = 10;
 const MAX_IMAGES_PER_MESSAGE = 3;
 const MAX_IMAGE_BYTES = 1_500_000; // 1.5MB per image (after client resize)
 const ALLOWED_IMAGE_MIME = new Set([

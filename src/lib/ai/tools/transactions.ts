@@ -2,7 +2,9 @@ import { Type } from "@google/genai";
 import type { ChatTool } from "./types";
 import { searchProductIdsByTokens } from "./search-utils";
 
-const MAX_RESULTS = 50;
+// LIMIT 50 → 30. 잘림 인지는 truncation_warning + total_count 로 처리.
+// 더 많은 결과는 /transactions 페이지에서 조회.
+const MAX_RESULTS = 30;
 const MAX_DAYS = 90;
 
 export const findRecentTransactionsTool: ChatTool = {
