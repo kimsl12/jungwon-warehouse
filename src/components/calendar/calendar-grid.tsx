@@ -51,18 +51,9 @@ function dateToString(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-function isInRange(target: string, start: string | null, end: string | null): boolean {
-  if (start && target < start) return false;
-  if (end && target > end) return false;
-  // start/end 둘 다 null 이면 항상 진행 중으로 간주 X (표시 안 함)
-  if (!start && !end) return false;
-  return true;
-}
-
 export function CalendarGrid({
   year,
   month,
-  sites,
   schedules,
   purchaseOrders,
   onCellAdd,
@@ -70,7 +61,6 @@ export function CalendarGrid({
 }: {
   year: number;
   month: number;
-  sites: SiteRange[];
   schedules: ScheduleWithAssignees[];
   purchaseOrders: PurchaseOrderDue[];
   onCellAdd: (dateStr: string) => void;
@@ -119,7 +109,6 @@ export function CalendarGrid({
           const inMonth = d.getMonth() === month - 1;
           const isToday = dateStr === todayStr;
           const weekday = d.getDay();
-          const activeSites = sites.filter((s) => isInRange(dateStr, s.start_date, s.end_date));
           const daySchedules = schedulesByDate.get(dateStr) ?? [];
           const dayPOs = posByDate.get(dateStr) ?? [];
 
@@ -131,7 +120,6 @@ export function CalendarGrid({
               inMonth={inMonth}
               isToday={isToday}
               weekday={weekday}
-              sites={activeSites}
               schedules={daySchedules}
               purchaseOrders={dayPOs}
               onAdd={() => onCellAdd(dateStr)}

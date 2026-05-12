@@ -105,7 +105,6 @@ export function CalendarView({
       <CalendarGrid
         year={year}
         month={month}
-        sites={sites}
         schedules={schedules}
         purchaseOrders={purchaseOrders}
         onCellAdd={handleCellAdd}

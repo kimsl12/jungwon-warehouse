@@ -6,17 +6,15 @@ import { Plus, Truck, Users } from "lucide-react";
 import type {
   PurchaseOrderDue,
   ScheduleWithAssignees,
-  SiteRange,
 } from "./calendar-grid";
 import { cn } from "@/lib/utils";
 
 export function CalendarDayCell({
   date,
-  dateStr,
+  dateStr: _dateStr,
   inMonth,
   isToday,
   weekday,
-  sites,
   schedules,
   purchaseOrders,
   onAdd,
@@ -27,7 +25,6 @@ export function CalendarDayCell({
   inMonth: boolean;
   isToday: boolean;
   weekday: number;
-  sites: SiteRange[];
   schedules: ScheduleWithAssignees[];
   purchaseOrders: PurchaseOrderDue[];
   onAdd: () => void;
@@ -62,20 +59,6 @@ export function CalendarDayCell({
           </button>
         )}
       </div>
-
-      {/* 진행 중 현장 — 최대 2개 */}
-      {sites.slice(0, 2).map((s) => (
-        <div
-          key={s.id}
-          className="truncate rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-900 dark:bg-amber-950/50 dark:text-amber-200"
-          title={s.name}
-        >
-          {s.name}
-        </div>
-      ))}
-      {sites.length > 2 && (
-        <div className="text-[10px] text-muted-foreground">+ {sites.length - 2} 현장</div>
-      )}
 
       {/* 작업 일정 — 최대 3개 */}
       {schedules.slice(0, 3).map((s) => (
