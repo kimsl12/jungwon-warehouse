@@ -68,6 +68,25 @@ export default async function CalendarPage({
     assigneesRaw = (data ?? []) as WorkScheduleAssigneeRow[];
   }
 
+  // 그 달 발주서 납기 (canceled 제외)
+  const { data: posRaw } = await supabase
+    .from("purchase_orders")
+    .select("id, po_number, due_date, status, vendor_id, vendors!purchase_orders_vendor_id_fkey(name)")
+    .gte("due_date", monthStart)
+    .lte("due_date", monthEnd)
+    .neq("status", "canceled")
+    .order("due_date", { ascending: true });
+  const purchaseOrders = (posRaw ?? []).map((p) => {
+    const v = p.vendors as { name?: string } | null;
+    return {
+      id: p.id as string,
+      po_number: p.po_number as string,
+      due_date: p.due_date as string,
+      status: p.status as string,
+      vendor_name: v?.name ?? null,
+    };
+  });
+
   // 사이트 — active 만 가져와서 그 달과 겹치는지 client 가 판단
   const { data: sitesRaw } = await supabase
     .from("sites")
@@ -107,6 +126,7 @@ export default async function CalendarPage({
       month={month}
       sites={sites}
       schedules={schedulesWithAssignees}
+      purchaseOrders={purchaseOrders}
       assignableUsers={profiles.map((p) => ({
         id: p.id,
         name: p.name ?? "(이름 없음)",

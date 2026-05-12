@@ -19,6 +19,14 @@ export type ScheduleWithAssignees = {
   assignees: Array<{ user_id: string; name: string }>;
 };
 
+export type PurchaseOrderDue = {
+  id: string;
+  po_number: string;
+  due_date: string;
+  status: string;
+  vendor_name: string | null;
+};
+
 const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
 /**
@@ -56,6 +64,7 @@ export function CalendarGrid({
   month,
   sites,
   schedules,
+  purchaseOrders,
   onCellAdd,
   onScheduleClick,
 }: {
@@ -63,6 +72,7 @@ export function CalendarGrid({
   month: number;
   sites: SiteRange[];
   schedules: ScheduleWithAssignees[];
+  purchaseOrders: PurchaseOrderDue[];
   onCellAdd: (dateStr: string) => void;
   onScheduleClick: (s: ScheduleWithAssignees) => void;
 }) {
@@ -73,12 +83,18 @@ export function CalendarGrid({
     return new Date(kstMs).toISOString().slice(0, 10);
   })();
 
-  // 일정 / 진행 중 현장을 날짜별로 그룹화
+  // 일정 / 진행 중 현장 / 발주 납기를 날짜별로 그룹화
   const schedulesByDate = new Map<string, ScheduleWithAssignees[]>();
   for (const s of schedules) {
     const arr = schedulesByDate.get(s.work_date) ?? [];
     arr.push(s);
     schedulesByDate.set(s.work_date, arr);
+  }
+  const posByDate = new Map<string, PurchaseOrderDue[]>();
+  for (const p of purchaseOrders) {
+    const arr = posByDate.get(p.due_date) ?? [];
+    arr.push(p);
+    posByDate.set(p.due_date, arr);
   }
 
   return (
@@ -105,6 +121,7 @@ export function CalendarGrid({
           const weekday = d.getDay();
           const activeSites = sites.filter((s) => isInRange(dateStr, s.start_date, s.end_date));
           const daySchedules = schedulesByDate.get(dateStr) ?? [];
+          const dayPOs = posByDate.get(dateStr) ?? [];
 
           return (
             <CalendarDayCell
@@ -116,6 +133,7 @@ export function CalendarGrid({
               weekday={weekday}
               sites={activeSites}
               schedules={daySchedules}
+              purchaseOrders={dayPOs}
               onAdd={() => onCellAdd(dateStr)}
               onScheduleClick={onScheduleClick}
             />

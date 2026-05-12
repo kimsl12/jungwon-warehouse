@@ -4,7 +4,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 
-import { CalendarGrid, type ScheduleWithAssignees, type SiteRange } from "./calendar-grid";
+import {
+  CalendarGrid,
+  type PurchaseOrderDue,
+  type ScheduleWithAssignees,
+  type SiteRange,
+} from "./calendar-grid";
 import { ScheduleDialog, type AssignableUser, type ScheduleEditValues } from "./schedule-dialog";
 import { Button } from "@/components/ui/button";
 
@@ -18,12 +23,14 @@ export function CalendarView({
   month,
   sites,
   schedules,
+  purchaseOrders,
   assignableUsers,
 }: {
   year: number;
   month: number;
   sites: SiteRange[];
   schedules: ScheduleWithAssignees[];
+  purchaseOrders: PurchaseOrderDue[];
   assignableUsers: AssignableUser[];
 }) {
   const router = useRouter();
@@ -100,6 +107,7 @@ export function CalendarView({
         month={month}
         sites={sites}
         schedules={schedules}
+        purchaseOrders={purchaseOrders}
         onCellAdd={handleCellAdd}
         onScheduleClick={handleScheduleClick}
       />

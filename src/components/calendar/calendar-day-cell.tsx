@@ -1,8 +1,13 @@
 "use client";
 
-import { Plus, Users } from "lucide-react";
+import Link from "next/link";
+import { Plus, Truck, Users } from "lucide-react";
 
-import type { ScheduleWithAssignees, SiteRange } from "./calendar-grid";
+import type {
+  PurchaseOrderDue,
+  ScheduleWithAssignees,
+  SiteRange,
+} from "./calendar-grid";
 import { cn } from "@/lib/utils";
 
 export function CalendarDayCell({
@@ -13,6 +18,7 @@ export function CalendarDayCell({
   weekday,
   sites,
   schedules,
+  purchaseOrders,
   onAdd,
   onScheduleClick,
 }: {
@@ -23,6 +29,7 @@ export function CalendarDayCell({
   weekday: number;
   sites: SiteRange[];
   schedules: ScheduleWithAssignees[];
+  purchaseOrders: PurchaseOrderDue[];
   onAdd: () => void;
   onScheduleClick: (s: ScheduleWithAssignees) => void;
 }) {
@@ -90,6 +97,22 @@ export function CalendarDayCell({
       ))}
       {schedules.length > 3 && (
         <div className="text-[10px] text-muted-foreground">+ {schedules.length - 3} 일정</div>
+      )}
+
+      {/* 발주 납기 — 최대 2개 */}
+      {purchaseOrders.slice(0, 2).map((p) => (
+        <Link
+          key={p.id}
+          href={`/purchase-orders/${p.id}`}
+          className="flex items-center gap-1 truncate rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-medium text-emerald-900 hover:bg-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-200 dark:hover:bg-emerald-900/60"
+          title={`납기: ${p.vendor_name ?? "거래처 미상"} (${p.po_number})`}
+        >
+          <Truck className="size-3 shrink-0" />
+          <span className="flex-1 truncate">{p.vendor_name ?? p.po_number}</span>
+        </Link>
+      ))}
+      {purchaseOrders.length > 2 && (
+        <div className="text-[10px] text-muted-foreground">+ {purchaseOrders.length - 2} 납기</div>
       )}
     </div>
   );
