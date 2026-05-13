@@ -16,6 +16,7 @@ type SearchParams = Promise<{
   from?: string;
   to?: string;
   page?: string;
+  q?: string;
 }>;
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
@@ -84,6 +85,48 @@ export default async function RequestsPage({ searchParams }: { searchParams: Sea
     const endOfDay = new Date(params.to);
     endOfDay.setHours(23, 59, 59, 999);
     query = query.lte("created_at", endOfDay.toISOString());
+  }
+
+  // 자유 검색 — 자재명 / 현장명 / 신청자 / 비고 / 긴급사유 통합 매칭.
+  // 각 보조 테이블에서 매칭되는 ID 를 모은 뒤 .or() 로 합치는 패턴.
+  const qRaw = (params.q ?? "").trim();
+  if (qRaw.length > 0) {
+    const escaped = qRaw.replace(/[%_,()]/g, (c) => "\\" + c);
+    const like = `%${escaped}%`;
+
+    const [prodResult, siteResult, userResult] = await Promise.all([
+      supabase.from("products").select("id").ilike("name", like),
+      supabase.from("sites").select("id").ilike("name", like),
+      supabase.from("profiles").select("id").ilike("name", like),
+    ]);
+    const productIds = (prodResult.data ?? []).map((p) => p.id);
+    let requestIdsFromItems: string[] = [];
+    if (productIds.length > 0) {
+      const { data: items } = await supabase
+        .from("material_request_items")
+        .select("request_id")
+        .in("product_id", productIds);
+      requestIdsFromItems = Array.from(
+        new Set((items ?? []).map((i) => i.request_id as string)),
+      );
+    }
+    const matchedSiteIds = (siteResult.data ?? []).map((s) => s.id);
+    const matchedUserIds = (userResult.data ?? []).map((u) => u.id);
+
+    const orParts: string[] = [
+      `note.ilike.${like}`,
+      `urgent_reason.ilike.${like}`,
+    ];
+    if (requestIdsFromItems.length > 0) {
+      orParts.push(`id.in.(${requestIdsFromItems.join(",")})`);
+    }
+    if (matchedSiteIds.length > 0) {
+      orParts.push(`site_id.in.(${matchedSiteIds.join(",")})`);
+    }
+    if (matchedUserIds.length > 0) {
+      orParts.push(`created_by.in.(${matchedUserIds.join(",")})`);
+    }
+    query = query.or(orParts.join(","));
   }
 
   const [requestsResult, sitesResult, profilesResult] = await Promise.all([
@@ -164,6 +207,15 @@ export default async function RequestsPage({ searchParams }: { searchParams: Sea
       {/* Site / user filters (optional) */}
       <form method="get" className="flex flex-wrap items-end gap-2 text-xs">
         <input type="hidden" name="status" value={current === "all" ? "" : current} />
+        <Field label="검색 (자재·현장·신청자·비고)">
+          <input
+            type="text"
+            name="q"
+            defaultValue={params.q ?? ""}
+            placeholder="예: 매립등, 무역센터, 김승열"
+            className="h-9 w-64 rounded border bg-background px-2 text-sm"
+          />
+        </Field>
         <Field label="현장">
           <select
             name="site_id"
@@ -297,6 +349,7 @@ export default async function RequestsPage({ searchParams }: { searchParams: Sea
             if (params.user_id) urlParams.set("user_id", params.user_id);
             if (params.from) urlParams.set("from", params.from);
             if (params.to) urlParams.set("to", params.to);
+            if (params.q) urlParams.set("q", params.q);
             urlParams.set("page", String(p));
             return (
               <Link
