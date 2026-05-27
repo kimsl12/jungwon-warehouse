@@ -4,6 +4,7 @@ import { ArrowDownToLine, Download, Package, Truck } from "lucide-react";
 import { KPICard } from "@/components/shared/kpi-card";
 import { StatusBadge, type StatusTone } from "@/components/shared/status-badge";
 import { QuickTransactionButton } from "@/components/transactions/quick-transaction-button";
+import { TransactionAdminDeleteButton } from "@/components/transactions/transaction-admin-delete-button";
 import { TransactionsPagination } from "@/components/transactions/transactions-pagination";
 import { PO_STATUS_LABEL, type PoStatus } from "@/lib/po-options";
 import { createClient } from "@/lib/supabase/server";
@@ -38,6 +39,18 @@ export default async function InboundPage({
 
   const supabase = await createClient();
 
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
+  const { data: currentProfile } = currentUser
+    ? await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", currentUser.id)
+        .single()
+    : { data: null };
+  const isAdmin = currentProfile?.role === "admin";
+
   let query = supabase
     .from("transactions")
     .select(
@@ -45,6 +58,7 @@ export default async function InboundPage({
       { count: "exact" },
     )
     .eq("type", "in")
+    .is("canceled_at", null)
     .order("created_at", { ascending: false })
     .range(fromIdx, toIdx);
 
@@ -58,39 +72,36 @@ export default async function InboundPage({
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const [
-    txResult,
-    profilesResult,
-    sitesResult,
-    pendingPoResult,
-    last7Result,
-  ] = await Promise.all([
-    query,
-    supabase.from("profiles").select("id, name"),
-    supabase.from("sites").select("id, name").eq("active", true).order("name"),
-    supabase
-      .from("purchase_orders")
-      .select(
-        "id, po_number, status, order_date, due_date, vendor:vendors!inner(id, name)",
-      )
-      .in("status", ["sent", "receiving"])
-      .order("due_date", { ascending: true, nullsFirst: false })
-      .limit(5),
-    supabase
-      .from("transactions")
-      .select("quantity")
-      .eq("type", "in")
-      .gte("created_at", sevenDaysAgo.toISOString()),
-  ]);
+  const [txResult, profilesResult, sitesResult, pendingPoResult, last7Result] =
+    await Promise.all([
+      query,
+      supabase.from("profiles").select("id, name"),
+      supabase
+        .from("sites")
+        .select("id, name")
+        .eq("active", true)
+        .order("name"),
+      supabase
+        .from("purchase_orders")
+        .select(
+          "id, po_number, status, order_date, due_date, vendor:vendors!inner(id, name)",
+        )
+        .in("status", ["sent", "receiving"])
+        .order("due_date", { ascending: true, nullsFirst: false })
+        .limit(5),
+      supabase
+        .from("transactions")
+        .select("quantity")
+        .eq("type", "in")
+        .is("canceled_at", null)
+        .gte("created_at", sevenDaysAgo.toISOString()),
+    ]);
 
   const transactions = txResult.data ?? [];
   const totalCount = txResult.count ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const pendingPos = pendingPoResult.data ?? [];
-  const last7Sum = (last7Result.data ?? []).reduce(
-    (s, t) => s + t.quantity,
-    0,
-  );
+  const last7Sum = (last7Result.data ?? []).reduce((s, t) => s + t.quantity, 0);
 
   const profileMap = new Map(
     (profilesResult.data ?? []).map((p) => [p.id, p.name]),
@@ -196,10 +207,7 @@ export default async function InboundPage({
                 ? dateOnlyFmt.format(new Date(po.due_date))
                 : "—";
               return (
-                <li
-                  key={po.id}
-                  className="flex items-center gap-4 px-5 py-3.5"
-                >
+                <li key={po.id} className="flex items-center gap-4 px-5 py-3.5">
                   <div className="inline-flex size-10 shrink-0 items-center justify-center rounded-md bg-info-bg text-info">
                     <Truck className="size-4" />
                   </div>
@@ -265,6 +273,9 @@ export default async function InboundPage({
                   <th className="px-3 py-2.5 text-right font-medium">수량</th>
                   <th className="px-3 py-2.5 text-left font-medium">담당자</th>
                   <th className="px-3 py-2.5 text-left font-medium">메모</th>
+                  {isAdmin && (
+                    <th className="px-3 py-2.5 text-right font-medium" />
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -304,6 +315,14 @@ export default async function InboundPage({
                     <td className="px-3 py-3 text-[12px] text-muted-foreground">
                       {tx.note ?? ""}
                     </td>
+                    {isAdmin && (
+                      <td className="px-3 py-3 text-right">
+                        {!(
+                          tx.note?.startsWith("자재 신청 출고") ||
+                          tx.note?.startsWith("발주 ")
+                        ) && <TransactionAdminDeleteButton txId={tx.id} />}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
