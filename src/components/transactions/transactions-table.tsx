@@ -1,3 +1,4 @@
+import { TransactionAdminDeleteButton } from "@/components/transactions/transaction-admin-delete-button";
 import { TransactionUndoButton } from "@/components/transactions/transaction-undo-button";
 import {
   Table,
@@ -47,15 +48,19 @@ export function TransactionsTable({
   transactions,
   profileNameMap,
   currentUserId,
+  isAdmin,
 }: {
   transactions: TransactionRow[];
   profileNameMap: Map<string, string | null>;
   currentUserId: string | null;
+  isAdmin: boolean;
 }) {
   if (transactions.length === 0) {
     return (
       <div className="rounded-md border bg-muted/20 p-12 text-center">
-        <p className="text-sm text-muted-foreground">조건에 맞는 입출고 내역이 없습니다.</p>
+        <p className="text-sm text-muted-foreground">
+          조건에 맞는 입출고 내역이 없습니다.
+        </p>
       </div>
     );
   }
@@ -80,14 +85,19 @@ export function TransactionsTable({
         </TableHeader>
         <TableBody>
           {transactions.map((tx) => {
-            const userName = tx.created_by ? (profileNameMap.get(tx.created_by) ?? "—") : "—";
+            const userName = tx.created_by
+              ? (profileNameMap.get(tx.created_by) ?? "—")
+              : "—";
             const isCanceled = tx.canceled_at !== null;
             const isReversal = tx.related_tx_id !== null && !isCanceled;
             const isLinked =
               tx.note?.startsWith("자재 신청 출고") === true ||
               tx.note?.startsWith("발주 ") === true;
             const age = now - new Date(tx.created_at).getTime();
+            const canAdminDelete =
+              isAdmin && !isCanceled && !isReversal && !isLinked;
             const canUndo =
+              !canAdminDelete &&
               !isCanceled &&
               !isReversal &&
               !isLinked &&
@@ -98,7 +108,11 @@ export function TransactionsTable({
             return (
               <TableRow
                 key={tx.id}
-                className={isCanceled ? "opacity-50 line-through decoration-muted-foreground" : undefined}
+                className={
+                  isCanceled
+                    ? "opacity-50 line-through decoration-muted-foreground"
+                    : undefined
+                }
               >
                 <TableCell className="text-muted-foreground tabular-nums">
                   {dateFormatter.format(new Date(tx.created_at))}
@@ -114,7 +128,11 @@ export function TransactionsTable({
                           : "bg-warning-bg text-warning dark:bg-amber-950 dark:text-amber-300",
                     )}
                   >
-                    {tx.type === "in" ? "입고" : tx.type === "loss" ? "분실" : "출고"}
+                    {tx.type === "in"
+                      ? "입고"
+                      : tx.type === "loss"
+                        ? "분실"
+                        : "출고"}
                   </span>
                   {isCanceled && (
                     <span className="ml-1.5 inline-flex items-center rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground no-underline">
@@ -149,11 +167,16 @@ export function TransactionsTable({
                 <TableCell className="text-muted-foreground">
                   {tx.sites?.name ?? "—"}
                 </TableCell>
-                <TableCell className="text-muted-foreground">{userName}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {userName}
+                </TableCell>
                 <TableCell className="max-w-xs truncate text-muted-foreground">
                   {tx.note ?? ""}
                 </TableCell>
                 <TableCell className="text-right">
+                  {canAdminDelete && (
+                    <TransactionAdminDeleteButton txId={tx.id} />
+                  )}
                   {canUndo && <TransactionUndoButton txId={tx.id} />}
                 </TableCell>
               </TableRow>

@@ -35,6 +35,15 @@ export default async function TransactionsPage({
     data: { user: currentUser },
   } = await supabase.auth.getUser();
 
+  const { data: currentProfile } = currentUser
+    ? await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", currentUser.id)
+        .single()
+    : { data: null };
+  const isAdmin = currentProfile?.role === "admin";
+
   // Build the transactions query. We embed `products` (FK on transactions
   // → products) but resolve `profiles` separately because the FK on
   // transactions.created_by points to auth.users, not profiles.
@@ -98,13 +107,17 @@ export default async function TransactionsPage({
     sitesResult,
     vendorsResult,
   ] = await Promise.all([
-      query,
-      supabase.from("products").select("id, name").order("name"),
-      supabase.from("products").select("category").not("category", "is", null),
-      supabase.from("profiles").select("id, name").order("name"),
-      supabase.from("sites").select("id, name").eq("active", true).order("name"),
-      supabase.from("vendors").select("id, name").eq("active", true).order("name"),
-    ]);
+    query,
+    supabase.from("products").select("id, name").order("name"),
+    supabase.from("products").select("category").not("category", "is", null),
+    supabase.from("profiles").select("id, name").order("name"),
+    supabase.from("sites").select("id, name").eq("active", true).order("name"),
+    supabase
+      .from("vendors")
+      .select("id, name")
+      .eq("active", true)
+      .order("name"),
+  ]);
 
   const transactions = transactionsResult.data ?? [];
   const totalCount = transactionsResult.count ?? 0;
@@ -112,7 +125,11 @@ export default async function TransactionsPage({
 
   // Resolve profile names for the visible transactions
   const userIds = Array.from(
-    new Set(transactions.map((t) => t.created_by).filter((id): id is string => Boolean(id))),
+    new Set(
+      transactions
+        .map((t) => t.created_by)
+        .filter((id): id is string => Boolean(id)),
+    ),
   );
   let profileNameMap = new Map<string, string | null>();
   if (userIds.length > 0) {
@@ -127,12 +144,15 @@ export default async function TransactionsPage({
   for (const row of categoriesResult.data ?? []) {
     if (row.category) categorySet.add(row.category);
   }
-  const categories = Array.from(categorySet).sort((a, b) => a.localeCompare(b, "ko"));
+  const categories = Array.from(categorySet).sort((a, b) =>
+    a.localeCompare(b, "ko"),
+  );
 
   // Build the export URL with the same filter params so users export
   // exactly what's on screen.
   const exportParams = new URLSearchParams();
-  if (params.type === "in" || params.type === "out" || params.type === "loss") exportParams.set("type", params.type);
+  if (params.type === "in" || params.type === "out" || params.type === "loss")
+    exportParams.set("type", params.type);
   if (params.product_id) exportParams.set("product_id", params.product_id);
   if (params.user_id) exportParams.set("user_id", params.user_id);
   if (params.category) exportParams.set("category", params.category);
@@ -211,6 +231,7 @@ export default async function TransactionsPage({
         transactions={transactions}
         profileNameMap={profileNameMap}
         currentUserId={currentUser?.id ?? null}
+        isAdmin={isAdmin}
       />
 
       <TransactionsPagination currentPage={page} totalPages={totalPages} />
