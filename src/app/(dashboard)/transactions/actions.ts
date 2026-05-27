@@ -82,10 +82,15 @@ export async function adminCancelTransaction(
   const parsed = undoSchema.safeParse({ tx_id: txId, reason });
   if (!parsed.success) return { error: "잘못된 요청입니다." };
 
-  const { error } = await supabase.rpc("admin_cancel_transaction", {
-    p_tx_id: parsed.data.tx_id,
-    p_reason: (parsed.data.reason ?? null) as unknown as string,
-  });
+  // admin_cancel_transaction RPC 는 마이그레이션 20260515000000 이후 추가됨.
+  // database.types 재생성(pnpm gen:types) 전까지 type-safe 우회.
+  const { error } = await supabase.rpc(
+    "admin_cancel_transaction" as never,
+    {
+      p_tx_id: parsed.data.tx_id,
+      p_reason: (parsed.data.reason ?? null) as unknown as string,
+    } as never,
+  );
 
   if (error) {
     if (error.message.includes("NOT_ADMIN"))
