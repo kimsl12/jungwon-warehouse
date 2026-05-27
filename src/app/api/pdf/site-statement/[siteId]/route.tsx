@@ -2,7 +2,10 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { NextResponse } from "next/server";
 import path from "node:path";
 
-import { attachmentDispositionHeader, formatYmdCompact } from "@/lib/csv/generate";
+import {
+  attachmentDispositionHeader,
+  formatYmdCompact,
+} from "@/lib/csv/generate";
 import { createClient } from "@/lib/supabase/server";
 import {
   SiteStatementPdf,
@@ -28,7 +31,9 @@ export async function GET(
 ) {
   const { siteId } = await params;
   const url = new URL(req.url);
-  const type = (url.searchParams.get("type") ?? "monthly") as "monthly" | "completion";
+  const type = (url.searchParams.get("type") ?? "monthly") as
+    | "monthly"
+    | "completion";
   const fromParam = url.searchParams.get("from");
   const toParam = url.searchParams.get("to");
 
@@ -79,7 +84,9 @@ export async function GET(
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
-    dateFrom = firstTx?.created_at?.slice(0, 10) ?? new Date().toISOString().slice(0, 10);
+    dateFrom =
+      firstTx?.created_at?.slice(0, 10) ??
+      new Date().toISOString().slice(0, 10);
     dateTo = !site.active
       ? site.updated_at.slice(0, 10)
       : new Date().toISOString().slice(0, 10);
@@ -102,7 +109,9 @@ export async function GET(
     .order("created_at", { ascending: true });
 
   if (txErr) {
-    return new NextResponse("Failed to fetch transactions: " + txErr.message, { status: 500 });
+    return new NextResponse("Failed to fetch transactions: " + txErr.message, {
+      status: 500,
+    });
   }
 
   const rows = txRows ?? [];
@@ -123,20 +132,50 @@ export async function GET(
     }
   }
 
-  const items: SiteStatementItem[] = rows.map((r, idx) => {
-    const unitPrice = priceMap.get(r.product_id) ?? 0;
-    const supply = r.quantity * unitPrice;
-    return {
-      no: idx + 1,
-      date: new Date(r.created_at).toISOString().slice(0, 10),
-      name: r.products?.name ?? "-",
-      variant: r.products?.variant ?? null,
-      unit: r.products?.unit ?? null,
-      quantity: r.quantity,
-      unitPrice,
-      supply,
-    };
-  });
+  // 같은 자재(product_id)는 한 줄로 합산. 출고일은 가장 최근 일자.
+  // 정산서 자체가 기간별 청구라 개별 출고 row 분리는 노이즈만 큼.
+  type Agg = {
+    product_id: string;
+    name: string;
+    variant: string | null;
+    unit: string | null;
+    quantity: number;
+    lastDate: string;
+    unitPrice: number;
+  };
+  const aggMap = new Map<string, Agg>();
+  for (const r of rows) {
+    const date = new Date(r.created_at).toISOString().slice(0, 10);
+    const existing = aggMap.get(r.product_id);
+    if (existing) {
+      existing.quantity += r.quantity;
+      if (date > existing.lastDate) existing.lastDate = date;
+    } else {
+      aggMap.set(r.product_id, {
+        product_id: r.product_id,
+        name: r.products?.name ?? "-",
+        variant: r.products?.variant ?? null,
+        unit: r.products?.unit ?? null,
+        quantity: r.quantity,
+        lastDate: date,
+        unitPrice: priceMap.get(r.product_id) ?? 0,
+      });
+    }
+  }
+  const sortedAggs = Array.from(aggMap.values()).sort((a, b) =>
+    a.name.localeCompare(b.name, "ko"),
+  );
+
+  const items: SiteStatementItem[] = sortedAggs.map((a, idx) => ({
+    no: idx + 1,
+    date: a.lastDate,
+    name: a.name,
+    variant: a.variant,
+    unit: a.unit,
+    quantity: a.quantity,
+    unitPrice: a.unitPrice,
+    supply: a.quantity * a.unitPrice,
+  }));
 
   const statementNumber = `${type === "monthly" ? "MS" : "CS"}-${formatYmdCompact()}-${siteId.slice(0, 6).toUpperCase()}`;
   const issueDate = new Date().toISOString().slice(0, 10);
