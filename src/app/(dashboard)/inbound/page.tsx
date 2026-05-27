@@ -59,6 +59,7 @@ export default async function InboundPage({
     )
     .eq("type", "in")
     .is("canceled_at", null)
+    .is("related_tx_id", null)
     .order("created_at", { ascending: false })
     .range(fromIdx, toIdx);
 
@@ -94,6 +95,7 @@ export default async function InboundPage({
         .select("quantity")
         .eq("type", "in")
         .is("canceled_at", null)
+        .is("related_tx_id", null)
         .gte("created_at", sevenDaysAgo.toISOString()),
     ]);
 
