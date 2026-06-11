@@ -2,7 +2,10 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { NextResponse } from "next/server";
 import path from "node:path";
 
-import { attachmentDispositionHeader, formatYmdCompact } from "@/lib/csv/generate";
+import {
+  attachmentDispositionHeader,
+  formatYmdCompact,
+} from "@/lib/csv/generate";
 import { createClient } from "@/lib/supabase/server";
 import { productDisplayName } from "@/lib/product-display";
 import { DeliveryPdf, type DeliveryItem } from "@/templates/delivery-pdf";
@@ -68,7 +71,9 @@ export async function GET(req: Request) {
 
   const { data, error } = await query;
   if (error) {
-    return new NextResponse(`Failed to fetch transactions: ${error.message}`, { status: 500 });
+    return new NextResponse(`Failed to fetch transactions: ${error.message}`, {
+      status: 500,
+    });
   }
 
   const rows = data ?? [];
@@ -78,7 +83,9 @@ export async function GET(req: Request) {
 
   // Resolve user names for the PDF
   const userIds = Array.from(
-    new Set(rows.map((r) => r.created_by).filter((id): id is string => Boolean(id))),
+    new Set(
+      rows.map((r) => r.created_by).filter((id): id is string => Boolean(id)),
+    ),
   );
   const profileNameMap = new Map<string, string | null>();
   if (userIds.length > 0) {
@@ -97,16 +104,24 @@ export async function GET(req: Request) {
     quantity: tx.quantity,
     note: tx.note,
     siteName: tx.sites?.name ?? null,
-    userName: tx.created_by ? (profileNameMap.get(tx.created_by) ?? null) : null,
+    userName: tx.created_by
+      ? (profileNameMap.get(tx.created_by) ?? null)
+      : null,
     date: new Date(tx.created_at).toISOString().slice(0, 10),
   }));
 
   // Auto-determine recipient from site info. If all rows share the same
   // site, use that as the 수신처. Otherwise use "여러 현장" or override.
-  const distinctSites = new Map<string, { name: string; address: string | null }>();
+  const distinctSites = new Map<
+    string,
+    { name: string; address: string | null }
+  >();
   for (const row of rows) {
     if (row.sites?.id) {
-      distinctSites.set(row.sites.id, { name: row.sites.name, address: row.sites.address ?? null });
+      distinctSites.set(row.sites.id, {
+        name: row.sites.name,
+        address: row.sites.address ?? null,
+      });
     }
   }
   let recipient = recipientOverride;
@@ -114,7 +129,10 @@ export async function GET(req: Request) {
     const site = Array.from(distinctSites.values())[0];
     recipient = site.address ? `${site.name} (${site.address})` : site.name;
   } else if (!recipient && distinctSites.size > 1) {
-    recipient = `여러 현장 (${distinctSites.size}곳)`;
+    // 어느 현장들인지 알 수 있도록 현장명을 나열 (4곳 초과 시 "외 n곳"으로 축약)
+    const names = Array.from(distinctSites.values()).map((s) => s.name);
+    const shown = names.slice(0, 4).join(", ");
+    recipient = names.length > 4 ? `${shown} 외 ${names.length - 4}곳` : shown;
   }
 
   const issueDate = new Date().toISOString().slice(0, 10);
