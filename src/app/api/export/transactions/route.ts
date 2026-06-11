@@ -52,7 +52,7 @@ export async function GET(req: Request) {
   let query = supabase
     .from("transactions")
     .select(
-      `id, type, quantity, note, created_at, created_by,
+      `id, type, quantity, note, created_at, created_by, canceled_at, related_tx_id,
        products!inner(name, category, unit, variant),
        sites(name)`,
     )
@@ -72,12 +72,18 @@ export async function GET(req: Request) {
 
   const { data, error } = await query;
   if (error) {
-    return new NextResponse(`Failed to fetch transactions: ${error.message}`, { status: 500 });
+    return new NextResponse(`Failed to fetch transactions: ${error.message}`, {
+      status: 500,
+    });
   }
 
   // Resolve user names for the visible rows
   const userIds = Array.from(
-    new Set((data ?? []).map((t) => t.created_by).filter((id): id is string => Boolean(id))),
+    new Set(
+      (data ?? [])
+        .map((t) => t.created_by)
+        .filter((id): id is string => Boolean(id)),
+    ),
   );
   const profileNameMap = new Map<string, string | null>();
   if (userIds.length > 0) {
@@ -88,10 +94,36 @@ export async function GET(req: Request) {
     for (const p of profileRows ?? []) profileNameMap.set(p.id, p.name);
   }
 
-  const headers = ["일시", "구분", "제품명", "변형", "분류", "단위", "수량", "현장", "담당자", "메모"];
+  const headers = [
+    "일시",
+    "구분",
+    "상태",
+    "제품명",
+    "변형",
+    "분류",
+    "단위",
+    "수량",
+    "현장",
+    "담당자",
+    "메모",
+  ];
+  const typeLabel = (type: string) =>
+    type === "in"
+      ? "입고"
+      : type === "out"
+        ? "출고"
+        : type === "loss"
+          ? "분실"
+          : type;
+  // 취소된 원본(canceled_at)과 역방향 복구분(related_tx_id)은 합계에서 제외해야 함을 표시
+  const statusLabel = (tx: {
+    canceled_at: string | null;
+    related_tx_id: string | null;
+  }) => (tx.canceled_at ? "취소됨" : tx.related_tx_id ? "취소분" : "정상");
   const rows = (data ?? []).map((tx) => [
     dateFormatter.format(new Date(tx.created_at)),
-    tx.type === "in" ? "입고" : "출고",
+    typeLabel(tx.type),
+    statusLabel(tx),
     tx.products?.name ?? "",
     tx.products?.variant ?? "",
     tx.products?.category ?? "",
