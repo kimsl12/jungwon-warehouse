@@ -80,7 +80,7 @@ export default async function UsersPage() {
             신청 승인/처리 등 전권을 가집니다.{" "}
             <b className="text-foreground">현장 담당자(user)</b>는 배정된 현장의
             자재 신청만 가능합니다 — 현장 배정은{" "}
-            <b className="text-foreground">"현장 관리"</b> 페이지에서 각 현장을
+            <b className="text-foreground">“현장 관리”</b> 페이지에서 각 현장을
             수정해 담당자를 선택하세요.
           </div>
           <UsersTable users={usersWithAssignments} currentUserId={user.id} />

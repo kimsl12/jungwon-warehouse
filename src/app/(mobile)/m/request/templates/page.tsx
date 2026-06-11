@@ -58,7 +58,7 @@ export default async function TemplatesPage() {
       <TemplateList rows={rows} />
 
       <div className="rounded-md border border-dashed p-4 text-center text-xs text-muted-foreground">
-        새 템플릿은 <b>신청 작성</b> 화면에서 자재를 고른 뒤 "템플릿으로 저장" 버튼으로
+        새 템플릿은 <b>신청 작성</b> 화면에서 자재를 고른 뒤 “템플릿으로 저장” 버튼으로
         만듭니다.
       </div>
     </div>

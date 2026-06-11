@@ -16,6 +16,10 @@ function todayStartSeoul(): string {
   return `${ymd}T00:00:00+09:00`;
 }
 
+function fourteenDaysAgoIso(): string {
+  return new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+}
+
 function formatDayLabel(day: string): string {
   const d = new Date(`${day}T00:00:00+09:00`);
   return `${d.getMonth() + 1}/${d.getDate()}`;
@@ -96,9 +100,7 @@ export default async function AIUsagePage() {
   }));
 
   // 14일 일별 토큰 합계 (gemini_usage_daily RPC 에 없어 직접 SUM)
-  const fourteenDaysAgo = new Date(
-    Date.now() - 14 * 24 * 60 * 60 * 1000,
-  ).toISOString();
+  const fourteenDaysAgo = fourteenDaysAgoIso();
   const { data: tokenRows } = await supabase
     .from("gemini_usage_log")
     .select("created_at, prompt_tokens, response_tokens")
@@ -134,10 +136,7 @@ export default async function AIUsagePage() {
     ...new Set(recent.map((r) => r.user_id).filter((x): x is string => !!x)),
   ];
   const { data: recentNameRows } = recentUserIds.length
-    ? await supabase
-        .from("profiles")
-        .select("id, name")
-        .in("id", recentUserIds)
+    ? await supabase.from("profiles").select("id, name").in("id", recentUserIds)
     : { data: null };
   const recentNameById = new Map(
     (recentNameRows ?? []).map((r) => [r.id as string, r.name as string]),
@@ -152,8 +151,9 @@ export default async function AIUsagePage() {
       <div>
         <h2 className="text-2xl font-bold tracking-tight">AI 사용량</h2>
         <p className="text-sm text-muted-foreground">
-          Gemini 챗봇 일일 호출량 — 사용자당 {USER_DAILY_LIMIT}회/일,
-          전체 {GLOBAL_DAILY_LIMIT.toLocaleString("ko-KR")}회/일 (Asia/Seoul 자정 기준).
+          Gemini 챗봇 일일 호출량 — 사용자당 {USER_DAILY_LIMIT}회/일, 전체{" "}
+          {GLOBAL_DAILY_LIMIT.toLocaleString("ko-KR")}회/일 (Asia/Seoul 자정
+          기준).
         </p>
       </div>
 
@@ -204,9 +204,13 @@ export default async function AIUsagePage() {
             </div>
           </div>
           <div className="mt-2 text-[11px] text-muted-foreground">
-            평균 {todayTotal > 0
-              ? Math.round(todayTotalTokens / todayTotal).toLocaleString("ko-KR")
-              : 0} tokens/호출
+            평균{" "}
+            {todayTotal > 0
+              ? Math.round(todayTotalTokens / todayTotal).toLocaleString(
+                  "ko-KR",
+                )
+              : 0}{" "}
+            tokens/호출
           </div>
         </div>
 
@@ -221,7 +225,8 @@ export default async function AIUsagePage() {
             </span>
           </div>
           <div className="mt-2 text-[11px] text-muted-foreground">
-            전체 호출 중 {todayTotal > 0
+            전체 호출 중{" "}
+            {todayTotal > 0
               ? ((todayImageCalls / todayTotal) * 100).toFixed(1)
               : "0.0"}
             % 가 이미지 생성

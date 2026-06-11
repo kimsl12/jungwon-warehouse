@@ -20,7 +20,14 @@ import { Label } from "@/components/ui/label";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 
 type SiteOption = { id: string; name: string };
-type ProductOption = { id: string; name: string; category: string | null; unit: string | null; variant: string | null; quantity: number };
+type ProductOption = {
+  id: string;
+  name: string;
+  category: string | null;
+  unit: string | null;
+  variant: string | null;
+  quantity: number;
+};
 
 export function QuickTransactionDialog({
   type,
@@ -41,19 +48,26 @@ export function QuickTransactionDialog({
   const [isPending, startTransition] = useTransition();
   const [searching, setSearching] = useState(false);
 
-  // Debounced product search
+  // Debounced product search — setState 는 모두 debounce 콜백 안에서만 수행
   useEffect(() => {
-    if (query.length < 1) { setResults([]); return; }
-    const t = setTimeout(async () => {
-      setSearching(true);
-      const supabase = createBrowserClient();
-      const { data } = await supabase
-        .rpc("search_products", { p_query: query })
-        .select("id, name, category, unit, variant, quantity")
-        .limit(200);
-      setResults(data ?? []);
-      setSearching(false);
-    }, 250);
+    const t = setTimeout(
+      async () => {
+        if (query.length < 1) {
+          setResults([]);
+          setSearching(false);
+          return;
+        }
+        setSearching(true);
+        const supabase = createBrowserClient();
+        const { data } = await supabase
+          .rpc("search_products", { p_query: query })
+          .select("id, name, category, unit, variant, quantity")
+          .limit(200);
+        setResults(data ?? []);
+        setSearching(false);
+      },
+      query.length < 1 ? 0 : 250,
+    );
     return () => clearTimeout(t);
   }, [query]);
 
@@ -112,11 +126,15 @@ export function QuickTransactionDialog({
                     <p className="text-sm font-medium">
                       {selected.name}
                       {selected.variant && (
-                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">· {selected.variant}</span>
+                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                          · {selected.variant}
+                        </span>
                       )}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {selected.category ?? ""} · 현재 {selected.quantity.toLocaleString("ko-KR")}{selected.unit ? ` ${selected.unit}` : ""}
+                      {selected.category ?? ""} · 현재{" "}
+                      {selected.quantity.toLocaleString("ko-KR")}
+                      {selected.unit ? ` ${selected.unit}` : ""}
                     </p>
                   </div>
                   <button
@@ -143,7 +161,10 @@ export function QuickTransactionDialog({
                   />
                 </div>
                 {results.length > 0 && (
-                  <div className="rounded bg-card max-h-96 overflow-y-auto" style={{ boxShadow: "0 20px 40px rgba(27,28,27,0.06)" }}>
+                  <div
+                    className="rounded bg-card max-h-96 overflow-y-auto"
+                    style={{ boxShadow: "0 20px 40px rgba(27,28,27,0.06)" }}
+                  >
                     {results.map((p) => (
                       <button
                         key={p.id}
@@ -154,16 +175,24 @@ export function QuickTransactionDialog({
                         <p className="text-sm font-medium">
                           {p.name}
                           {p.variant && (
-                            <span className="ml-1.5 text-xs font-normal text-muted-foreground">· {p.variant}</span>
+                            <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                              · {p.variant}
+                            </span>
                           )}
                         </p>
-                        <p className="text-xs text-muted-foreground">{p.category ?? ""} · {p.quantity.toLocaleString("ko-KR")}{p.unit ?? ""}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {p.category ?? ""} ·{" "}
+                          {p.quantity.toLocaleString("ko-KR")}
+                          {p.unit ?? ""}
+                        </p>
                       </button>
                     ))}
                   </div>
                 )}
                 {query.length > 0 && results.length === 0 && !searching && (
-                  <p className="text-xs text-muted-foreground px-1">검색 결과 없음</p>
+                  <p className="text-xs text-muted-foreground px-1">
+                    검색 결과 없음
+                  </p>
                 )}
               </div>
             )}
@@ -171,16 +200,29 @@ export function QuickTransactionDialog({
             {selected && (
               <>
                 <div className="space-y-1.5">
-                  <Label htmlFor="qty">수량 <span className="text-destructive">*</span></Label>
-                  <Input id="qty" name="quantity" type="number" min={1} required disabled={isPending} />
+                  <Label htmlFor="qty">
+                    수량 <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="qty"
+                    name="quantity"
+                    type="number"
+                    min={1}
+                    required
+                    disabled={isPending}
+                  />
                   {state?.fieldErrors?.quantity?.[0] && (
-                    <p className="text-xs text-destructive">{state.fieldErrors.quantity[0]}</p>
+                    <p className="text-xs text-destructive">
+                      {state.fieldErrors.quantity[0]}
+                    </p>
                   )}
                 </div>
 
                 {type === "out" && (
                   <div className="space-y-1.5">
-                    <Label htmlFor="site">현장 <span className="text-destructive">*</span></Label>
+                    <Label htmlFor="site">
+                      현장 <span className="text-destructive">*</span>
+                    </Label>
                     <select
                       id="site"
                       className="w-full rounded bg-surface-highest py-2.5 px-3 text-sm outline-none focus:ring-2 focus:ring-secondary/20"
@@ -191,25 +233,37 @@ export function QuickTransactionDialog({
                     >
                       <option value="">— 현장 선택 —</option>
                       {sites.map((s) => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
                       ))}
                     </select>
                     {state?.fieldErrors?.site_id?.[0] && (
-                      <p className="text-xs text-destructive">{state.fieldErrors.site_id[0]}</p>
+                      <p className="text-xs text-destructive">
+                        {state.fieldErrors.site_id[0]}
+                      </p>
                     )}
                   </div>
                 )}
 
                 <div className="space-y-1.5">
                   <Label htmlFor="note">메모 (선택)</Label>
-                  <Input id="note" name="note" type="text" maxLength={500} disabled={isPending} />
+                  <Input
+                    id="note"
+                    name="note"
+                    type="text"
+                    maxLength={500}
+                    disabled={isPending}
+                  />
                 </div>
               </>
             )}
           </div>
 
           {state?.error && (
-            <p className="mt-3 text-sm text-destructive" role="alert">{state.error}</p>
+            <p className="mt-3 text-sm text-destructive" role="alert">
+              {state.error}
+            </p>
           )}
           {state?.success && (
             <div className="mt-3 rounded bg-success-bg p-3 text-sm">
@@ -217,14 +271,24 @@ export function QuickTransactionDialog({
                 처리 완료 · 새 수량 {state.newQuantity?.toLocaleString("ko-KR")}
               </p>
               {state.lowStock && (
-                <p className="mt-1 text-xs text-destructive">최소 재고 이하 — 추가 입고 필요</p>
+                <p className="mt-1 text-xs text-destructive">
+                  최소 재고 이하 — 추가 입고 필요
+                </p>
               )}
             </div>
           )}
 
           <DialogFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>닫기</Button>
-            <Button type="submit" disabled={isPending || !selected}>{isPending ? "처리 중..." : title}</Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+            >
+              닫기
+            </Button>
+            <Button type="submit" disabled={isPending || !selected}>
+              {isPending ? "처리 중..." : title}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

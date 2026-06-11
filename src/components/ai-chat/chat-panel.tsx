@@ -57,8 +57,12 @@ export function ChatPanel({ className }: { className?: string }) {
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
+    // localStorage 는 클라이언트 전용이라 mount 후 1회 동기화가 불가피
+    // (SSR 하이드레이션 불일치 방지 — lazy init 으로 대체 불가)
+    /* eslint-disable react-hooks/set-state-in-effect */
     setMessages(loadHistory());
     setHydrated(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   useEffect(() => {

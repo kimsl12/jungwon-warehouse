@@ -65,6 +65,8 @@ export function TransactionsTable({
     );
   }
 
+  // undo 20분 윈도우 판정용 — 렌더 시점 기준 시간이 의도된 동작
+  // eslint-disable-next-line react-hooks/purity
   const now = Date.now();
 
   return (

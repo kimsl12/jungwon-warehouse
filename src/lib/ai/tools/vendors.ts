@@ -133,7 +133,7 @@ export const getVendorPricesTool: ChatTool = {
       };
     }
 
-    let query = ctx.supabase
+    const query = ctx.supabase
       .from("vendor_product_prices")
       .select(
         `unit_price, note, updated_at,
@@ -167,14 +167,12 @@ export const getVendorPricesTool: ChatTool = {
       count: rows.length,
       truncated: rows.length === PRICE_LIMIT,
       prices: rows.map((r) => {
-        const p = r.products as
-          | {
-              name?: string;
-              variant?: string | null;
-              unit?: string | null;
-              category?: string | null;
-            }
-          | null;
+        const p = r.products as {
+          name?: string;
+          variant?: string | null;
+          unit?: string | null;
+          category?: string | null;
+        } | null;
         return {
           product: p?.name ?? "(알 수 없음)",
           variant: p?.variant ?? null,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 
 import {
   processTransaction,
@@ -44,9 +44,12 @@ export function ProcessTransactionDialog({
   // When the dialog re-opens after a prior close, reset the type to the
   // caller-supplied initialType. Otherwise a user who opens 출고 처리 once,
   // closes, then opens 입고 처리 would keep seeing out.
-  useEffect(() => {
+  // (effect 대신 렌더 중 상태 보정 패턴 — react.dev/learn/you-might-not-need-an-effect)
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) setType(initialType);
-  }, [open, initialType]);
+  }
 
   function handleSubmit(formData: FormData) {
     setState(null);
@@ -88,7 +91,9 @@ export function ProcessTransactionDialog({
             <span className="font-medium text-foreground">
               {product.name}
               {product.variant && (
-                <span className="ml-1 text-xs font-normal text-muted-foreground">· {product.variant}</span>
+                <span className="ml-1 text-xs font-normal text-muted-foreground">
+                  · {product.variant}
+                </span>
               )}
             </span>
             {" · 현재 "}
@@ -165,7 +170,9 @@ export function ProcessTransactionDialog({
                 aria-invalid={state?.fieldErrors?.quantity ? true : undefined}
               />
               {state?.fieldErrors?.quantity?.[0] && (
-                <p className="text-xs text-destructive">{state.fieldErrors.quantity[0]}</p>
+                <p className="text-xs text-destructive">
+                  {state.fieldErrors.quantity[0]}
+                </p>
               )}
             </div>
 
@@ -194,7 +201,9 @@ export function ProcessTransactionDialog({
                 ))}
               </select>
               {state?.fieldErrors?.site_id?.[0] && (
-                <p className="text-xs text-destructive">{state.fieldErrors.site_id[0]}</p>
+                <p className="text-xs text-destructive">
+                  {state.fieldErrors.site_id[0]}
+                </p>
               )}
               {sites.length === 0 && (
                 <p className="text-xs text-warning dark:text-amber-400">
@@ -205,7 +214,13 @@ export function ProcessTransactionDialog({
 
             <div className="space-y-1.5">
               <Label htmlFor="note">메모 (선택)</Label>
-              <Input id="note" name="note" type="text" maxLength={500} disabled={isPending} />
+              <Input
+                id="note"
+                name="note"
+                type="text"
+                maxLength={500}
+                disabled={isPending}
+              />
             </div>
           </div>
 
@@ -229,7 +244,11 @@ export function ProcessTransactionDialog({
           )}
 
           <DialogFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+            >
               닫기
             </Button>
             <Button type="submit" disabled={isPending}>

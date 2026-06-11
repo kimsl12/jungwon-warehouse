@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Design reference prototypes (HTML + inline JSX) — not project code.
+    "design_handoff_jungwon_inventory/**",
   ]),
 ]);
 

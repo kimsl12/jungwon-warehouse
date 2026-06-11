@@ -93,7 +93,7 @@ export function RequestFulfillForm({
         <div>
           <p className="text-xs font-semibold">출고 처리</p>
           <p className="text-[11px] text-muted-foreground">
-            각 자재별 이번 출고 수량을 입력한 뒤 "출고 처리" 버튼을 누르세요.
+            각 자재별 이번 출고 수량을 입력한 뒤 “출고 처리” 버튼을 누르세요.
           </p>
         </div>
         <button

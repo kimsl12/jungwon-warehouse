@@ -2,7 +2,17 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, BookOpen, Calculator, Minus, Plus, Save, Search, Trash2, X } from "lucide-react";
+import {
+  AlertCircle,
+  BookOpen,
+  Calculator,
+  Minus,
+  Plus,
+  Save,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react";
 
 import {
   createMaterialRequest,
@@ -216,7 +226,11 @@ function CategoryTemplatePicker({
     const seen = new Set<string>();
     const out: string[] = [];
     for (const t of categorized) {
-      if (t.category === category && t.subcategory && !seen.has(t.subcategory)) {
+      if (
+        t.category === category &&
+        t.subcategory &&
+        !seen.has(t.subcategory)
+      ) {
         seen.add(t.subcategory);
         out.push(t.subcategory);
       }
@@ -230,35 +244,37 @@ function CategoryTemplatePicker({
       .sort((a, b) => a.name.localeCompare(b.name, "ko"));
   }, [categorized, category, subcategory]);
 
-  // 같은 (대,소) 조합에 템플릿 1개뿐이면 자동 선택
-  useEffect(() => {
-    if (templatesInSubcategory.length === 1) {
-      setTemplateId(templatesInSubcategory[0].id);
-    } else if (
-      templatesInSubcategory.length > 1 &&
-      !templatesInSubcategory.some((t) => t.id === templateId)
-    ) {
-      setTemplateId("");
-    }
-  }, [templatesInSubcategory, templateId]);
+  // 같은 (대,소) 조합에 템플릿 1개뿐이면 자동 선택 (렌더 중 상태 보정 패턴)
+  if (
+    templatesInSubcategory.length === 1 &&
+    templateId !== templatesInSubcategory[0].id
+  ) {
+    setTemplateId(templatesInSubcategory[0].id);
+  } else if (
+    templatesInSubcategory.length > 1 &&
+    templateId !== "" &&
+    !templatesInSubcategory.some((t) => t.id === templateId)
+  ) {
+    setTemplateId("");
+  }
 
   const selectedTemplate = useMemo(
     () => templatesInSubcategory.find((t) => t.id === templateId) ?? null,
     [templatesInSubcategory, templateId],
   );
 
-  // 템플릿 변경 시 변수 값 초기화
-  useEffect(() => {
-    if (!selectedTemplate?.variables) {
-      setVariableValues({});
-      return;
-    }
+  // 템플릿 변경 시 변수 값 초기화 (렌더 중 상태 보정 패턴)
+  const [prevTemplate, setPrevTemplate] = useState(selectedTemplate);
+  if (selectedTemplate !== prevTemplate) {
+    setPrevTemplate(selectedTemplate);
     setVariableValues(
-      Object.fromEntries(
-        selectedTemplate.variables.map((v) => [v.name, v.default]),
-      ),
+      selectedTemplate?.variables
+        ? Object.fromEntries(
+            selectedTemplate.variables.map((v) => [v.name, v.default]),
+          )
+        : {},
     );
-  }, [selectedTemplate]);
+  }
 
   // 미리보기 — formula 기반 line 의 계산 결과
   const computed = useMemo(() => {
@@ -283,7 +299,9 @@ function CategoryTemplatePicker({
     <div className="rounded-md border bg-info-bg/30 p-3 space-y-3">
       <div className="flex items-center gap-1.5">
         <Calculator className="h-4 w-4 text-info" />
-        <p className="text-xs font-semibold text-info">공용 템플릿 (산출식 기반)</p>
+        <p className="text-xs font-semibold text-info">
+          공용 템플릿 (산출식 기반)
+        </p>
       </div>
 
       <div className="space-y-2">
@@ -328,7 +346,9 @@ function CategoryTemplatePicker({
             onChange={(e) => setTemplateId(e.target.value)}
             className="h-11 w-full rounded-md border bg-background px-3 text-sm"
           >
-            <option value="">템플릿 선택… ({templatesInSubcategory.length}개)</option>
+            <option value="">
+              템플릿 선택… ({templatesInSubcategory.length}개)
+            </option>
             {templatesInSubcategory.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name}
@@ -417,11 +437,12 @@ function TemplateRow({
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold truncate">{tpl.name}</p>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
-            자재 {tpl.items.length}개
-            {tpl.is_public && " · 공용"}
+            자재 {tpl.items.length}개{tpl.is_public && " · 공용"}
           </p>
           {tpl.note && (
-            <p className="mt-1 text-xs text-muted-foreground truncate">{tpl.note}</p>
+            <p className="mt-1 text-xs text-muted-foreground truncate">
+              {tpl.note}
+            </p>
           )}
         </div>
       </label>
@@ -518,7 +539,9 @@ export function MobileRequestForm({
   function updateQty(idx: number, next: number) {
     const min = lines[idx]?.fromFormula ? 0 : 1;
     if (next < min) return;
-    setLines((prev) => prev.map((l, i) => (i === idx ? { ...l, quantity: next } : l)));
+    setLines((prev) =>
+      prev.map((l, i) => (i === idx ? { ...l, quantity: next } : l)),
+    );
   }
 
   function removeLine(idx: number) {
@@ -540,7 +563,9 @@ export function MobileRequestForm({
         if (!meta) continue;
         const qty = computedQuantities.get(ti.product_id) ?? 0;
         const isFormula = !!ti.formula;
-        const existingIdx = next.findIndex((l) => l.product_id === ti.product_id);
+        const existingIdx = next.findIndex(
+          (l) => l.product_id === ti.product_id,
+        );
         if (existingIdx >= 0) {
           next[existingIdx] = {
             ...next[existingIdx],
@@ -566,7 +591,9 @@ export function MobileRequestForm({
   }
 
   function updateLineNote(idx: number, value: string) {
-    setLines((prev) => prev.map((l, i) => (i === idx ? { ...l, note: value } : l)));
+    setLines((prev) =>
+      prev.map((l, i) => (i === idx ? { ...l, note: value } : l)),
+    );
   }
 
   /**
@@ -580,7 +607,9 @@ export function MobileRequestForm({
         const meta = productMetaMap[ti.product_id];
         // 메타 정보가 없으면 (제품이 삭제된 경우) 스킵
         if (!meta) continue;
-        const existingIdx = next.findIndex((l) => l.product_id === ti.product_id);
+        const existingIdx = next.findIndex(
+          (l) => l.product_id === ti.product_id,
+        );
         const qty = ti.requested_quantity ?? 0;
         if (existingIdx >= 0) {
           next[existingIdx] = {
@@ -677,7 +706,10 @@ export function MobileRequestForm({
     <div className="space-y-4">
       {/* 현장 선택 */}
       <div>
-        <label className="text-xs font-semibold text-muted-foreground" htmlFor="site">
+        <label
+          className="text-xs font-semibold text-muted-foreground"
+          htmlFor="site"
+        >
           현장 <span className="text-destructive">*</span>
         </label>
         <select
@@ -753,93 +785,96 @@ export function MobileRequestForm({
             {lines.map((l, idx) => {
               const minQty = l.fromFormula ? 0 : 1;
               return (
-              <div
-                key={`${l.product_id}-${idx}`}
-                className={
-                  "rounded-md border bg-background p-3 " +
-                  (l.fromFormula ? "border-info/40" : "")
-                }
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">
-                      {l.name}
-                      {l.variant && (
-                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">
-                          · {l.variant}
-                        </span>
-                      )}
-                      {l.fromFormula && (
-                        <span className="ml-1.5 inline-block rounded bg-info-bg px-1 py-0.5 text-[9px] font-bold uppercase tracking-wider text-info">
-                          산출
-                        </span>
-                      )}
-                    </p>
+                <div
+                  key={`${l.product_id}-${idx}`}
+                  className={
+                    "rounded-md border bg-background p-3 " +
+                    (l.fromFormula ? "border-info/40" : "")
+                  }
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">
+                        {l.name}
+                        {l.variant && (
+                          <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                            · {l.variant}
+                          </span>
+                        )}
+                        {l.fromFormula && (
+                          <span className="ml-1.5 inline-block rounded bg-info-bg px-1 py-0.5 text-[9px] font-bold uppercase tracking-wider text-info">
+                            산출
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeLine(idx)}
+                      disabled={isSubmitting || l.fromFormula}
+                      title={
+                        l.fromFormula
+                          ? "산출식 자재는 수량 0으로 변경하세요 (삭제하면 수식이 깨질 수 있음)"
+                          : "삭제"
+                      }
+                      className="shrink-0 rounded p-1 text-muted-foreground active:bg-muted disabled:opacity-30"
+                      aria-label="삭제"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removeLine(idx)}
-                    disabled={isSubmitting || l.fromFormula}
-                    title={
-                      l.fromFormula
-                        ? "산출식 자재는 수량 0으로 변경하세요 (삭제하면 수식이 깨질 수 있음)"
-                        : "삭제"
-                    }
-                    className="shrink-0 rounded p-1 text-muted-foreground active:bg-muted disabled:opacity-30"
-                    aria-label="삭제"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-                {/* 수량 입력 */}
-                <div className="mt-2 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => updateQty(idx, l.quantity - 1)}
-                    disabled={isSubmitting || l.quantity <= minQty}
-                    className="flex h-11 w-11 items-center justify-center rounded border bg-surface-low active:bg-surface-high disabled:opacity-30"
-                    aria-label="수량 감소"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
+                  {/* 수량 입력 */}
+                  <div className="mt-2 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => updateQty(idx, l.quantity - 1)}
+                      disabled={isSubmitting || l.quantity <= minQty}
+                      className="flex h-11 w-11 items-center justify-center rounded border bg-surface-low active:bg-surface-high disabled:opacity-30"
+                      aria-label="수량 감소"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      value={l.quantity}
+                      min={minQty}
+                      onChange={(e) => {
+                        const v = Number.parseInt(e.target.value, 10);
+                        if (Number.isFinite(v) && v >= minQty)
+                          updateQty(idx, v);
+                      }}
+                      disabled={isSubmitting}
+                      className={
+                        "h-11 flex-1 rounded border bg-background px-3 text-center text-base tabular-nums font-semibold " +
+                        (l.quantity === 0 ? "text-muted-foreground" : "")
+                      }
+                    />
+                    <button
+                      type="button"
+                      onClick={() => updateQty(idx, l.quantity + 1)}
+                      disabled={isSubmitting}
+                      className="flex h-11 w-11 items-center justify-center rounded border bg-surface-low active:bg-surface-high"
+                      aria-label="수량 증가"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                    {l.unit && (
+                      <span className="text-sm text-muted-foreground">
+                        {l.unit}
+                      </span>
+                    )}
+                  </div>
                   <input
-                    type="number"
-                    inputMode="numeric"
-                    value={l.quantity}
-                    min={minQty}
-                    onChange={(e) => {
-                      const v = Number.parseInt(e.target.value, 10);
-                      if (Number.isFinite(v) && v >= minQty) updateQty(idx, v);
-                    }}
+                    type="text"
+                    value={l.note}
+                    onChange={(e) => updateLineNote(idx, e.target.value)}
+                    maxLength={200}
+                    placeholder="메모 (선택)"
                     disabled={isSubmitting}
-                    className={
-                      "h-11 flex-1 rounded border bg-background px-3 text-center text-base tabular-nums font-semibold " +
-                      (l.quantity === 0 ? "text-muted-foreground" : "")
-                    }
+                    className="mt-2 h-10 w-full rounded border bg-background px-3 text-sm"
                   />
-                  <button
-                    type="button"
-                    onClick={() => updateQty(idx, l.quantity + 1)}
-                    disabled={isSubmitting}
-                    className="flex h-11 w-11 items-center justify-center rounded border bg-surface-low active:bg-surface-high"
-                    aria-label="수량 증가"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                  {l.unit && (
-                    <span className="text-sm text-muted-foreground">{l.unit}</span>
-                  )}
                 </div>
-                <input
-                  type="text"
-                  value={l.note}
-                  onChange={(e) => updateLineNote(idx, e.target.value)}
-                  maxLength={200}
-                  placeholder="메모 (선택)"
-                  disabled={isSubmitting}
-                  className="mt-2 h-10 w-full rounded border bg-background px-3 text-sm"
-                />
-              </div>
               );
             })}
             <button
@@ -869,7 +904,10 @@ export function MobileRequestForm({
         </label>
         {isUrgent && (
           <div>
-            <label className="text-[11px] font-medium text-muted-foreground" htmlFor="urgent-reason">
+            <label
+              className="text-[11px] font-medium text-muted-foreground"
+              htmlFor="urgent-reason"
+            >
               긴급 사유 (선택)
             </label>
             <input
@@ -888,7 +926,10 @@ export function MobileRequestForm({
 
       {/* 전체 비고 */}
       <div>
-        <label className="text-xs font-semibold text-muted-foreground" htmlFor="note">
+        <label
+          className="text-xs font-semibold text-muted-foreground"
+          htmlFor="note"
+        >
           비고 (선택)
         </label>
         <textarea
@@ -946,8 +987,8 @@ export function MobileRequestForm({
               </button>
             </div>
             <p className="text-xs text-muted-foreground">
-              현재 추가한 {lines.length}개 자재를 템플릿으로 저장합니다. 나중에 신청 작성 시
-              불러와 한 번에 추가할 수 있습니다.
+              현재 추가한 {lines.length}개 자재를 템플릿으로 저장합니다. 나중에
+              신청 작성 시 불러와 한 번에 추가할 수 있습니다.
             </p>
             <div>
               <label className="text-xs font-medium" htmlFor="tpl-name">
@@ -1031,7 +1072,9 @@ export function MobileRequestForm({
                 제품명 또는 별칭을 입력하세요.
               </p>
             ) : isSearching ? (
-              <p className="py-4 text-center text-xs text-muted-foreground">검색 중...</p>
+              <p className="py-4 text-center text-xs text-muted-foreground">
+                검색 중...
+              </p>
             ) : candidates.length === 0 ? (
               <p className="rounded-md border bg-background p-6 text-center text-sm text-muted-foreground">
                 검색 결과가 없습니다.
@@ -1063,7 +1106,9 @@ export function MobileRequestForm({
                           <p className="text-sm text-muted-foreground tabular-nums">
                             재고 {c.quantity.toLocaleString("ko-KR")}
                             {c.unit && (
-                              <span className="ml-0.5 text-[11px]">{c.unit}</span>
+                              <span className="ml-0.5 text-[11px]">
+                                {c.unit}
+                              </span>
                             )}
                           </p>
                           {c.pending > 0 && (
@@ -1074,7 +1119,8 @@ export function MobileRequestForm({
                                   : "text-[10px] font-medium text-warning tabular-nums"
                               }
                             >
-                              가용 {c.available.toLocaleString("ko-KR")} (대기 {c.pending.toLocaleString("ko-KR")})
+                              가용 {c.available.toLocaleString("ko-KR")} (대기{" "}
+                              {c.pending.toLocaleString("ko-KR")})
                             </p>
                           )}
                         </div>

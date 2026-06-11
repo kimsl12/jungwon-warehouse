@@ -221,7 +221,7 @@ export default async function PurchaseOrderDetailPage({ params }: { params: Para
         <div className="rounded bg-card p-5">
           <h3 className="text-sm font-semibold mb-3">입고 처리</h3>
           <p className="text-xs text-muted-foreground mb-4">
-            각 품목의 "이번에 입고" 수량을 입력하고 "입고 확정"을 누르세요.
+            각 품목의 “이번에 입고” 수량을 입력하고 “입고 확정”을 누르세요.
             부분 수령이 가능하며, 재고에 자동으로 반영됩니다.
           </p>
           <PurchaseOrderReceiveForm

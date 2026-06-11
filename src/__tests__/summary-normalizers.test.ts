@@ -41,8 +41,26 @@ describe("normalizeDailySummary", () => {
     const today = result.find((r) => r.day === "2026-04-09");
     const yesterday = result.find((r) => r.day === "2026-04-08");
 
-    expect(today).toEqual({ day: "2026-04-09", label: "4/9", in: 50, out: 20 });
-    expect(yesterday).toEqual({ day: "2026-04-08", label: "4/8", in: 10, out: 0 });
+    expect(today).toEqual({
+      day: "2026-04-09",
+      label: "4/9",
+      in: 50,
+      out: 20,
+      loss: 0,
+      inCount: 0,
+      outCount: 0,
+      lossCount: 0,
+    });
+    expect(yesterday).toEqual({
+      day: "2026-04-08",
+      label: "4/8",
+      in: 10,
+      out: 0,
+      loss: 0,
+      inCount: 0,
+      outCount: 0,
+      lossCount: 0,
+    });
   });
 
   it("ignores rows outside the 7-day window", () => {
@@ -71,7 +89,16 @@ describe("normalizeDailySummary", () => {
 
     expect(result).toHaveLength(7);
     const today = result.find((r) => r.day === "2026-04-09");
-    expect(today).toEqual({ day: "2026-04-09", label: "4/9", in: 0, out: 0 });
+    expect(today).toEqual({
+      day: "2026-04-09",
+      label: "4/9",
+      in: 0,
+      out: 0,
+      loss: 0,
+      inCount: 0,
+      outCount: 0,
+      lossCount: 0,
+    });
   });
 
   it("accepts ISO timestamps with time portion in the day field", () => {
@@ -109,14 +136,36 @@ describe("normalizeMonthlySummary", () => {
     const apr = result.find((r) => r.month === "2026-04");
     const mar = result.find((r) => r.month === "2026-03");
 
-    expect(apr).toEqual({ month: "2026-04", label: "2026-04", in: 100, out: 60 });
-    expect(mar).toEqual({ month: "2026-03", label: "2026-03", in: 200, out: 0 });
+    expect(apr).toEqual({
+      month: "2026-04",
+      label: "2026-04",
+      in: 100,
+      out: 60,
+      loss: 0,
+      inCount: 0,
+      outCount: 0,
+      lossCount: 0,
+    });
+    expect(mar).toEqual({
+      month: "2026-03",
+      label: "2026-03",
+      in: 200,
+      out: 0,
+      loss: 0,
+      inCount: 0,
+      outCount: 0,
+      lossCount: 0,
+    });
   });
 
   it("ignores rows outside the 12-month window", () => {
     const result = normalizeMonthlySummary(
       [
-        { month: "2024-01-01T00:00:00+00:00", type: "out", total_quantity: 999 },
+        {
+          month: "2024-01-01T00:00:00+00:00",
+          type: "out",
+          total_quantity: 999,
+        },
         { month: "2026-04-01T00:00:00+00:00", type: "in", total_quantity: 5 },
       ],
       REF,

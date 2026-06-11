@@ -28,17 +28,21 @@ export function TemplateProductPicker({ onPick, disabled = false }: Props) {
   useEffect(() => {
     if (timer.current) clearTimeout(timer.current);
     const trimmed = query.trim();
-    if (trimmed.length === 0) {
-      setResults([]);
-      setSearching(false);
-      return;
-    }
-    setSearching(true);
-    timer.current = setTimeout(async () => {
-      const rows = await searchProductsForRequest(trimmed);
-      setResults(rows);
-      setSearching(false);
-    }, 250);
+    // setState 는 모두 debounce 콜백(비동기) 안에서만 수행
+    timer.current = setTimeout(
+      async () => {
+        if (trimmed.length === 0) {
+          setResults([]);
+          setSearching(false);
+          return;
+        }
+        setSearching(true);
+        const rows = await searchProductsForRequest(trimmed);
+        setResults(rows);
+        setSearching(false);
+      },
+      trimmed.length === 0 ? 0 : 250,
+    );
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
@@ -58,7 +62,9 @@ export function TemplateProductPicker({ onPick, disabled = false }: Props) {
       {query.trim().length > 0 && (
         <div className="absolute z-10 mt-1 max-h-[60vh] w-full overflow-y-auto rounded border bg-background shadow-lg">
           {searching && results.length === 0 && (
-            <p className="px-3 py-2 text-xs text-muted-foreground">검색 중...</p>
+            <p className="px-3 py-2 text-xs text-muted-foreground">
+              검색 중...
+            </p>
           )}
           {!searching && results.length === 0 && (
             <p className="px-3 py-2 text-xs text-muted-foreground">
@@ -80,7 +86,9 @@ export function TemplateProductPicker({ onPick, disabled = false }: Props) {
                 <p className="truncate text-sm font-medium">
                   {p.name}
                   {p.variant && (
-                    <span className="ml-1 text-muted-foreground">· {p.variant}</span>
+                    <span className="ml-1 text-muted-foreground">
+                      · {p.variant}
+                    </span>
                   )}
                 </p>
                 <p className="text-[11px] text-muted-foreground">

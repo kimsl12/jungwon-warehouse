@@ -343,7 +343,7 @@ export function TemplateForm({
               <div>
                 <p className="font-semibold text-foreground">변수</p>
                 <p className="text-muted-foreground">
-                  아래 "변수" 섹션에서 정의한 이름을 그대로 사용 (예:{" "}
+                  아래 “변수” 섹션에서 정의한 이름을 그대로 사용 (예:{" "}
                   <code className="rounded bg-background px-1">L</code>,{" "}
                   <code className="rounded bg-background px-1">N</code>).
                 </p>

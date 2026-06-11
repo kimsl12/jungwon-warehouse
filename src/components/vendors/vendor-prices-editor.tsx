@@ -50,18 +50,26 @@ export function VendorPricesEditor({
   const [state, setState] = useState<PriceFormState>(null);
   const [isPending, startTransition] = useTransition();
 
+  // setState 는 모두 debounce 콜백 안에서만 수행
   useEffect(() => {
-    if (query.length < 1) { setResults([]); return; }
-    const t = setTimeout(async () => {
-      setSearching(true);
-      const supabase = createBrowserClient();
-      const { data } = await supabase
-        .rpc("search_products", { p_query: query })
-        .select("id, name, variant, unit, category")
-        .limit(200);
-      setResults((data ?? []) as ProductOption[]);
-      setSearching(false);
-    }, 250);
+    const t = setTimeout(
+      async () => {
+        if (query.length < 1) {
+          setResults([]);
+          setSearching(false);
+          return;
+        }
+        setSearching(true);
+        const supabase = createBrowserClient();
+        const { data } = await supabase
+          .rpc("search_products", { p_query: query })
+          .select("id, name, variant, unit, category")
+          .limit(200);
+        setResults((data ?? []) as ProductOption[]);
+        setSearching(false);
+      },
+      query.length < 1 ? 0 : 250,
+    );
     return () => clearTimeout(t);
   }, [query]);
 
@@ -142,16 +150,22 @@ export function VendorPricesEditor({
                     <p className="text-sm font-medium">
                       {p.name}
                       {p.variant && (
-                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">· {p.variant}</span>
+                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                          · {p.variant}
+                        </span>
                       )}
                     </p>
-                    <p className="text-xs text-muted-foreground">{p.category ?? "분류 없음"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {p.category ?? "분류 없음"}
+                    </p>
                   </button>
                 ))}
               </div>
             )}
             {query.length > 0 && results.length === 0 && !searching && (
-              <p className="text-xs text-muted-foreground px-1">검색 결과 없음</p>
+              <p className="text-xs text-muted-foreground px-1">
+                검색 결과 없음
+              </p>
             )}
           </div>
         ) : (
@@ -161,17 +175,25 @@ export function VendorPricesEditor({
                 <p className="text-sm font-medium">
                   {selected.name}
                   {selected.variant && (
-                    <span className="ml-1.5 text-xs font-normal text-muted-foreground">· {selected.variant}</span>
+                    <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                      · {selected.variant}
+                    </span>
                   )}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {selected.category ?? "분류 없음"}
-                  {selected.unit && <span className="ml-2">단위: {selected.unit}</span>}
+                  {selected.unit && (
+                    <span className="ml-2">단위: {selected.unit}</span>
+                  )}
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => { setSelected(null); setUnitPrice(""); setNote(""); }}
+                onClick={() => {
+                  setSelected(null);
+                  setUnitPrice("");
+                  setNote("");
+                }}
                 className="text-xs text-muted-foreground hover:text-foreground"
               >
                 변경
@@ -196,7 +218,9 @@ export function VendorPricesEditor({
                   placeholder="0"
                 />
                 {state?.fieldErrors?.unit_price?.[0] && (
-                  <p className="text-xs text-destructive">{state.fieldErrors.unit_price[0]}</p>
+                  <p className="text-xs text-destructive">
+                    {state.fieldErrors.unit_price[0]}
+                  </p>
                 )}
               </div>
               <div className="space-y-1.5">
@@ -215,11 +239,19 @@ export function VendorPricesEditor({
             </div>
 
             {state?.error && (
-              <p className="text-sm text-destructive" role="alert">{state.error}</p>
+              <p className="text-sm text-destructive" role="alert">
+                {state.error}
+              </p>
             )}
 
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => setSelected(null)} disabled={isPending}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setSelected(null)}
+                disabled={isPending}
+              >
                 취소
               </Button>
               <Button type="submit" size="sm" disabled={isPending}>
@@ -233,7 +265,9 @@ export function VendorPricesEditor({
       {/* 등록된 단가 목록 */}
       {prices.length === 0 ? (
         <div className="rounded border border-dashed p-8 text-center">
-          <p className="text-sm text-muted-foreground">등록된 단가가 없습니다.</p>
+          <p className="text-sm text-muted-foreground">
+            등록된 단가가 없습니다.
+          </p>
           <p className="text-xs text-muted-foreground mt-1">
             위 검색으로 품목을 골라 단가를 등록하세요.
           </p>
@@ -262,14 +296,20 @@ export function VendorPricesEditor({
                   )}
                 </p>
                 {row.product?.unit && (
-                  <p className="text-xs text-muted-foreground">단위: {row.product.unit}</p>
+                  <p className="text-xs text-muted-foreground">
+                    단위: {row.product.unit}
+                  </p>
                 )}
               </div>
-              <span className="text-xs text-muted-foreground truncate">{row.product?.category ?? "—"}</span>
+              <span className="text-xs text-muted-foreground truncate">
+                {row.product?.category ?? "—"}
+              </span>
               <span className="text-right text-sm font-bold tabular-nums">
                 {nf.format(row.unit_price)}
               </span>
-              <span className="text-xs text-muted-foreground truncate">{row.note ?? "—"}</span>
+              <span className="text-xs text-muted-foreground truncate">
+                {row.note ?? "—"}
+              </span>
               <button
                 onClick={() => handleDelete(row.id)}
                 className="justify-self-end p-1.5 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10"

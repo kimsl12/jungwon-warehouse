@@ -38,11 +38,7 @@ export function ChatMessageRow({ message }: { message: ChatMessageView }) {
             : "border-border bg-card text-muted-foreground",
         )}
       >
-        {isUser ? (
-          <User className="size-3.5" />
-        ) : (
-          <Bot className="size-3.5" />
-        )}
+        {isUser ? <User className="size-3.5" /> : <Bot className="size-3.5" />}
       </div>
       <div
         className={cn(
@@ -115,15 +111,16 @@ function MarkdownBody({ content }: { content: string }) {
   );
 }
 
+function download(url: string, idx: number) {
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `jungwon-ai-${Date.now()}-${idx + 1}.png`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
 function GeneratedImages({ urls }: { urls: string[] }) {
-  function download(url: string, idx: number) {
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `jungwon-ai-${Date.now()}-${idx + 1}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
   return (
     <div className="mb-2 space-y-2">
       {urls.map((url, i) => (
