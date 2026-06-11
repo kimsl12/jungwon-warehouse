@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   MapPin,
   Package,
+  Smartphone,
   Sparkles,
   Users,
   Warehouse,
@@ -40,10 +41,20 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/calendar", label: "캘린더", icon: Calendar, adminOnly: true },
   { href: "/sites", label: "현장 관리", icon: MapPin, adminOnly: true },
   { href: "/requests", label: "자재 신청", icon: Boxes, adminOnly: true },
-  { href: "/purchase-orders", label: "발주서", icon: ClipboardList, adminOnly: true },
+  {
+    href: "/purchase-orders",
+    label: "발주서",
+    icon: ClipboardList,
+    adminOnly: true,
+  },
   { href: "/vendors", label: "거래처 관리", icon: Building2, adminOnly: true },
   { href: "/users", label: "사용자", icon: Users, adminOnly: true },
-  { href: "/activity-log", label: "활동 로그", icon: FileText, adminOnly: true },
+  {
+    href: "/activity-log",
+    label: "활동 로그",
+    icon: FileText,
+    adminOnly: true,
+  },
   { href: "/ai-usage", label: "AI 사용량", icon: Sparkles, adminOnly: true },
 ];
 
@@ -67,7 +78,9 @@ export function DashboardSidebar({
           <div className="truncate font-display text-[15px] font-semibold tracking-tight">
             정원전기
           </div>
-          <div className="text-[11px] text-muted-foreground">재고관리 시스템</div>
+          <div className="text-[11px] text-muted-foreground">
+            재고관리 시스템
+          </div>
         </div>
       </div>
 
@@ -104,6 +117,13 @@ export function DashboardSidebar({
           }
         />
         {isAdmin && <NotificationToggle />}
+        <Link
+          href="/m"
+          className="flex h-9 items-center gap-2.5 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+        >
+          <Smartphone className="size-[18px] shrink-0" />
+          <span className="flex-1 truncate">모바일 모드</span>
+        </Link>
       </div>
 
       <div className="flex items-center gap-2.5 border-t border-sidebar-border p-3">
@@ -111,7 +131,9 @@ export function DashboardSidebar({
           {userName.charAt(0)}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-semibold leading-tight">{userName}</p>
+          <p className="truncate text-[13px] font-semibold leading-tight">
+            {userName}
+          </p>
           <p className="text-[11px] text-muted-foreground">
             {isAdmin ? "관리자" : "사용자"}
           </p>
