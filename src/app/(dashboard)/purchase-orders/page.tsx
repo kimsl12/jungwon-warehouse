@@ -61,14 +61,23 @@ export default async function PurchaseOrdersPage({
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const poIds = (pos ?? []).map((po) => po.id);
-  const totalsMap = new Map<string, { ordered: number; received: number; value: number }>();
+  const totalsMap = new Map<
+    string,
+    { ordered: number; received: number; value: number }
+  >();
   if (poIds.length > 0) {
     const { data: items } = await supabase
       .from("purchase_order_items")
-      .select("purchase_order_id, ordered_quantity, received_quantity, unit_price")
+      .select(
+        "purchase_order_id, ordered_quantity, received_quantity, unit_price",
+      )
       .in("purchase_order_id", poIds);
     for (const it of items ?? []) {
-      const agg = totalsMap.get(it.purchase_order_id) ?? { ordered: 0, received: 0, value: 0 };
+      const agg = totalsMap.get(it.purchase_order_id) ?? {
+        ordered: 0,
+        received: 0,
+        value: 0,
+      };
       agg.ordered += it.ordered_quantity;
       agg.received += it.received_quantity;
       agg.value += it.ordered_quantity * it.unit_price;
@@ -125,8 +134,8 @@ export default async function PurchaseOrdersPage({
         })}
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-border bg-card shadow-xs">
-        <div className="grid grid-cols-[150px_1fr_110px_120px_110px_100px] gap-3 bg-muted px-5 py-2.5 text-[10.5px] font-medium uppercase tracking-widest text-muted-foreground">
+      <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-xs">
+        <div className="grid min-w-[800px] grid-cols-[150px_1fr_110px_120px_110px_100px] gap-3 bg-muted px-5 py-2.5 text-[10.5px] font-medium uppercase tracking-widest text-muted-foreground">
           <span>발주번호</span>
           <span>거래처</span>
           <span className="text-right">품목/수량</span>
@@ -150,7 +159,7 @@ export default async function PurchaseOrdersPage({
               <Link
                 key={po.id}
                 href={`/purchase-orders/${po.id}`}
-                className="grid grid-cols-[150px_1fr_110px_120px_110px_100px] items-center gap-3 border-t border-border px-5 py-3.5 transition-colors hover:bg-muted/40"
+                className="grid min-w-[800px] grid-cols-[150px_1fr_110px_120px_110px_100px] items-center gap-3 border-t border-border px-5 py-3.5 transition-colors hover:bg-muted/40"
               >
                 <span className="font-mono text-sm tabular-nums">
                   {po.po_number}
@@ -206,4 +215,3 @@ export default async function PurchaseOrdersPage({
     </div>
   );
 }
-

@@ -44,7 +44,11 @@ const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
   minute: "2-digit",
 });
 
-export default async function RequestsPage({ searchParams }: { searchParams: SearchParams }) {
+export default async function RequestsPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const params = await searchParams;
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
   const from = (page - 1) * PAGE_SIZE;
@@ -171,8 +175,12 @@ export default async function RequestsPage({ searchParams }: { searchParams: Sea
           <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
             매출 관리
           </p>
-          <h2 className="text-2xl font-bold tracking-tight mt-1">자재 신청 관리</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">전체 {nf.format(count)}건</p>
+          <h2 className="text-2xl font-bold tracking-tight mt-1">
+            자재 신청 관리
+          </h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            전체 {nf.format(count)}건
+          </p>
         </div>
         <Link
           href="/requests/templates"
@@ -186,7 +194,8 @@ export default async function RequestsPage({ searchParams }: { searchParams: Sea
       <div className="flex flex-wrap items-center gap-1 rounded bg-card p-1 w-fit">
         {STATUS_OPTIONS.map((s) => {
           const active = current === s.value;
-          const href = s.value === "all" ? "/requests" : `/requests?status=${s.value}`;
+          const href =
+            s.value === "all" ? "/requests" : `/requests?status=${s.value}`;
           return (
             <Link
               key={s.value}
@@ -206,7 +215,11 @@ export default async function RequestsPage({ searchParams }: { searchParams: Sea
 
       {/* Site / user filters (optional) */}
       <form method="get" className="flex flex-wrap items-end gap-2 text-xs">
-        <input type="hidden" name="status" value={current === "all" ? "" : current} />
+        <input
+          type="hidden"
+          name="status"
+          value={current === "all" ? "" : current}
+        />
         <Field label="검색 (자재·현장·신청자·비고)">
           <input
             type="text"
@@ -266,14 +279,17 @@ export default async function RequestsPage({ searchParams }: { searchParams: Sea
         >
           필터 적용
         </button>
-        <Link href="/requests" className="h-9 rounded border px-3 text-xs font-medium leading-[2.25rem]">
+        <Link
+          href="/requests"
+          className="h-9 rounded border px-3 text-xs font-medium leading-[2.25rem]"
+        >
           초기화
         </Link>
       </form>
 
       {/* Table */}
-      <div className="rounded bg-card overflow-hidden">
-        <div className="grid grid-cols-[120px_1fr_160px_130px_110px_90px] gap-3 px-5 py-3 bg-surface-high text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <div className="rounded bg-card overflow-x-auto">
+        <div className="grid min-w-[820px] grid-cols-[120px_1fr_160px_130px_110px_90px] gap-3 px-5 py-3 bg-surface-high text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
           <span>신청일시</span>
           <span>현장 · 비고</span>
           <span>담당자</span>
@@ -288,7 +304,10 @@ export default async function RequestsPage({ searchParams }: { searchParams: Sea
         ) : (
           requests.map((r) => {
             const meta = STATUS_META[r.status] ?? STATUS_META.submitted;
-            const progress = progressMap.get(r.id) ?? { total: 0, fulfilled: 0 };
+            const progress = progressMap.get(r.id) ?? {
+              total: 0,
+              fulfilled: 0,
+            };
             const urgentBgClass =
               r.is_urgent && r.status === "submitted"
                 ? "bg-danger-bg/50 hover:bg-danger-bg"
@@ -297,7 +316,7 @@ export default async function RequestsPage({ searchParams }: { searchParams: Sea
               <Link
                 key={r.id}
                 href={`/requests/${r.id}`}
-                className={`grid grid-cols-[120px_1fr_160px_130px_110px_90px] gap-3 items-center px-5 py-3.5 ${urgentBgClass} transition-colors border-t`}
+                className={`grid min-w-[820px] grid-cols-[120px_1fr_160px_130px_110px_90px] gap-3 items-center px-5 py-3.5 ${urgentBgClass} transition-colors border-t`}
               >
                 <span className="text-xs text-muted-foreground tabular-nums">
                   {dateFormatter.format(new Date(r.created_at))}
@@ -312,10 +331,14 @@ export default async function RequestsPage({ searchParams }: { searchParams: Sea
                     {r.sites?.name ?? "—"}
                   </p>
                   {r.note && (
-                    <p className="text-xs text-muted-foreground truncate">{r.note}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {r.note}
+                    </p>
                   )}
                   {r.is_urgent && r.urgent_reason && (
-                    <p className="text-xs text-danger truncate">⚠ {r.urgent_reason}</p>
+                    <p className="text-xs text-danger truncate">
+                      ⚠ {r.urgent_reason}
+                    </p>
                   )}
                 </div>
                 <span className="text-sm text-muted-foreground truncate">
@@ -331,7 +354,9 @@ export default async function RequestsPage({ searchParams }: { searchParams: Sea
                     {meta.label}
                   </span>
                 </span>
-                <span className="text-right text-xs text-muted-foreground">열기 →</span>
+                <span className="text-right text-xs text-muted-foreground">
+                  열기 →
+                </span>
               </Link>
             );
           })
@@ -344,7 +369,8 @@ export default async function RequestsPage({ searchParams }: { searchParams: Sea
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
             const active = p === page;
             const urlParams = new URLSearchParams();
-            if (params.status && params.status !== "all") urlParams.set("status", params.status);
+            if (params.status && params.status !== "all")
+              urlParams.set("status", params.status);
             if (params.site_id) urlParams.set("site_id", params.site_id);
             if (params.user_id) urlParams.set("user_id", params.user_id);
             if (params.from) urlParams.set("from", params.from);
@@ -372,7 +398,13 @@ export default async function RequestsPage({ searchParams }: { searchParams: Sea
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className="flex flex-col gap-1">
       <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">

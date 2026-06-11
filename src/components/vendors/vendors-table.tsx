@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
-import { deleteVendor, toggleVendorActive } from "@/app/(dashboard)/vendors/actions";
+import {
+  deleteVendor,
+  toggleVendorActive,
+} from "@/app/(dashboard)/vendors/actions";
 import { VendorEditDialog } from "@/components/vendors/vendor-edit-dialog";
 import {
   AlertDialog,
@@ -40,7 +43,9 @@ export function VendorsTable({ vendors }: { vendors: Vendor[] }) {
   if (vendors.length === 0) {
     return (
       <div className="rounded bg-card p-12 text-center">
-        <p className="text-sm text-muted-foreground">등록된 거래처가 없습니다.</p>
+        <p className="text-sm text-muted-foreground">
+          등록된 거래처가 없습니다.
+        </p>
       </div>
     );
   }
@@ -71,8 +76,8 @@ export function VendorsTable({ vendors }: { vendors: Vendor[] }) {
 
   return (
     <>
-      <div className="rounded bg-card overflow-hidden">
-        <div className="grid grid-cols-[1fr_130px_130px_130px_80px_200px] gap-3 px-5 py-3 bg-surface-high text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <div className="rounded bg-card overflow-x-auto">
+        <div className="grid min-w-[820px] grid-cols-[1fr_130px_130px_130px_80px_200px] gap-3 px-5 py-3 bg-surface-high text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
           <span>거래처명</span>
           <span>담당자</span>
           <span>연락처</span>
@@ -83,13 +88,15 @@ export function VendorsTable({ vendors }: { vendors: Vendor[] }) {
         {vendors.map((vendor) => (
           <div
             key={vendor.id}
-            className={`grid grid-cols-[1fr_130px_130px_130px_80px_200px] gap-3 items-center px-5 py-3.5 hover:bg-surface-low/50 transition-colors ${vendor.active ? "" : "opacity-50"}`}
+            className={`grid min-w-[820px] grid-cols-[1fr_130px_130px_130px_80px_200px] gap-3 items-center px-5 py-3.5 hover:bg-surface-low/50 transition-colors ${vendor.active ? "" : "opacity-50"}`}
           >
             <div className="min-w-0">
               <p className="text-sm font-medium truncate">{vendor.name}</p>
               <p className="text-xs text-muted-foreground truncate">
                 {vendor.ceo ?? "대표자 미입력"}
-                {vendor.business_number && <span className="ml-2">· {vendor.business_number}</span>}
+                {vendor.business_number && (
+                  <span className="ml-2">· {vendor.business_number}</span>
+                )}
               </p>
             </div>
             <span className="text-sm text-muted-foreground truncate">
@@ -132,7 +139,10 @@ export function VendorsTable({ vendors }: { vendors: Vendor[] }) {
                 {vendor.active ? "비활성" : "활성화"}
               </button>
               <button
-                onClick={() => { setDeleting(vendor); setDeleteError(null); }}
+                onClick={() => {
+                  setDeleting(vendor);
+                  setDeleteError(null);
+                }}
                 className="rounded bg-destructive/10 px-2.5 py-1 text-xs text-destructive hover:bg-destructive/20 transition-colors"
               >
                 삭제
@@ -152,17 +162,27 @@ export function VendorsTable({ vendors }: { vendors: Vendor[] }) {
 
       <AlertDialog
         open={deleting !== null}
-        onOpenChange={(open) => { if (!open) { setDeleting(null); setDeleteError(null); } }}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleting(null);
+            setDeleteError(null);
+          }
+        }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>거래처 삭제</AlertDialogTitle>
             <AlertDialogDescription>
-              <span className="font-medium text-foreground">{deleting?.name}</span> 거래처를 삭제하시겠습니까?
+              <span className="font-medium text-foreground">
+                {deleting?.name}
+              </span>{" "}
+              거래처를 삭제하시겠습니까?
             </AlertDialogDescription>
           </AlertDialogHeader>
           {deleteError && (
-            <p className="text-sm text-destructive" role="alert">{deleteError}</p>
+            <p className="text-sm text-destructive" role="alert">
+              {deleteError}
+            </p>
           )}
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>

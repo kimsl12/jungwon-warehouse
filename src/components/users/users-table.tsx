@@ -28,7 +28,6 @@ type UserRow = {
   assignedSiteIds: string[];
 };
 
-
 const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
   timeZone: "Asia/Seoul",
   year: "numeric",
@@ -43,7 +42,10 @@ export function UsersTable({
   users: UserRow[];
   currentUserId: string;
 }) {
-  const [confirmTarget, setConfirmTarget] = useState<{ user: UserRow; newRole: "admin" | "user" } | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<{
+    user: UserRow;
+    newRole: "admin" | "user";
+  } | null>(null);
   const [editing, setEditing] = useState<UserRow | null>(null);
   const [deleting, setDeleting] = useState<UserRow | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +60,10 @@ export function UsersTable({
   function confirmChange() {
     if (!confirmTarget) return;
     startTransition(async () => {
-      const result = await updateUserRole(confirmTarget.user.id, confirmTarget.newRole);
+      const result = await updateUserRole(
+        confirmTarget.user.id,
+        confirmTarget.newRole,
+      );
       if (result.error) {
         setError(result.error);
       } else {
@@ -83,17 +88,22 @@ export function UsersTable({
   if (users.length === 0) {
     return (
       <div className="rounded bg-card p-12 text-center">
-        <p className="text-sm text-muted-foreground">등록된 사용자가 없습니다.</p>
+        <p className="text-sm text-muted-foreground">
+          등록된 사용자가 없습니다.
+        </p>
       </div>
     );
   }
 
-  const GRID = "grid-cols-[1fr_130px_120px_1fr_90px_110px_280px]";
+  const GRID =
+    "min-w-[1000px] grid-cols-[1fr_130px_120px_1fr_90px_110px_280px]";
 
   return (
     <>
-      <div className="rounded bg-card overflow-hidden">
-        <div className={`grid ${GRID} gap-3 px-5 py-3 bg-surface-high text-[10px] font-semibold uppercase tracking-widest text-muted-foreground`}>
+      <div className="rounded bg-card overflow-x-auto">
+        <div
+          className={`grid ${GRID} gap-3 px-5 py-3 bg-surface-high text-[10px] font-semibold uppercase tracking-widest text-muted-foreground`}
+        >
           <span>이름</span>
           <span>직급</span>
           <span>연락처</span>
@@ -114,15 +124,25 @@ export function UsersTable({
                   {(user.name ?? "?").charAt(0)}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{user.name ?? "—"}</p>
-                  {isMe && <span className="text-[10px] text-muted-foreground">나</span>}
+                  <p className="text-sm font-medium truncate">
+                    {user.name ?? "—"}
+                  </p>
+                  {isMe && (
+                    <span className="text-[10px] text-muted-foreground">
+                      나
+                    </span>
+                  )}
                 </div>
               </div>
-              <span className="text-sm text-muted-foreground truncate">{user.title ?? "—"}</span>
+              <span className="text-sm text-muted-foreground truncate">
+                {user.title ?? "—"}
+              </span>
               <span className="text-sm text-muted-foreground tabular-nums truncate">
                 {user.phone ?? "—"}
               </span>
-              <span className="text-sm text-muted-foreground truncate">{user.email ?? "—"}</span>
+              <span className="text-sm text-muted-foreground truncate">
+                {user.email ?? "—"}
+              </span>
               <span>
                 {user.role === "admin" ? (
                   <span className="inline-block rounded bg-secondary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-secondary">
@@ -162,7 +182,11 @@ export function UsersTable({
                 <button
                   onClick={() => setDeleting(user)}
                   disabled={user.id === currentUserId}
-                  title={user.id === currentUserId ? "자기 자신은 삭제할 수 없습니다" : "사용자 영구 삭제"}
+                  title={
+                    user.id === currentUserId
+                      ? "자기 자신은 삭제할 수 없습니다"
+                      : "사용자 영구 삭제"
+                  }
                   className="inline-flex items-center gap-1 rounded border border-destructive/30 px-2 py-1 text-[11px] text-destructive transition-colors hover:bg-destructive/5 disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   <Trash2 className="size-3" /> 삭제
@@ -181,7 +205,15 @@ export function UsersTable({
         />
       )}
 
-      <AlertDialog open={deleting !== null} onOpenChange={(open) => { if (!open) { setDeleting(null); setError(null); } }}>
+      <AlertDialog
+        open={deleting !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleting(null);
+            setError(null);
+          }
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>사용자 삭제</AlertDialogTitle>
@@ -194,7 +226,11 @@ export function UsersTable({
               복구할 수 없습니다.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
+          {error && (
+            <p className="text-sm text-destructive" role="alert">
+              {error}
+            </p>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>취소</AlertDialogCancel>
             <AlertDialogAction
@@ -208,19 +244,39 @@ export function UsersTable({
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={confirmTarget !== null} onOpenChange={(open) => { if (!open) { setConfirmTarget(null); setError(null); } }}>
+      <AlertDialog
+        open={confirmTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setConfirmTarget(null);
+            setError(null);
+          }
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>역할 변경</AlertDialogTitle>
             <AlertDialogDescription>
-              <span className="font-medium text-foreground">{confirmTarget?.user.name ?? confirmTarget?.user.email}</span>님의 역할을{" "}
-              <span className="font-semibold text-foreground">{confirmTarget?.newRole === "admin" ? "관리자" : "일반 사용자"}</span>로 변경하시겠습니까?
+              <span className="font-medium text-foreground">
+                {confirmTarget?.user.name ?? confirmTarget?.user.email}
+              </span>
+              님의 역할을{" "}
+              <span className="font-semibold text-foreground">
+                {confirmTarget?.newRole === "admin" ? "관리자" : "일반 사용자"}
+              </span>
+              로 변경하시겠습니까?
               {confirmTarget?.user.id === currentUserId && (
-                <span className="mt-2 block text-destructive">본인의 권한을 변경합니다.</span>
+                <span className="mt-2 block text-destructive">
+                  본인의 권한을 변경합니다.
+                </span>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
+          {error && (
+            <p className="text-sm text-destructive" role="alert">
+              {error}
+            </p>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>취소</AlertDialogCancel>
             <AlertDialogAction onClick={confirmChange} disabled={isPending}>
