@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function LoginForm({ next }: { next: string }) {
+export function LoginForm({ next }: { next?: string }) {
   const [state, formAction, isPending] = useActionState<LoginState, FormData>(login, null);
 
   return (
@@ -27,7 +27,7 @@ export function LoginForm({ next }: { next: string }) {
       </CardHeader>
       <form action={formAction}>
         <CardContent className="space-y-4">
-          <input type="hidden" name="next" value={next} />
+          {next && <input type="hidden" name="next" value={next} />}
           <div className="space-y-2">
             <Label htmlFor="email">이메일</Label>
             <Input
