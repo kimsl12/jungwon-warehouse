@@ -22,7 +22,9 @@ export const dynamic = "force-dynamic";
  *   monthly   : from/to 기간의 출고 합계
  *   completion: 현장 전체 기간 (최초 트랜잭션 ~ 현장 비활성화 시점 또는 now)
  *
- * sort=name(기본) | date — 품목명 가나다순 / 마지막 출고일순 정렬.
+ * sort=name(기본) | date
+ *   name: 같은 자재를 한 줄로 합산한 청구 요약 (품목명 가나다순)
+ *   date: 합산 없이 출고 건별 내역 전체를 날짜순으로 나열
  * 단가는 vendor_product_prices 기반 "가장 최근에 등록된" 가격을 product별로 사용.
  * 못 찾으면 0으로 표시.
  */
@@ -143,54 +145,67 @@ export async function GET(
     }
   }
 
-  // 같은 자재(product_id)는 한 줄로 합산. 출고일은 가장 최근 일자.
-  // 정산서 자체가 기간별 청구라 개별 출고 row 분리는 노이즈만 큼.
-  type Agg = {
-    product_id: string;
-    name: string;
-    variant: string | null;
-    unit: string | null;
-    quantity: number;
-    lastDate: string;
-    unitPrice: number;
-  };
-  const aggMap = new Map<string, Agg>();
-  for (const r of rows) {
-    const date = new Date(r.created_at).toISOString().slice(0, 10);
-    const existing = aggMap.get(r.product_id);
-    if (existing) {
-      existing.quantity += r.quantity;
-      if (date > existing.lastDate) existing.lastDate = date;
-    } else {
-      aggMap.set(r.product_id, {
-        product_id: r.product_id,
+  // sort=name : 같은 자재(product_id)를 한 줄로 합산한 청구 요약 (가나다순)
+  // sort=date : 합산 없이 출고 건별 내역을 날짜순으로 전부 나열
+  let items: SiteStatementItem[];
+  if (sort === "date") {
+    // rows 는 쿼리에서 created_at 오름차순 — 그 순서 그대로 건별 출력
+    items = rows.map((r, idx) => {
+      const unitPrice = priceMap.get(r.product_id) ?? 0;
+      return {
+        no: idx + 1,
+        date: new Date(r.created_at).toISOString().slice(0, 10),
         name: r.products?.name ?? "-",
         variant: r.products?.variant ?? null,
         unit: r.products?.unit ?? null,
         quantity: r.quantity,
-        lastDate: date,
-        unitPrice: priceMap.get(r.product_id) ?? 0,
-      });
+        unitPrice,
+        supply: r.quantity * unitPrice,
+      };
+    });
+  } else {
+    type Agg = {
+      product_id: string;
+      name: string;
+      variant: string | null;
+      unit: string | null;
+      quantity: number;
+      lastDate: string;
+      unitPrice: number;
+    };
+    const aggMap = new Map<string, Agg>();
+    for (const r of rows) {
+      const date = new Date(r.created_at).toISOString().slice(0, 10);
+      const existing = aggMap.get(r.product_id);
+      if (existing) {
+        existing.quantity += r.quantity;
+        if (date > existing.lastDate) existing.lastDate = date;
+      } else {
+        aggMap.set(r.product_id, {
+          product_id: r.product_id,
+          name: r.products?.name ?? "-",
+          variant: r.products?.variant ?? null,
+          unit: r.products?.unit ?? null,
+          quantity: r.quantity,
+          lastDate: date,
+          unitPrice: priceMap.get(r.product_id) ?? 0,
+        });
+      }
     }
+    const sortedAggs = Array.from(aggMap.values()).sort((a, b) =>
+      a.name.localeCompare(b.name, "ko"),
+    );
+    items = sortedAggs.map((a, idx) => ({
+      no: idx + 1,
+      date: a.lastDate,
+      name: a.name,
+      variant: a.variant,
+      unit: a.unit,
+      quantity: a.quantity,
+      unitPrice: a.unitPrice,
+      supply: a.quantity * a.unitPrice,
+    }));
   }
-  // 정렬: 이름순(가나다) 또는 날짜순(마지막 출고일, 같은 날짜는 이름순 2차 정렬)
-  const sortedAggs = Array.from(aggMap.values()).sort((a, b) =>
-    sort === "date"
-      ? a.lastDate.localeCompare(b.lastDate) ||
-        a.name.localeCompare(b.name, "ko")
-      : a.name.localeCompare(b.name, "ko"),
-  );
-
-  const items: SiteStatementItem[] = sortedAggs.map((a, idx) => ({
-    no: idx + 1,
-    date: a.lastDate,
-    name: a.name,
-    variant: a.variant,
-    unit: a.unit,
-    quantity: a.quantity,
-    unitPrice: a.unitPrice,
-    supply: a.quantity * a.unitPrice,
-  }));
 
   const statementNumber = `${type === "monthly" ? "MS" : "CS"}-${formatYmdCompact()}-${siteId.slice(0, 6).toUpperCase()}`;
   const issueDate = new Date().toISOString().slice(0, 10);

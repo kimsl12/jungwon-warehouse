@@ -59,34 +59,48 @@ export function SiteStatementButton({
     reset();
   }
 
-  // 월말/준공 두 화면에서 공용으로 쓰는 정렬 선택 토글
+  // 월말/준공 두 화면에서 공용으로 쓰는 출력 형식 토글
   const sortSelector = (
     <div>
       <label className="text-xs font-medium text-muted-foreground">
-        정렬 순서
+        출력 형식
       </label>
       <div className="mt-1 grid grid-cols-2 gap-2">
         <button
           type="button"
           onClick={() => setSortOrder("name")}
-          className={`rounded-md border px-3 py-2.5 text-sm font-medium transition-colors ${
+          className={`rounded-md border px-3 py-2.5 text-left transition-colors ${
             sortOrder === "name"
-              ? "border-primary bg-primary/10 text-primary"
-              : "border-input text-muted-foreground hover:bg-muted"
+              ? "border-primary bg-primary/10"
+              : "border-input hover:bg-muted"
           }`}
         >
-          이름순 (가나다)
+          <span
+            className={`block text-sm font-medium ${sortOrder === "name" ? "text-primary" : "text-foreground"}`}
+          >
+            이름순 (합산)
+          </span>
+          <span className="mt-0.5 block text-[11px] text-muted-foreground">
+            같은 자재를 한 줄로 합산
+          </span>
         </button>
         <button
           type="button"
           onClick={() => setSortOrder("date")}
-          className={`rounded-md border px-3 py-2.5 text-sm font-medium transition-colors ${
+          className={`rounded-md border px-3 py-2.5 text-left transition-colors ${
             sortOrder === "date"
-              ? "border-primary bg-primary/10 text-primary"
-              : "border-input text-muted-foreground hover:bg-muted"
+              ? "border-primary bg-primary/10"
+              : "border-input hover:bg-muted"
           }`}
         >
-          날짜순 (출고일)
+          <span
+            className={`block text-sm font-medium ${sortOrder === "date" ? "text-primary" : "text-foreground"}`}
+          >
+            날짜순 (건별)
+          </span>
+          <span className="mt-0.5 block text-[11px] text-muted-foreground">
+            출고 내역을 건별로 전부 나열
+          </span>
         </button>
       </div>
     </div>
