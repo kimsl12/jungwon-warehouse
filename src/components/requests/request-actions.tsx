@@ -29,6 +29,7 @@ export function RequestActions({
   canCancel,
   canDelete = false,
   redirectAfterDelete = "/requests",
+  fulfilledQuantity = 0,
 }: {
   requestId: string;
   canApprove: boolean;
@@ -36,6 +37,8 @@ export function RequestActions({
   canCancel: boolean;
   canDelete?: boolean;
   redirectAfterDelete?: string;
+  /** 이미 출고된 총 수량 — 부분 출고 후 취소 시 경고 표시용 */
+  fulfilledQuantity?: number;
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -226,6 +229,13 @@ export function RequestActions({
             <AlertDialogTitle>신청 취소</AlertDialogTitle>
             <AlertDialogDescription>
               이 신청을 취소하시겠습니까? 취소 후에는 출고 처리가 불가능합니다.
+              {fulfilledQuantity > 0 && (
+                <span className="mt-2 block rounded-md bg-warning-bg px-3 py-2 text-warning">
+                  이미 출고된 {fulfilledQuantity.toLocaleString("ko-KR")}개는
+                  재고로 자동 회수되지 않습니다. 회수가 필요하면 취소 후 해당
+                  품목을 입고 처리하세요.
+                </span>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           {error && <p className="text-sm text-destructive">{error}</p>}

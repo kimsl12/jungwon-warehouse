@@ -28,7 +28,11 @@ const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
   minute: "2-digit",
 });
 
-export default async function AdminRequestDetailPage({ params }: { params: Params }) {
+export default async function AdminRequestDetailPage({
+  params,
+}: {
+  params: Params;
+}) {
   const { id } = await params;
 
   const supabase = await createClient();
@@ -74,11 +78,15 @@ export default async function AdminRequestDetailPage({ params }: { params: Param
   const meta = STATUS_META[request.status] ?? STATUS_META.submitted;
 
   const canApprove = request.status === "submitted";
-  const canReject = request.status === "submitted" || request.status === "approved";
-  const canCancel = request.status === "submitted" || request.status === "approved";
-  const canDelete = request.status === "canceled" || request.status === "rejected";
+  const canReject =
+    request.status === "submitted" || request.status === "approved";
+  const canCancel =
+    request.status === "submitted" || request.status === "approved";
+  const canDelete =
+    request.status === "canceled" || request.status === "rejected";
   const canFulfill = request.status === "approved";
-  const canShowPdf = request.status === "approved" || request.status === "fulfilled";
+  const canShowPdf =
+    request.status === "approved" || request.status === "fulfilled";
 
   return (
     <div className="space-y-6">
@@ -109,7 +117,9 @@ export default async function AdminRequestDetailPage({ params }: { params: Param
               {request.sites?.name ?? "—"}
             </h2>
             {request.sites?.address && (
-              <p className="text-xs text-muted-foreground">{request.sites.address}</p>
+              <p className="text-xs text-muted-foreground">
+                {request.sites.address}
+              </p>
             )}
             {request.is_urgent && request.urgent_reason && (
               <p className="mt-2 text-sm font-medium text-danger">
@@ -134,7 +144,10 @@ export default async function AdminRequestDetailPage({ params }: { params: Param
             }
           />
           <InfoRow label="연락처" value={requesterProfile?.phone ?? null} />
-          <InfoRow label="신청 일시" value={dateFormatter.format(new Date(request.created_at))} />
+          <InfoRow
+            label="신청 일시"
+            value={dateFormatter.format(new Date(request.created_at))}
+          />
           {request.approved_at && (
             <InfoRow
               label="승인 일시"
@@ -155,7 +168,12 @@ export default async function AdminRequestDetailPage({ params }: { params: Param
           )}
           {request.note && <InfoRow label="비고" value={request.note} span2 />}
           {request.reject_reason && (
-            <InfoRow label="거절 사유" value={request.reject_reason} span2 tone="destructive" />
+            <InfoRow
+              label="거절 사유"
+              value={request.reject_reason}
+              span2
+              tone="destructive"
+            />
           )}
         </dl>
       </div>
@@ -168,6 +186,10 @@ export default async function AdminRequestDetailPage({ params }: { params: Param
           canReject={canReject}
           canCancel={canCancel}
           canDelete={canDelete}
+          fulfilledQuantity={(items ?? []).reduce(
+            (sum, it) => sum + (it.fulfilled_quantity ?? 0),
+            0,
+          )}
         />
       )}
 
@@ -225,10 +247,14 @@ export default async function AdminRequestDetailPage({ params }: { params: Param
                       )}
                     </p>
                     {it.note && (
-                      <p className="text-xs text-muted-foreground truncate">{it.note}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {it.note}
+                      </p>
                     )}
                   </div>
-                  <span className="text-sm text-muted-foreground">{it.unit ?? "—"}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {it.unit ?? "—"}
+                  </span>
                   <span className="text-right text-sm tabular-nums">
                     {it.requested_quantity.toLocaleString("ko-KR")} /{" "}
                     {it.fulfilled_quantity.toLocaleString("ko-KR")}
@@ -243,7 +269,9 @@ export default async function AdminRequestDetailPage({ params }: { params: Param
                         부분
                       </span>
                     ) : (
-                      <span className="text-[10px] text-muted-foreground">—</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        —
+                      </span>
                     )}
                   </span>
                 </div>
