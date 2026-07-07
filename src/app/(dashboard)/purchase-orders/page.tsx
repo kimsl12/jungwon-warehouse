@@ -102,12 +102,21 @@ export default async function PurchaseOrdersPage({
         <p className="text-sm text-muted-foreground">
           전체 {nf.format(total)}건
         </p>
-        <Link
-          href="/purchase-orders/new"
-          className="inline-flex h-9 items-center rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          발주서 작성
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/api/export/purchase-orders"
+            prefetch={false}
+            className="inline-flex h-9 items-center rounded-md border border-input px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted"
+          >
+            CSV 내보내기
+          </Link>
+          <Link
+            href="/purchase-orders/new"
+            className="inline-flex h-9 items-center rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            발주서 작성
+          </Link>
+        </div>
       </div>
 
       <div className="flex w-fit flex-wrap items-center gap-1 rounded-md bg-muted p-1">

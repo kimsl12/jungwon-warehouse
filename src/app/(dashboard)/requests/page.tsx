@@ -182,12 +182,21 @@ export default async function RequestsPage({
             전체 {nf.format(count)}건
           </p>
         </div>
-        <Link
-          href="/requests/templates"
-          className="inline-flex items-center gap-1.5 rounded border bg-card px-3 py-2 text-xs font-medium hover:bg-surface-low"
-        >
-          <LayoutTemplate className="h-4 w-4" /> 템플릿 관리
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/api/export/material-requests"
+            prefetch={false}
+            className="inline-flex items-center rounded border bg-card px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-surface-low"
+          >
+            CSV 내보내기
+          </Link>
+          <Link
+            href="/requests/templates"
+            className="inline-flex items-center gap-1.5 rounded border bg-card px-3 py-2 text-xs font-medium hover:bg-surface-low"
+          >
+            <LayoutTemplate className="h-4 w-4" /> 템플릿 관리
+          </Link>
+        </div>
       </div>
 
       {/* Status tabs */}
