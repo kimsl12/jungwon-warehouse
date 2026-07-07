@@ -167,6 +167,31 @@ export function SiteStatementButton({
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <div className="space-y-3">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = new Date();
+                      setYear(String(d.getFullYear()));
+                      setMonth(String(d.getMonth() + 1));
+                    }}
+                    className="rounded-md border border-input px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted transition-colors"
+                  >
+                    이번 달
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = new Date();
+                      d.setMonth(d.getMonth() - 1);
+                      setYear(String(d.getFullYear()));
+                      setMonth(String(d.getMonth() + 1));
+                    }}
+                    className="rounded-md border border-input px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted transition-colors"
+                  >
+                    지난 달
+                  </button>
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">
@@ -174,6 +199,7 @@ export function SiteStatementButton({
                     </label>
                     <input
                       type="number"
+                      inputMode="numeric"
                       value={year}
                       onChange={(e) => setYear(e.target.value)}
                       min={2020}
@@ -187,6 +213,7 @@ export function SiteStatementButton({
                     </label>
                     <input
                       type="number"
+                      inputMode="numeric"
                       value={month}
                       onChange={(e) => setMonth(e.target.value)}
                       min={1}
