@@ -3,7 +3,10 @@
 import { useState, useTransition } from "react";
 import { ChevronDown } from "lucide-react";
 
-import { deleteProduct } from "@/app/(dashboard)/inventory/actions";
+import {
+  deleteProduct,
+  toggleProductActive,
+} from "@/app/(dashboard)/inventory/actions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,6 +69,16 @@ export function ProductRowActions({
     });
   }
 
+  // is_active 는 gen:types 재생성 전까지 타입에 없음 — 런타임 값으로 판정
+  const isActive =
+    (product as unknown as { is_active?: boolean }).is_active !== false;
+
+  function handleToggleActive() {
+    startTransition(async () => {
+      await toggleProductActive(product.id, !isActive);
+    });
+  }
+
   return (
     <div className="flex justify-end gap-1">
       {/* 처리: 입고 / 출고 / 변형 추가 를 드롭다운 메뉴로 통합 */}
@@ -78,14 +91,28 @@ export function ProductRowActions({
           }
         />
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => openProcess("in")}>입고 처리</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => openProcess("out")}>출고 처리</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => openProcess("in")}>
+            입고 처리
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => openProcess("out")}>
+            출고 처리
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => openProcess("loss")}>분실 처리</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => openProcess("loss")}>
+            분실 처리
+          </DropdownMenuItem>
           {isAdmin && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setVariantOpen(true)}>변형 추가</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setVariantOpen(true)}>
+                변형 추가
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleToggleActive}
+                disabled={isPending}
+              >
+                {isActive ? "단종 처리 (숨김)" : "단종 해제 (활성화)"}
+              </DropdownMenuItem>
             </>
           )}
         </DropdownMenuContent>
@@ -123,15 +150,22 @@ export function ProductRowActions({
             onOpenChange={setVariantOpen}
           />
 
-          <ProductEditDialog product={product} open={editOpen} onOpenChange={setEditOpen} isAdmin={isAdmin} />
+          <ProductEditDialog
+            product={product}
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            isAdmin={isAdmin}
+          />
 
           <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>품목 삭제</AlertDialogTitle>
                 <AlertDialogDescription>
-                  <span className="font-medium text-foreground">{product.name}</span> 품목을
-                  삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+                  <span className="font-medium text-foreground">
+                    {product.name}
+                  </span>{" "}
+                  품목을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               {deleteError && (

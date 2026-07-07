@@ -10,6 +10,7 @@ type SearchParams = Promise<{
   category?: string;
   page?: string;
   import?: string;
+  inactive?: string;
 }>;
 
 export default async function InventoryPage({
@@ -24,7 +25,9 @@ export default async function InventoryPage({
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
-  const hasFilter = search.length > 0 || category.length > 0;
+  // 단종(비활성) 포함 보기 — 켜면 검색 경로로 전체 목록 조회
+  const includeInactive = params.inactive === "1";
+  const hasFilter = search.length > 0 || category.length > 0 || includeInactive;
 
   const supabase = await createClient();
 
@@ -32,7 +35,13 @@ export default async function InventoryPage({
     ? await supabase
         .rpc(
           "search_products",
-          { p_query: search || undefined, p_category: category || undefined },
+          // p_include_inactive 는 마이그레이션 20260707020000 이후 추가됨 —
+          // database.types 재생성 전까지 type-safe 우회.
+          {
+            p_query: search || undefined,
+            p_category: category || undefined,
+            p_include_inactive: includeInactive,
+          } as never,
           { count: "exact" },
         )
         .range(from, to)
@@ -120,6 +129,7 @@ export default async function InventoryPage({
         initialSearch={search}
         initialCategory={category}
         isAdmin={isAdmin}
+        initialIncludeInactive={includeInactive}
       />
 
       {!hasFilter && (

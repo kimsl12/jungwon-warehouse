@@ -15,11 +15,13 @@ export function InventoryToolbar({
   initialSearch,
   initialCategory,
   isAdmin,
+  initialIncludeInactive = false,
 }: {
   categories: string[];
   initialSearch: string;
   initialCategory: string;
   isAdmin: boolean;
+  initialIncludeInactive?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -39,9 +41,7 @@ export function InventoryToolbar({
       if (value) params.set(key, value);
       else params.delete(key);
     }
-    startTransition(() =>
-      router.push(`/inventory?${params.toString()}`),
-    );
+    startTransition(() => router.push(`/inventory?${params.toString()}`));
   }
 
   const visibleCats = categories.slice(0, VISIBLE_CHIPS);
@@ -112,6 +112,26 @@ export function InventoryToolbar({
           </select>
         )}
       </div>
+
+      {isAdmin && (
+        <button
+          type="button"
+          onClick={() =>
+            pushParams({
+              inactive: initialIncludeInactive ? "" : "1",
+              page: "1",
+            })
+          }
+          className={cn(
+            "h-9 rounded-md border px-3 text-xs font-medium transition-colors",
+            initialIncludeInactive
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-input text-muted-foreground hover:bg-muted",
+          )}
+        >
+          단종 포함
+        </button>
+      )}
 
       <div className="flex flex-1 justify-end gap-2">
         <Link

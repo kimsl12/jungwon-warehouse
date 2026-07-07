@@ -63,16 +63,19 @@ export function InventoryTable({
                     : { tone: "success" as const, label: "정상" };
               const availability = availabilityMap?.[p.id];
               const showPending = availability && availability.pending > 0;
+              // is_active 는 gen:types 재생성 전까지 타입에 없음 — 런타임 값으로 판정
+              const isInactive =
+                (p as unknown as { is_active?: boolean }).is_active === false;
 
-              const isFirstOfGroup =
-                i === 0 || products[i - 1].name !== p.name;
+              const isFirstOfGroup = i === 0 || products[i - 1].name !== p.name;
 
               return (
                 <tr
                   key={p.id}
                   className={
                     "transition-colors hover:bg-muted/40 " +
-                    (isFirstOfGroup ? "border-t border-border" : "")
+                    (isFirstOfGroup ? "border-t border-border" : "") +
+                    (isInactive ? " opacity-55" : "")
                   }
                 >
                   <td className="px-5 py-3">
@@ -86,12 +89,22 @@ export function InventoryTable({
                             {p.name}
                           </span>
                           <VariantChip value={p.variant} />
+                          {isInactive && (
+                            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                              단종
+                            </span>
+                          )}
                         </div>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 pl-12">
                         <CornerDownRight className="size-3.5 shrink-0 text-muted-foreground/60" />
                         <VariantChip value={p.variant} />
+                        {isInactive && (
+                          <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                            단종
+                          </span>
+                        )}
                       </div>
                     )}
                   </td>
@@ -124,7 +137,9 @@ export function InventoryTable({
                   </td>
                   <td className="px-3 py-3 text-right tabular-nums text-muted-foreground">
                     {p.min_quantity.toLocaleString("ko-KR")}
-                    {p.unit && <span className="ml-0.5 text-[11px]">{p.unit}</span>}
+                    {p.unit && (
+                      <span className="ml-0.5 text-[11px]">{p.unit}</span>
+                    )}
                   </td>
                   <td className="px-3 py-3 text-right tabular-nums">
                     {showPending ? (
@@ -138,7 +153,9 @@ export function InventoryTable({
                       </div>
                     ) : (
                       <span className="text-muted-foreground">
-                        {(availability?.available ?? p.quantity).toLocaleString("ko-KR")}
+                        {(availability?.available ?? p.quantity).toLocaleString(
+                          "ko-KR",
+                        )}
                       </span>
                     )}
                   </td>

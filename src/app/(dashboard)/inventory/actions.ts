@@ -15,7 +15,10 @@ const productCreateSchema = z.object({
   variant: z.string().trim().optional().or(z.literal("")),
   unit: z.string().trim().optional().or(z.literal("")),
   quantity: z.coerce.number().int().min(0, "수량은 0 이상이어야 합니다."),
-  min_quantity: z.coerce.number().int().min(0, "최소수량은 0 이상이어야 합니다."),
+  min_quantity: z.coerce
+    .number()
+    .int()
+    .min(0, "최소수량은 0 이상이어야 합니다."),
   location: z.string().trim().optional().or(z.literal("")),
 });
 
@@ -26,7 +29,10 @@ const productUpdateSchema = z.object({
   subcategory: z.string().trim().optional().or(z.literal("")),
   variant: z.string().trim().optional().or(z.literal("")),
   unit: z.string().trim().optional().or(z.literal("")),
-  min_quantity: z.coerce.number().int().min(0, "최소수량은 0 이상이어야 합니다."),
+  min_quantity: z.coerce
+    .number()
+    .int()
+    .min(0, "최소수량은 0 이상이어야 합니다."),
   location: z.string().trim().optional().or(z.literal("")),
 });
 
@@ -108,16 +114,19 @@ export async function createProduct(
       .from("products")
       .select("id", { head: true, count: "exact" })
       .eq("name", parsed.data.name);
-    dupQuery = normalizedVariant === null
-      ? dupQuery.is("variant", null)
-      : dupQuery.eq("variant", normalizedVariant);
+    dupQuery =
+      normalizedVariant === null
+        ? dupQuery.is("variant", null)
+        : dupQuery.eq("variant", normalizedVariant);
     const { count: dupCount } = await dupQuery;
     if ((dupCount ?? 0) > 0) {
       return {
         error: normalizedVariant
           ? `이미 같은 품목(${parsed.data.name})의 변형 "${normalizedVariant}"이(가) 등록되어 있습니다.`
           : `이미 같은 이름(${parsed.data.name})의 품목이 등록되어 있습니다.`,
-        fieldErrors: { variant: [normalizedVariant ? "중복된 변형" : "중복된 제품명"] },
+        fieldErrors: {
+          variant: [normalizedVariant ? "중복된 변형" : "중복된 제품명"],
+        },
       };
     }
   }
@@ -144,14 +153,19 @@ export async function createProduct(
   // Register aliases if provided (comma-separated)
   const aliasStr = String(formData.get("aliases") ?? "").trim();
   if (aliasStr && inserted?.id) {
-    const aliases = [...new Set(aliasStr.split(",").map((a) => a.trim()).filter(Boolean))];
+    const aliases = [
+      ...new Set(
+        aliasStr
+          .split(",")
+          .map((a) => a.trim())
+          .filter(Boolean),
+      ),
+    ];
     if (aliases.length > 0) {
-      await auth.supabase
-        .from("product_aliases")
-        .upsert(
-          aliases.map((alias) => ({ product_id: inserted.id, alias })),
-          { onConflict: "product_id,alias", ignoreDuplicates: true },
-        );
+      await auth.supabase.from("product_aliases").upsert(
+        aliases.map((alias) => ({ product_id: inserted.id, alias })),
+        { onConflict: "product_id,alias", ignoreDuplicates: true },
+      );
     }
   }
 
@@ -278,9 +292,40 @@ export async function adjustProductStock(
 }
 
 // -----------------------------------------------------------------------------
+// toggleProductActive — 단종(비활성) 처리 / 재활성화
+// 비활성 품목은 검색·저재고 목록에서 숨겨지고 이력은 유지된다.
+// -----------------------------------------------------------------------------
+export async function toggleProductActive(
+  productId: string,
+  active: boolean,
+): Promise<{ error: string | null }> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { error: auth.error };
+
+  if (!z.string().uuid().safeParse(productId).success) {
+    return { error: "잘못된 요청입니다." };
+  }
+
+  // is_active 는 마이그레이션 20260707020000 이후 추가됨 —
+  // database.types 재생성(pnpm gen:types) 전까지 type-safe 우회.
+  const { error } = await auth.supabase
+    .from("products")
+    .update({ is_active: active } as never)
+    .eq("id", productId);
+
+  if (error) return { error: "변경에 실패했습니다: " + error.message };
+
+  revalidatePath("/inventory");
+  revalidatePath("/overview");
+  return { error: null };
+}
+
+// -----------------------------------------------------------------------------
 // deleteProduct
 // -----------------------------------------------------------------------------
-export async function deleteProduct(formData: FormData): Promise<{ error: string | null }> {
+export async function deleteProduct(
+  formData: FormData,
+): Promise<{ error: string | null }> {
   const auth = await requireAdmin();
   if (!auth.ok) return { error: auth.error };
 
@@ -289,7 +334,10 @@ export async function deleteProduct(formData: FormData): Promise<{ error: string
     return { error: "잘못된 요청입니다." };
   }
 
-  const { error } = await auth.supabase.from("products").delete().eq("id", parsed.data.id);
+  const { error } = await auth.supabase
+    .from("products")
+    .delete()
+    .eq("id", parsed.data.id);
 
   if (error) {
     // Likely FK violation if there are transactions referencing it
