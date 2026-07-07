@@ -80,8 +80,11 @@ export default async function AdminRequestDetailPage({
   const canApprove = request.status === "submitted";
   const canReject =
     request.status === "submitted" || request.status === "approved";
+  // fulfilled 도 취소 가능 — 취소 다이얼로그에서 출고분 재고 회수 선택 지원
   const canCancel =
-    request.status === "submitted" || request.status === "approved";
+    request.status === "submitted" ||
+    request.status === "approved" ||
+    request.status === "fulfilled";
   const canDelete =
     request.status === "canceled" || request.status === "rejected";
   const canFulfill = request.status === "approved";

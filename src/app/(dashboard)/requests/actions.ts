@@ -11,7 +11,8 @@ async function requireAdmin() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false as const, error: "로그인이 필요합니다.", supabase };
+  if (!user)
+    return { ok: false as const, error: "로그인이 필요합니다.", supabase };
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
@@ -28,9 +29,12 @@ const uuid = z.string().uuid();
 function mapRpcError(msg: string, fallbackPrefix: string): string {
   if (msg.includes("NOT_AUTHORIZED")) return "관리자 권한이 필요합니다.";
   if (msg.includes("REQUEST_NOT_FOUND")) return "신청을 찾을 수 없습니다.";
-  if (msg.includes("INVALID_TRANSITION")) return "현재 상태에서는 수행할 수 없습니다.";
-  if (msg.includes("REQUEST_NOT_APPROVED")) return "승인된 신청만 출고 처리할 수 있습니다.";
-  if (msg.includes("OVER_FULFILLMENT")) return "요청 수량을 초과할 수 없습니다.";
+  if (msg.includes("INVALID_TRANSITION"))
+    return "현재 상태에서는 수행할 수 없습니다.";
+  if (msg.includes("REQUEST_NOT_APPROVED"))
+    return "승인된 신청만 출고 처리할 수 있습니다.";
+  if (msg.includes("OVER_FULFILLMENT"))
+    return "요청 수량을 초과할 수 없습니다.";
   if (msg.includes("INSUFFICIENT_STOCK")) return "재고가 부족합니다.";
   if (msg.includes("ITEM_NOT_FOUND")) return "아이템을 찾을 수 없습니다.";
   return `${fallbackPrefix}: ${msg}`;
@@ -45,7 +49,8 @@ export async function approveMaterialRequest(
   const auth = await requireAdmin();
   if (!auth.ok) return { error: auth.error };
 
-  if (!uuid.safeParse(requestId).success) return { error: "잘못된 요청입니다." };
+  if (!uuid.safeParse(requestId).success)
+    return { error: "잘못된 요청입니다." };
 
   const { error } = await auth.supabase.rpc("approve_material_request", {
     p_request_id: requestId,
@@ -128,16 +133,23 @@ export async function fulfillMaterialRequest(
 
   const parsed = fulfillSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "잘못된 요청입니다." };
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "잘못된 요청입니다.",
+    };
   }
 
-  const { data, error } = await auth.supabase.rpc("fulfill_material_request_items", {
-    p_request_id: parsed.data.request_id,
-    p_fulfillments: parsed.data.fulfillments as unknown as never,
-    p_user_id: auth.user.id,
-  });
+  const { data, error } = await auth.supabase.rpc(
+    "fulfill_material_request_items",
+    {
+      p_request_id: parsed.data.request_id,
+      p_fulfillments: parsed.data.fulfillments as unknown as never,
+      p_user_id: auth.user.id,
+    },
+  );
 
-  if (error) return { ok: false, error: mapRpcError(error.message, "출고 처리 실패") };
+  if (error)
+    return { ok: false, error: mapRpcError(error.message, "출고 처리 실패") };
 
   const result = data as unknown as {
     status: string;
@@ -185,19 +197,28 @@ export async function fulfillMaterialRequest(
 }
 
 // -----------------------------------------------------------------------------
-// 관리자에 의한 취소 (user가 취소 못하는 approved 상태도 취소 가능)
+// 관리자에 의한 취소 (user가 취소 못하는 approved·fulfilled 상태도 취소 가능)
+// restock=true 면 해당 신청의 출고 건 전체를 역거래로 회수 (재고 복구)
 // -----------------------------------------------------------------------------
 export async function adminCancelMaterialRequest(
   requestId: string,
+  restock = false,
 ): Promise<{ error: string | null }> {
   const auth = await requireAdmin();
   if (!auth.ok) return { error: auth.error };
 
-  if (!uuid.safeParse(requestId).success) return { error: "잘못된 요청입니다." };
+  if (!uuid.safeParse(requestId).success)
+    return { error: "잘못된 요청입니다." };
 
-  const { error } = await auth.supabase.rpc("cancel_material_request", {
-    p_request_id: requestId,
-  });
+  // cancel_material_request_with_restock 는 마이그레이션 20260707030000 이후
+  // 추가됨 — database.types 재생성(pnpm gen:types) 전까지 type-safe 우회.
+  const { error } = await auth.supabase.rpc(
+    "cancel_material_request_with_restock" as never,
+    {
+      p_request_id: requestId,
+      p_restock: restock,
+    } as never,
+  );
 
   if (error) return { error: mapRpcError(error.message, "취소 실패") };
 
@@ -205,6 +226,8 @@ export async function adminCancelMaterialRequest(
   revalidatePath(`/requests/${requestId}`);
   revalidatePath("/m/request");
   revalidatePath(`/m/request/${requestId}`);
+  revalidatePath("/inventory");
+  revalidatePath("/transactions");
   return { error: null };
 }
 
@@ -219,7 +242,8 @@ export async function deleteMaterialRequest(
   const auth = await requireAdmin();
   if (!auth.ok) return { error: auth.error };
 
-  if (!uuid.safeParse(requestId).success) return { error: "잘못된 요청입니다." };
+  if (!uuid.safeParse(requestId).success)
+    return { error: "잘못된 요청입니다." };
 
   const { data: req, error: fetchError } = await auth.supabase
     .from("material_requests")

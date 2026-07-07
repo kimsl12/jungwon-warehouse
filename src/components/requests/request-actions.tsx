@@ -48,6 +48,7 @@ export function RequestActions({
   const [cancelOpen, setCancelOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [reason, setReason] = useState("");
+  const [restock, setRestock] = useState(true);
 
   function runApprove() {
     setError(null);
@@ -75,7 +76,10 @@ export function RequestActions({
   function runCancel() {
     setError(null);
     startTransition(async () => {
-      const result = await adminCancelMaterialRequest(requestId);
+      const result = await adminCancelMaterialRequest(
+        requestId,
+        fulfilledQuantity > 0 && restock,
+      );
       if (result.error) {
         setError(result.error);
         return;
@@ -229,15 +233,26 @@ export function RequestActions({
             <AlertDialogTitle>신청 취소</AlertDialogTitle>
             <AlertDialogDescription>
               이 신청을 취소하시겠습니까? 취소 후에는 출고 처리가 불가능합니다.
-              {fulfilledQuantity > 0 && (
-                <span className="mt-2 block rounded-md bg-warning-bg px-3 py-2 text-warning">
-                  이미 출고된 {fulfilledQuantity.toLocaleString("ko-KR")}개는
-                  재고로 자동 회수되지 않습니다. 회수가 필요하면 취소 후 해당
-                  품목을 입고 처리하세요.
-                </span>
-              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {fulfilledQuantity > 0 && (
+            <label className="flex cursor-pointer items-start gap-2.5 rounded-md bg-warning-bg px-3 py-2.5">
+              <input
+                type="checkbox"
+                checked={restock}
+                onChange={(e) => setRestock(e.target.checked)}
+                disabled={isPending}
+                className="mt-0.5 size-4 shrink-0 accent-primary"
+              />
+              <span className="text-sm text-warning">
+                이미 출고된 {fulfilledQuantity.toLocaleString("ko-KR")}개를
+                재고로 회수합니다 (해당 출고 건이 취소 처리됨).
+                <span className="mt-0.5 block text-xs opacity-80">
+                  체크를 해제하면 출고분은 그대로 두고 신청만 취소합니다.
+                </span>
+              </span>
+            </label>
+          )}
           {error && <p className="text-sm text-destructive">{error}</p>}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>돌아가기</AlertDialogCancel>
