@@ -307,8 +307,25 @@ export default async function RequestsPage({
           <span className="text-right">작업</span>
         </div>
         {requests.length === 0 ? (
-          <div className="px-5 py-12 text-center text-sm text-muted-foreground">
-            신청 내역이 없습니다.
+          <div className="px-5 py-12 text-center">
+            <p className="text-sm text-muted-foreground">
+              신청 내역이 없습니다. 신청은 현장 직원이 모바일 모드(/m)에서
+              등록합니다.
+            </p>
+            <div className="mt-3 flex justify-center gap-2">
+              <Link
+                href="/requests/templates"
+                className="rounded border bg-card px-3 py-1.5 text-xs font-medium hover:bg-surface-low"
+              >
+                신청 템플릿 관리
+              </Link>
+              <Link
+                href="/sites"
+                className="rounded border bg-card px-3 py-1.5 text-xs font-medium hover:bg-surface-low"
+              >
+                현장 관리
+              </Link>
+            </div>
           </div>
         ) : (
           requests.map((r) => {
