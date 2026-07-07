@@ -31,9 +31,11 @@ export function SiteStatementButton({
   const [mode, setMode] = useState<"menu" | "monthly" | "completion">("menu");
   const [year, setYear] = useState<string>(String(new Date().getFullYear()));
   const [month, setMonth] = useState<string>(String(new Date().getMonth() + 1));
+  const [sortOrder, setSortOrder] = useState<"name" | "date">("name");
 
   function reset() {
     setMode("menu");
+    setSortOrder("name");
   }
 
   function handleMonthlyIssue() {
@@ -44,18 +46,51 @@ export function SiteStatementButton({
     // 말일: 다음 달 0일
     const last = new Date(y, m, 0);
     const lastStr = `${last.getFullYear()}-${String(last.getMonth() + 1).padStart(2, "0")}-${String(last.getDate()).padStart(2, "0")}`;
-    const url = `/api/pdf/site-statement/${siteId}?type=monthly&from=${first}&to=${lastStr}`;
+    const url = `/api/pdf/site-statement/${siteId}?type=monthly&from=${first}&to=${lastStr}&sort=${sortOrder}`;
     window.open(url, "_blank");
     setOpen(false);
     reset();
   }
 
   function handleCompletionIssue() {
-    const url = `/api/pdf/site-statement/${siteId}?type=completion`;
+    const url = `/api/pdf/site-statement/${siteId}?type=completion&sort=${sortOrder}`;
     window.open(url, "_blank");
     setOpen(false);
     reset();
   }
+
+  // 월말/준공 두 화면에서 공용으로 쓰는 정렬 선택 토글
+  const sortSelector = (
+    <div>
+      <label className="text-xs font-medium text-muted-foreground">
+        정렬 순서
+      </label>
+      <div className="mt-1 grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => setSortOrder("name")}
+          className={`rounded-md border px-3 py-2.5 text-sm font-medium transition-colors ${
+            sortOrder === "name"
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-input text-muted-foreground hover:bg-muted"
+          }`}
+        >
+          이름순 (가나다)
+        </button>
+        <button
+          type="button"
+          onClick={() => setSortOrder("date")}
+          className={`rounded-md border px-3 py-2.5 text-sm font-medium transition-colors ${
+            sortOrder === "date"
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-input text-muted-foreground hover:bg-muted"
+          }`}
+        >
+          날짜순 (출고일)
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -131,29 +166,36 @@ export function SiteStatementButton({
                   발급할 대상 월을 선택하세요.
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">년</label>
-                  <input
-                    type="number"
-                    value={year}
-                    onChange={(e) => setYear(e.target.value)}
-                    min={2020}
-                    max={2100}
-                    className="mt-1 h-10 w-full rounded border bg-background px-3 text-sm tabular-nums"
-                  />
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      년
+                    </label>
+                    <input
+                      type="number"
+                      value={year}
+                      onChange={(e) => setYear(e.target.value)}
+                      min={2020}
+                      max={2100}
+                      className="mt-1 h-10 w-full rounded border bg-background px-3 text-sm tabular-nums"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      월
+                    </label>
+                    <input
+                      type="number"
+                      value={month}
+                      onChange={(e) => setMonth(e.target.value)}
+                      min={1}
+                      max={12}
+                      className="mt-1 h-10 w-full rounded border bg-background px-3 text-sm tabular-nums"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">월</label>
-                  <input
-                    type="number"
-                    value={month}
-                    onChange={(e) => setMonth(e.target.value)}
-                    min={1}
-                    max={12}
-                    className="mt-1 h-10 w-full rounded border bg-background px-3 text-sm tabular-nums"
-                  />
-                </div>
+                {sortSelector}
               </div>
               <AlertDialogFooter>
                 <Button
@@ -177,17 +219,19 @@ export function SiteStatementButton({
                 <AlertDialogDescription>
                   {siteActive ? (
                     <>
-                      이 현장은 아직 <b>활성 상태</b>입니다. 준공 정산서는 보통 현장 비활성화
-                      시점에 발급하는 것이 정확합니다. 그래도 발급하시겠습니까?
+                      이 현장은 아직 <b>활성 상태</b>입니다. 준공 정산서는 보통
+                      현장 비활성화 시점에 발급하는 것이 정확합니다. 그래도
+                      발급하시겠습니까?
                     </>
                   ) : (
                     <>
-                      이 현장의 전체 기간(최초 출고 ~ 비활성화 시점) 출고 내역을 PDF로
-                      발급합니다.
+                      이 현장의 전체 기간(최초 출고 ~ 비활성화 시점) 출고 내역을
+                      PDF로 발급합니다.
                     </>
                   )}
                 </AlertDialogDescription>
               </AlertDialogHeader>
+              {sortSelector}
               <AlertDialogFooter>
                 <Button
                   type="button"

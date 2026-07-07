@@ -22,6 +22,7 @@ export const dynamic = "force-dynamic";
  *   monthly   : from/to 기간의 출고 합계
  *   completion: 현장 전체 기간 (최초 트랜잭션 ~ 현장 비활성화 시점 또는 now)
  *
+ * sort=name(기본) | date — 품목명 가나다순 / 마지막 출고일순 정렬.
  * 단가는 vendor_product_prices 기반 "가장 최근에 등록된" 가격을 product별로 사용.
  * 못 찾으면 0으로 표시.
  */
@@ -32,13 +33,16 @@ export async function GET(
   const { siteId } = await params;
   const url = new URL(req.url);
   const type = (url.searchParams.get("type") ?? "monthly") as
-    | "monthly"
-    | "completion";
+    "monthly" | "completion";
   const fromParam = url.searchParams.get("from");
   const toParam = url.searchParams.get("to");
+  const sort = (url.searchParams.get("sort") ?? "name") as "name" | "date";
 
   if (type !== "monthly" && type !== "completion") {
     return new NextResponse("Invalid type", { status: 400 });
+  }
+  if (sort !== "name" && sort !== "date") {
+    return new NextResponse("Invalid sort", { status: 400 });
   }
 
   const supabase = await createClient();
@@ -162,8 +166,12 @@ export async function GET(
       });
     }
   }
+  // 정렬: 이름순(가나다) 또는 날짜순(마지막 출고일, 같은 날짜는 이름순 2차 정렬)
   const sortedAggs = Array.from(aggMap.values()).sort((a, b) =>
-    a.name.localeCompare(b.name, "ko"),
+    sort === "date"
+      ? a.lastDate.localeCompare(b.lastDate) ||
+        a.name.localeCompare(b.name, "ko")
+      : a.name.localeCompare(b.name, "ko"),
   );
 
   const items: SiteStatementItem[] = sortedAggs.map((a, idx) => ({
