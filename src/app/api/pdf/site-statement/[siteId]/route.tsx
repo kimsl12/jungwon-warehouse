@@ -121,18 +121,25 @@ export async function GET(
   const rows = txRows ?? [];
   const productIds = Array.from(new Set(rows.map((r) => r.product_id)));
 
-  // 단가 조회: product별 최신 등록 단가 1개
+  // 단가 조회: 정산 기간 말(dateTo) 기준 단가 (get_prices_as_of RPC).
+  // "지금 시점 최신 단가"를 쓰면 단가 인상 후 과거 정산서를 재발급할 때
+  // 금액이 달라지므로, 기간 기준 이력 단가로 고정한다.
+  // get_prices_as_of 는 마이그레이션 20260707010000 이후 추가됨 —
+  // database.types 재생성(pnpm gen:types) 전까지 type-safe 우회.
   const priceMap = new Map<string, number>();
   if (productIds.length > 0) {
-    const { data: priceRows } = await supabase
-      .from("vendor_product_prices")
-      .select("product_id, unit_price, created_at")
-      .in("product_id", productIds)
-      .order("created_at", { ascending: false });
-    for (const p of priceRows ?? []) {
-      if (!priceMap.has(p.product_id)) {
-        priceMap.set(p.product_id, p.unit_price);
-      }
+    const { data: priceRows } = await supabase.rpc(
+      "get_prices_as_of" as never,
+      {
+        p_product_ids: productIds,
+        p_as_of: endOfTo.toISOString(),
+      } as never,
+    );
+    for (const p of (priceRows ?? []) as Array<{
+      product_id: string;
+      unit_price: number;
+    }>) {
+      priceMap.set(p.product_id, p.unit_price);
     }
   }
 
