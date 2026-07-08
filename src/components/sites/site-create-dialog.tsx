@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import { createSite, type SiteFormState } from "@/app/(dashboard)/sites/actions";
 import {
@@ -33,6 +34,7 @@ export function SiteCreateDialog({
     startTransition(async () => {
       const result = await createSite(null, formData);
       if (result?.success) {
+        toast.success("현장이 등록되었습니다.");
         setOpen(false);
         setState(null);
       } else {

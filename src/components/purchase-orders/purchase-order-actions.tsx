@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Printer, Send, Trash2, X } from "lucide-react";
 
 import {
@@ -49,8 +50,13 @@ export function PurchaseOrderActions({
       fd.set("po_id", poId);
       fd.set("status", status);
       const result = await updatePurchaseOrderStatus(fd);
-      if (result.error) alert(result.error);
-      else router.refresh();
+      if (result.error) toast.error(result.error);
+      else {
+        toast.success(
+          status === "sent" ? "발주서를 발송 상태로 변경했습니다." : "발주서를 취소했습니다.",
+        );
+        router.refresh();
+      }
     });
   }
 
@@ -64,9 +70,9 @@ export function PurchaseOrderActions({
       const fd = new FormData();
       fd.set("po_id", poId);
       const result = await sendPurchaseOrderFax(fd);
-      if (result.error) alert(result.error);
+      if (result.error) toast.error(result.error);
       else {
-        alert("팩스 발송 요청이 접수되었습니다.");
+        toast.success("팩스 발송 요청이 접수되었습니다.");
         router.refresh();
       }
     });
@@ -82,6 +88,7 @@ export function PurchaseOrderActions({
         setError(result.error);
         return;
       }
+      toast.success("발주서가 삭제되었습니다.");
       setDeleteOpen(false);
       router.push("/purchase-orders");
       router.refresh();

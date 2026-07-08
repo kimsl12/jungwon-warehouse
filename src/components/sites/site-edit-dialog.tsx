@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import { updateSite, type SiteFormState } from "@/app/(dashboard)/sites/actions";
 import {
@@ -47,6 +48,7 @@ export function SiteEditDialog({
     startTransition(async () => {
       const result = await updateSite(null, formData);
       if (result?.success) {
+        toast.success("현장 정보가 저장되었습니다.");
         onOpenChange(false);
         setState(null);
       } else {

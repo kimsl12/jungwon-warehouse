@@ -203,7 +203,11 @@ export async function fulfillMaterialRequest(
 export async function adminCancelMaterialRequest(
   requestId: string,
   restock = false,
-): Promise<{ error: string | null }> {
+): Promise<{
+  error: string | null;
+  restockedCount?: number;
+  restockedQuantity?: number;
+}> {
   const auth = await requireAdmin();
   if (!auth.ok) return { error: auth.error };
 
@@ -212,7 +216,7 @@ export async function adminCancelMaterialRequest(
 
   // cancel_material_request_with_restock 는 마이그레이션 20260707030000 이후
   // 추가됨 — database.types 재생성(pnpm gen:types) 전까지 type-safe 우회.
-  const { error } = await auth.supabase.rpc(
+  const { data, error } = await auth.supabase.rpc(
     "cancel_material_request_with_restock" as never,
     {
       p_request_id: requestId,
@@ -228,7 +232,16 @@ export async function adminCancelMaterialRequest(
   revalidatePath(`/m/request/${requestId}`);
   revalidatePath("/inventory");
   revalidatePath("/transactions");
-  return { error: null };
+
+  const restocked = data as {
+    restocked_count?: number;
+    restocked_quantity?: number;
+  } | null;
+  return {
+    error: null,
+    restockedCount: restocked?.restocked_count ?? 0,
+    restockedQuantity: restocked?.restocked_quantity ?? 0,
+  };
 }
 
 // -----------------------------------------------------------------------------

@@ -1,0 +1,140 @@
+/* ===== Claude-inspired warm palette + Slate neutrals ===== */
+:root {
+  /* Brand */
+  --c-brand-50: #FBEFE6;
+  --c-brand-100: #F4D9C4;
+  --c-brand-200: #ECBE9B;
+  --c-brand-300: #E0A074;
+  --c-brand-400: #D08858;
+  --c-brand-500: #C96442;  /* primary */
+  --c-brand-600: #B5482A;
+  --c-brand-700: #913A22;
+  --c-brand-800: #6E2C1A;
+  --c-brand-900: #4A1E12;
+
+  /* Cream / canvas */
+  --c-cream-50: #FAF7F2;
+  --c-cream-100: #F4EFE6;
+  --c-cream-200: #EAE2D2;
+  --c-cream-300: #DDD2BE;
+
+  /* Neutrals (Slate-ish, slightly warm) */
+  --c-n-0:   #FFFFFF;
+  --c-n-25:  #FBFAF7;
+  --c-n-50:  #F6F4EF;
+  --c-n-100: #ECE9E2;
+  --c-n-200: #DBD7CE;
+  --c-n-300: #BBB6AB;
+  --c-n-400: #8E8A82;
+  --c-n-500: #6B6862;
+  --c-n-600: #4D4A45;
+  --c-n-700: #34322E;
+  --c-n-800: #232220;
+  --c-n-900: #161513;
+
+  /* Semantic */
+  --c-success: #4F8A55;
+  --c-success-bg: #E7F0E5;
+  --c-warning: #C28B2B;
+  --c-warning-bg: #F8EFD8;
+  --c-danger: #B5482A;
+  --c-danger-bg: #F6E0D5;
+  --c-info: #4A6E8E;
+  --c-info-bg: #E2EAF1;
+
+  /* Surfaces (light default) */
+  --bg-app: var(--c-cream-50);
+  --bg-surface: var(--c-n-0);
+  --bg-elevated: var(--c-n-0);
+  --bg-muted: var(--c-cream-100);
+  --bg-hover: var(--c-cream-100);
+  --bg-pressed: var(--c-cream-200);
+  --bg-inverse: var(--c-n-800);
+
+  --fg-default: var(--c-n-800);
+  --fg-muted: var(--c-n-500);
+  --fg-subtle: var(--c-n-400);
+  --fg-inverse: var(--c-n-0);
+  --fg-brand: var(--c-brand-600);
+  --fg-on-brand: #FFFFFF;
+
+  --border-subtle: var(--c-n-100);
+  --border-default: var(--c-n-200);
+  --border-strong: var(--c-n-300);
+  --border-brand: var(--c-brand-500);
+
+  --shadow-xs: 0 1px 2px rgba(35, 34, 32, 0.04);
+  --shadow-sm: 0 1px 2px rgba(35, 34, 32, 0.04), 0 1px 3px rgba(35, 34, 32, 0.06);
+  --shadow-md: 0 4px 12px -2px rgba(35, 34, 32, 0.08), 0 2px 4px rgba(35, 34, 32, 0.04);
+  --shadow-lg: 0 12px 28px -8px rgba(35, 34, 32, 0.14), 0 4px 8px rgba(35, 34, 32, 0.05);
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+    'Noto Sans KR', system-ui, sans-serif;
+  --font-display: 'Copernicus', 'Source Serif Pro', 'Noto Serif KR', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* Dark theme */
+[data-theme='dark'] {
+  --bg-app: #1A1816;
+  --bg-surface: #232220;
+  --bg-elevated: #2A2926;
+  --bg-muted: #1F1E1C;
+  --bg-hover: #2D2C29;
+  --bg-pressed: #34322E;
+  --bg-inverse: var(--c-cream-50);
+
+  --fg-default: #F0EDE7;
+  --fg-muted: #A8A39A;
+  --fg-subtle: #6B6862;
+  --fg-inverse: var(--c-n-900);
+  --fg-brand: #E0A074;
+  --fg-on-brand: #FFFFFF;
+
+  --border-subtle: #2D2C29;
+  --border-default: #3A3835;
+  --border-strong: #4D4A45;
+  --border-brand: var(--c-brand-400);
+
+  --c-success-bg: rgba(79, 138, 85, 0.16);
+  --c-warning-bg: rgba(194, 139, 43, 0.18);
+  --c-danger-bg: rgba(181, 72, 42, 0.18);
+  --c-info-bg: rgba(74, 110, 142, 0.18);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+/* Reset-ish */
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+a { color: inherit; }
+
+/* Korean web font (Pretendard via CDN) */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css');
+
+/* Utility-ish base */
+.font-sans { font-family: var(--font-sans); }
+.font-display { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.01em; }
+.font-mono { font-family: var(--font-mono); }
+.tabular { font-variant-numeric: tabular-nums; }

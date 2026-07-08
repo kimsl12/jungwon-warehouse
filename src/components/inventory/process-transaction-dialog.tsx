@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import {
   processTransaction,
@@ -57,16 +58,18 @@ export function ProcessTransactionDialog({
     formData.set("site_id", siteId);
     startTransition(async () => {
       const result = await processTransaction(null, formData);
-      setState(result);
-      // Keep the dialog open on success briefly so user sees the new quantity
-      // before next action — close on explicit dismiss.
       if (result?.success) {
-        // Auto-close after a short delay so the success state is visible
-        setTimeout(() => {
-          onOpenChange(false);
-          setState(null);
-        }, 1500);
+        // 즉시 닫고 토스트로 알림 — 반복 작업 속도 우선
+        const label = type === "in" ? "입고" : type === "out" ? "출고" : "분실";
+        toast.success(`${label} 처리 완료 — ${product.name}`);
+        if (result.lowStock) {
+          toast.warning(`${product.name} 재고가 최소 수량 이하입니다.`);
+        }
+        onOpenChange(false);
+        setState(null);
+        return;
       }
+      setState(result);
     });
   }
 

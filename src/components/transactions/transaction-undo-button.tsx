@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Undo2 } from "lucide-react";
 
 import { undoTransaction } from "@/app/(dashboard)/transactions/actions";
@@ -41,6 +42,7 @@ export function TransactionUndoButton({
         setError(result.error);
         return;
       }
+      toast.success("거래가 취소되었습니다 — 재고가 복구되었습니다.");
       setOpen(false);
       setReason("");
       router.refresh();

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 
 import {
@@ -55,7 +56,10 @@ export function RequestActions({
     startTransition(async () => {
       const result = await approveMaterialRequest(requestId);
       if (result.error) setError(result.error);
-      else router.refresh();
+      else {
+        toast.success("신청을 승인했습니다.");
+        router.refresh();
+      }
     });
   }
 
@@ -67,6 +71,7 @@ export function RequestActions({
         setError(result.error);
         return;
       }
+      toast.success("신청을 거절했습니다.");
       setRejectOpen(false);
       setReason("");
       router.refresh();
@@ -84,6 +89,11 @@ export function RequestActions({
         setError(result.error);
         return;
       }
+      toast.success(
+        result.restockedCount && result.restockedCount > 0
+          ? `신청 취소 완료 — 출고 ${result.restockedCount}건 (총 ${(result.restockedQuantity ?? 0).toLocaleString("ko-KR")}개) 회수됨`
+          : "신청이 취소되었습니다.",
+      );
       setCancelOpen(false);
       router.refresh();
     });
@@ -97,6 +107,7 @@ export function RequestActions({
         setError(result.error);
         return;
       }
+      toast.success("신청이 삭제되었습니다.");
       setDeleteOpen(false);
       router.push(redirectAfterDelete);
       router.refresh();

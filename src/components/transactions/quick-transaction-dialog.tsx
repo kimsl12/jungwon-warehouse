@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Search } from "lucide-react";
 
 import {
@@ -85,13 +86,19 @@ export function QuickTransactionDialog({
     formData.set("site_id", siteId);
     startTransition(async () => {
       const result = await processTransaction(null, formData);
-      setState(result);
       if (result?.success) {
-        setTimeout(() => {
-          onOpenChange(false);
-          reset();
-        }, 1500);
+        // 즉시 닫고 토스트로 알림 — 반복 작업 속도 우선
+        toast.success(
+          `${type === "in" ? "입고" : "출고"} 처리 완료 — ${selected.name}`,
+        );
+        if (result.lowStock) {
+          toast.warning(`${selected.name} 재고가 최소 수량 이하입니다.`);
+        }
+        onOpenChange(false);
+        reset();
+        return;
       }
+      setState(result);
     });
   }
 

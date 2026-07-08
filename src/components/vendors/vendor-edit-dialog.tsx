@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import { updateVendor, type VendorFormState } from "@/app/(dashboard)/vendors/actions";
 import { VendorFormFields } from "@/components/vendors/vendor-form-fields";
@@ -44,6 +45,7 @@ export function VendorEditDialog({
     startTransition(async () => {
       const result = await updateVendor(null, formData);
       if (result?.success) {
+        toast.success("거래처 정보가 저장되었습니다.");
         onOpenChange(false);
         setState(null);
       } else {

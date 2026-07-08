@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import { fulfillMaterialRequest } from "@/app/(dashboard)/requests/actions";
 import { Button } from "@/components/ui/button";
@@ -75,6 +76,7 @@ export function RequestFulfillForm({
           return;
         }
         setAmounts({});
+        toast.success("출고 처리 완료");
         router.refresh();
       } catch (e) {
         setError((e as Error).message);

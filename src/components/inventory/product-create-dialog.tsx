@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import { createProduct, type ProductFormState } from "@/app/(dashboard)/inventory/actions";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ export function ProductCreateDialog() {
     startTransition(async () => {
       const result = await createProduct(null, formData);
       if (result?.success) {
+        toast.success("품목이 등록되었습니다.");
         setOpen(false);
         setState(null);
       } else {

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Plus, Search, Trash2 } from "lucide-react";
 
 import {
@@ -260,6 +261,7 @@ export function PurchaseOrderForm({ vendors }: { vendors: VendorOption[] }) {
         })),
       });
       if (result?.success && result.po_id) {
+        toast.success("발주서가 생성되었습니다.");
         router.push(`/purchase-orders/${result.po_id}`);
       } else {
         setState(result);

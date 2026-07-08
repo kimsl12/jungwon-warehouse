@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { ChevronDown } from "lucide-react";
 
 import {
@@ -65,6 +66,7 @@ export function ProductRowActions({
         setDeleteError(result.error);
         return;
       }
+      toast.success(`"${product.name}" 품목이 삭제되었습니다.`);
       setDeleteOpen(false);
     });
   }
@@ -75,7 +77,17 @@ export function ProductRowActions({
 
   function handleToggleActive() {
     startTransition(async () => {
-      await toggleProductActive(product.id, !isActive);
+      const result = await toggleProductActive(product.id, !isActive);
+      // 드롭다운이 이미 닫힌 뒤라 인라인 표시 불가 — 에러도 토스트로
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success(
+        isActive
+          ? `"${product.name}" 품목을 단종 처리했습니다.`
+          : `"${product.name}" 품목을 다시 활성화했습니다.`,
+      );
     });
   }
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { History } from "lucide-react";
 
 import { updateProduct, type ProductFormState } from "@/app/(dashboard)/inventory/actions";
@@ -42,6 +43,7 @@ export function ProductEditDialog({
     startTransition(async () => {
       const result = await updateProduct(null, formData);
       if (result?.success) {
+        toast.success("품목 정보가 저장되었습니다.");
         onOpenChange(false);
         setState(null);
       } else {

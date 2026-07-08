@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import {
   adjustProductStock,
@@ -44,6 +45,7 @@ export function StockAdjustSection({
     startTransition(async () => {
       const result = await adjustProductStock(null, formData);
       if (result?.success) {
+        toast.success("재고 보정 완료");
         setOpen(false);
         setReason("");
         setState(null);

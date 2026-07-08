@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import { createVendor, type VendorFormState } from "@/app/(dashboard)/vendors/actions";
 import { VendorFormFields } from "@/components/vendors/vendor-form-fields";
@@ -25,6 +26,7 @@ export function VendorCreateDialog() {
     startTransition(async () => {
       const result = await createVendor(null, formData);
       if (result?.success) {
+        toast.success("거래처가 등록되었습니다.");
         setOpen(false);
         setState(null);
       } else {

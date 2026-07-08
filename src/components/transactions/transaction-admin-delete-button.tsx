@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 
 import { adminCancelTransaction } from "@/app/(dashboard)/transactions/actions";
@@ -35,6 +36,7 @@ export function TransactionAdminDeleteButton({ txId }: { txId: string }) {
         setError(result.error);
         return;
       }
+      toast.success("거래가 삭제(취소)되었습니다 — 재고가 복구되었습니다.");
       setOpen(false);
       setReason("");
       router.refresh();

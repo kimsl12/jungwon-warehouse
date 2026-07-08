@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import { receivePurchaseOrder } from "@/app/(dashboard)/purchase-orders/actions";
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,7 @@ export function PurchaseOrderReceiveForm({
         return;
       }
       setInputs({});
+      toast.success("입고 확정 완료 — 재고에 반영되었습니다.");
       router.refresh();
     });
   }
