@@ -66,7 +66,7 @@ export function VariantAddDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>변형 추가</DialogTitle>
           <DialogDescription>

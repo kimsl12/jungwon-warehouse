@@ -46,7 +46,7 @@ export function ProductCreateDialog() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger render={<Button />}>신규 품목</DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>신규 품목 등록</DialogTitle>
           <DialogDescription>

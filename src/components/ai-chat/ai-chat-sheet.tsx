@@ -25,7 +25,7 @@ export function AIChatSheet({
       <SheetTrigger render={<button type="button" />}>{trigger}</SheetTrigger>
       <SheetContent
         side="right"
-        className="flex h-full w-full max-w-md flex-col gap-0 p-0 sm:max-w-md"
+        className="flex h-full w-full max-w-md flex-col gap-0 p-0 sm:max-w-lg"
       >
         <SheetHeader className="border-b border-border px-4 py-3">
           <SheetTitle className="flex items-center gap-2 text-base">

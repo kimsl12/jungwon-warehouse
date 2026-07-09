@@ -168,7 +168,7 @@ export function RequestActions({
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>신청 거절</AlertDialogTitle>
             <AlertDialogDescription>
@@ -239,7 +239,7 @@ export function RequestActions({
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>신청 취소</AlertDialogTitle>
             <AlertDialogDescription>

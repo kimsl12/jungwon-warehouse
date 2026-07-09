@@ -128,7 +128,7 @@ export function SiteStatementButton({
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md">
           {mode === "menu" && (
             <>
               <AlertDialogHeader>

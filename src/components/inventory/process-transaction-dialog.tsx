@@ -87,7 +87,7 @@ export function ProcessTransactionDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>입출고 처리</DialogTitle>
           <DialogDescription>

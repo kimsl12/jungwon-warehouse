@@ -59,7 +59,7 @@ export function ProductEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>품목 수정</DialogTitle>
           <DialogDescription>
