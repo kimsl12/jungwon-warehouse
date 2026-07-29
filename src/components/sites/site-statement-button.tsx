@@ -7,12 +7,12 @@ import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
-  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ScrollAlertDialogContent } from "@/components/shared/dialog-shell";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -128,7 +128,7 @@ export function SiteStatementButton({
           }
         }}
       >
-        <AlertDialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md">
+        <ScrollAlertDialogContent width="md">
           {mode === "menu" && (
             <>
               <AlertDialogHeader>
@@ -287,7 +287,7 @@ export function SiteStatementButton({
               </AlertDialogFooter>
             </>
           )}
-        </AlertDialogContent>
+        </ScrollAlertDialogContent>
       </AlertDialog>
     </>
   );

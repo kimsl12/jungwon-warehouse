@@ -10,13 +10,14 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollDialogContent } from "@/components/shared/dialog-shell";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/shared/number-input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/lib/database.types";
@@ -87,7 +88,7 @@ export function ProcessTransactionDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <ScrollDialogContent width="md">
         <DialogHeader>
           <DialogTitle>입출고 처리</DialogTitle>
           <DialogDescription>
@@ -163,12 +164,12 @@ export function ProcessTransactionDialog({
               <Label htmlFor="quantity">
                 수량 <span className="text-destructive">*</span>
               </Label>
-              <Input
+              <NumberInput
                 id="quantity"
                 name="quantity"
-                type="number"
                 min={1}
                 required
+                autoFocus
                 disabled={isPending}
                 aria-invalid={state?.fieldErrors?.quantity ? true : undefined}
               />
@@ -259,7 +260,7 @@ export function ProcessTransactionDialog({
             </Button>
           </DialogFooter>
         </form>
-      </DialogContent>
+      </ScrollDialogContent>
     </Dialog>
   );
 }

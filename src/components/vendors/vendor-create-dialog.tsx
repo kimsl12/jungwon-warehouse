@@ -8,13 +8,17 @@ import { VendorFormFields } from "@/components/vendors/vendor-form-fields";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DialogBody,
+  ScrollDialogContent,
+  dialogFormShell,
+} from "@/components/shared/dialog-shell";
 
 export function VendorCreateDialog() {
   const [open, setOpen] = useState(false);
@@ -43,19 +47,21 @@ export function VendorCreateDialog() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger render={<Button />}>거래처 등록</DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <ScrollDialogContent width="2xl">
         <DialogHeader>
           <DialogTitle>새 거래처 등록</DialogTitle>
           <DialogDescription>발주서 작성 시 선택할 거래처를 등록합니다.</DialogDescription>
         </DialogHeader>
-        <form action={handleSubmit}>
+        <form action={handleSubmit} className={dialogFormShell}>
+          <DialogBody>
           <VendorFormFields fieldErrors={state?.fieldErrors} disabled={isPending} />
           {state?.error && (
             <p className="mt-3 text-sm text-destructive" role="alert">
               {state.error}
             </p>
           )}
-          <DialogFooter className="mt-6">
+          </DialogBody>
+          <DialogFooter className="mt-4 shrink-0">
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
               취소
             </Button>
@@ -64,7 +70,7 @@ export function VendorCreateDialog() {
             </Button>
           </DialogFooter>
         </form>
-      </DialogContent>
+      </ScrollDialogContent>
     </Dialog>
   );
 }

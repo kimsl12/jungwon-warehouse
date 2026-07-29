@@ -10,12 +10,12 @@ import {
 } from "@/app/(mobile)/m/audit/actions";
 import {
   AlertDialog,
-  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ScrollAlertDialogContent } from "@/components/shared/dialog-shell";
 import { Button } from "@/components/ui/button";
 
 type Candidate = {
@@ -395,7 +395,7 @@ export function MobileAuditSession({ recent }: { recent: RecentRow[] }) {
           }
         }}
       >
-        <AlertDialogContent>
+        <ScrollAlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
               차이 {pendingDiff > 0 ? "+" : ""}
@@ -444,7 +444,7 @@ export function MobileAuditSession({ recent }: { recent: RecentRow[] }) {
               {isSaving ? "처리 중..." : "자동 맞춤"}
             </Button>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </ScrollAlertDialogContent>
       </AlertDialog>
     </div>
   );

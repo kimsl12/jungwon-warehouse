@@ -10,6 +10,7 @@ import {
 } from "@/app/(dashboard)/vendors/[id]/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/shared/number-input";
 import { Label } from "@/components/ui/label";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 
@@ -205,10 +206,10 @@ export function VendorPricesEditor({
                 <Label htmlFor="price-input">
                   단가 (원) <span className="text-destructive">*</span>
                 </Label>
-                <Input
+                <NumberInput
+                  decimal
                   id="price-input"
                   name="unit_price"
-                  type="number"
                   min={0}
                   step={1}
                   value={unitPrice}

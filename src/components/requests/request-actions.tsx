@@ -15,12 +15,12 @@ import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
-  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ScrollAlertDialogContent } from "@/components/shared/dialog-shell";
 import { Button } from "@/components/ui/button";
 
 export function RequestActions({
@@ -168,7 +168,7 @@ export function RequestActions({
           }
         }}
       >
-        <AlertDialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md">
+        <ScrollAlertDialogContent width="md">
           <AlertDialogHeader>
             <AlertDialogTitle>신청 거절</AlertDialogTitle>
             <AlertDialogDescription>
@@ -194,7 +194,7 @@ export function RequestActions({
               {isPending ? "처리 중..." : "거절하기"}
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </ScrollAlertDialogContent>
       </AlertDialog>
 
       {/* 삭제 다이얼로그 */}
@@ -207,7 +207,7 @@ export function RequestActions({
           }
         }}
       >
-        <AlertDialogContent>
+        <ScrollAlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>신청 내역 삭제</AlertDialogTitle>
             <AlertDialogDescription>
@@ -226,7 +226,7 @@ export function RequestActions({
               {isPending ? "삭제 중..." : "삭제하기"}
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </ScrollAlertDialogContent>
       </AlertDialog>
 
       {/* 취소 다이얼로그 */}
@@ -239,7 +239,7 @@ export function RequestActions({
           }
         }}
       >
-        <AlertDialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md">
+        <ScrollAlertDialogContent width="md">
           <AlertDialogHeader>
             <AlertDialogTitle>신청 취소</AlertDialogTitle>
             <AlertDialogDescription>
@@ -275,7 +275,7 @@ export function RequestActions({
               {isPending ? "처리 중..." : "취소하기"}
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </ScrollAlertDialogContent>
       </AlertDialog>
     </div>
   );

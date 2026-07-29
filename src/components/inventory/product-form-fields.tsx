@@ -1,5 +1,6 @@
 "use client";
 
+import { NumberInput } from "@/components/shared/number-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -144,17 +145,30 @@ function Field({
       <Label htmlFor={id}>
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
-      <Input
-        id={id}
-        name={id}
-        type={type}
-        required={required}
-        defaultValue={defaultValue}
-        placeholder={placeholder}
-        min={min}
-        disabled={disabled}
-        aria-invalid={error ? true : undefined}
-      />
+      {type === "number" ? (
+        <NumberInput
+          id={id}
+          name={id}
+          required={required}
+          defaultValue={defaultValue}
+          placeholder={placeholder}
+          min={min}
+          disabled={disabled}
+          aria-invalid={error ? true : undefined}
+        />
+      ) : (
+        <Input
+          id={id}
+          name={id}
+          type={type}
+          required={required}
+          defaultValue={defaultValue}
+          placeholder={placeholder}
+          min={min}
+          disabled={disabled}
+          aria-invalid={error ? true : undefined}
+        />
+      )}
       {error?.[0] && <p className="text-xs text-destructive">{error[0]}</p>}
     </div>
   );

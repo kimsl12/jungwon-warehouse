@@ -23,16 +23,22 @@ export function InventoryTable({
   isAdmin,
   sites,
   availabilityMap,
+  isFiltered = false,
 }: {
   products: Product[];
   isAdmin: boolean;
   sites: SiteOption[];
   availabilityMap?: Record<string, { pending: number; available: number }>;
+  isFiltered?: boolean;
 }) {
   if (products.length === 0) {
     return (
       <div className="rounded-lg border border-border bg-card p-12 text-center">
-        <p className="text-sm text-muted-foreground">등록된 품목이 없습니다.</p>
+        <p className="text-sm text-muted-foreground">
+          {isFiltered
+            ? "검색 조건에 맞는 품목이 없습니다. 검색어나 분류를 바꿔보세요."
+            : "등록된 품목이 없습니다."}
+        </p>
       </div>
     );
   }

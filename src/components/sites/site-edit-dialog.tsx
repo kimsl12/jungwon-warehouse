@@ -12,12 +12,12 @@ import { SiteFormFields } from "@/components/sites/site-form-fields";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollDialogContent } from "@/components/shared/dialog-shell";
 
 type Site = {
   id: string;
@@ -64,7 +64,7 @@ export function SiteEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
+      <ScrollDialogContent width="lg">
         <DialogHeader>
           <DialogTitle>현장 수정</DialogTitle>
           <DialogDescription>{site.name}</DialogDescription>
@@ -98,7 +98,7 @@ export function SiteEditDialog({
             </Button>
           </DialogFooter>
         </form>
-      </DialogContent>
+      </ScrollDialogContent>
     </Dialog>
   );
 }

@@ -12,11 +12,11 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollDialogContent } from "@/components/shared/dialog-shell";
 import type { SiteRange } from "./calendar-grid";
 
 export type AssignableUser = {
@@ -110,7 +110,7 @@ export function ScheduleDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md">
+      <ScrollDialogContent width="md">
         <DialogHeader>
           <DialogTitle>{mode === "edit" ? "작업 일정 수정" : "작업 일정 추가"}</DialogTitle>
         </DialogHeader>
@@ -207,7 +207,7 @@ export function ScheduleDialog({
             </Button>
           </div>
         </DialogFooter>
-      </DialogContent>
+      </ScrollDialogContent>
     </Dialog>
   );
 }

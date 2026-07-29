@@ -8,12 +8,12 @@ import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
-  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ScrollAlertDialogContent } from "@/components/shared/dialog-shell";
 
 export function MobileRequestCancelButton({ requestId }: { requestId: string }) {
   const router = useRouter();
@@ -53,7 +53,7 @@ export function MobileRequestCancelButton({ requestId }: { requestId: string }) 
           }
         }}
       >
-        <AlertDialogContent>
+        <ScrollAlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>신청을 취소하시겠습니까?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -75,7 +75,7 @@ export function MobileRequestCancelButton({ requestId }: { requestId: string }) 
               {isPending ? "처리 중..." : "취소하기"}
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </ScrollAlertDialogContent>
       </AlertDialog>
     </>
   );

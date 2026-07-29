@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronUp, Plus, X } from "lucide-react";
+import { NumberInput } from "@/components/shared/number-input";
 import { useMemo, useState } from "react";
 
 import {
@@ -9,6 +10,7 @@ import {
 } from "@/components/requests/template-product-picker";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
+import { DialogBody } from "@/components/shared/dialog-shell";
 import {
   evaluateFormula,
   isValidVariableName,
@@ -231,7 +233,7 @@ export function TemplateForm({
 
   return (
     <>
-      <div className="space-y-4">
+      <DialogBody className="space-y-4">
         {/* 이름 */}
         <div>
           <label className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
@@ -482,8 +484,7 @@ export function TemplateForm({
                         className="rounded border bg-background px-2 py-1 text-center text-xs"
                         disabled={isPending}
                       />
-                      <input
-                        type="number"
+                      <NumberInput
                         value={v.default}
                         onChange={(e) =>
                           updateVariable(idx, {
@@ -538,8 +539,7 @@ export function TemplateForm({
                     className="flex items-center gap-1.5 text-xs"
                   >
                     <span className="font-mono text-info">{v.name}</span>
-                    <input
-                      type="number"
+                    <NumberInput
                       value={previewValues[v.name] ?? v.default}
                       onChange={(e) =>
                         setPreview(v.name, Number(e.target.value) || 0)
@@ -650,8 +650,7 @@ export function TemplateForm({
                     <div className="flex items-center gap-2">
                       {mode === "fixed" ? (
                         <>
-                          <input
-                            type="number"
+                          <NumberInput
                             min={0}
                             value={l.requested_quantity ?? 0}
                             onChange={(e) =>
@@ -704,13 +703,12 @@ export function TemplateForm({
             </p>
           )}
         </div>
-      </div>
-
       {error && (
         <p className="text-sm text-destructive" role="alert">
           {error}
         </p>
       )}
+      </DialogBody>
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel} disabled={isPending}>

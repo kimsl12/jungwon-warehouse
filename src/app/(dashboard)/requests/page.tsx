@@ -203,8 +203,17 @@ export default async function RequestsPage({
       <div className="flex flex-wrap items-center gap-1 rounded bg-card p-1 w-fit">
         {STATUS_OPTIONS.map((s) => {
           const active = current === s.value;
-          const href =
-            s.value === "all" ? "/requests" : `/requests?status=${s.value}`;
+          // Keep the other filters; switching status used to reset them, which
+          // silently widened the result set the user had narrowed down.
+          const tabParams = new URLSearchParams();
+          if (s.value !== "all") tabParams.set("status", s.value);
+          if (params.site_id) tabParams.set("site_id", params.site_id);
+          if (params.user_id) tabParams.set("user_id", params.user_id);
+          if (params.from) tabParams.set("from", params.from);
+          if (params.to) tabParams.set("to", params.to);
+          if (params.q) tabParams.set("q", params.q);
+          const query = tabParams.toString();
+          const href = query ? `/requests?${query}` : "/requests";
           return (
             <Link
               key={s.value}

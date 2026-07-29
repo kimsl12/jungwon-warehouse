@@ -12,12 +12,12 @@ import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
-  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ScrollAlertDialogContent } from "@/components/shared/dialog-shell";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -170,7 +170,7 @@ export function ProductRowActions({
           />
 
           <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-            <AlertDialogContent>
+            <ScrollAlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>품목 삭제</AlertDialogTitle>
                 <AlertDialogDescription>
@@ -195,7 +195,7 @@ export function ProductRowActions({
                   {isPending ? "삭제 중..." : "삭제"}
                 </AlertDialogAction>
               </AlertDialogFooter>
-            </AlertDialogContent>
+            </ScrollAlertDialogContent>
           </AlertDialog>
         </>
       )}

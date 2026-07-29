@@ -12,13 +12,13 @@ import { SiteFormFields } from "@/components/sites/site-form-fields";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ScrollDialogContent } from "@/components/shared/dialog-shell";
 
 export function SiteCreateDialog({
   assigneeCandidates,
@@ -51,7 +51,7 @@ export function SiteCreateDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger render={<Button />}>현장 등록</DialogTrigger>
-      <DialogContent>
+      <ScrollDialogContent width="lg">
         <DialogHeader>
           <DialogTitle>새 현장 등록</DialogTitle>
           <DialogDescription>출고 처리 시 선택할 현장을 등록합니다.</DialogDescription>
@@ -78,7 +78,7 @@ export function SiteCreateDialog({
             </Button>
           </DialogFooter>
         </form>
-      </DialogContent>
+      </ScrollDialogContent>
     </Dialog>
   );
 }

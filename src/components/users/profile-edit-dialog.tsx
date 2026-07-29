@@ -9,12 +9,12 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollDialogContent } from "@/components/shared/dialog-shell";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -62,7 +62,7 @@ export function ProfileEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
+      <ScrollDialogContent width="md">
         <DialogHeader>
           <DialogTitle>사용자 정보 수정</DialogTitle>
           <DialogDescription>
@@ -108,13 +108,35 @@ export function ProfileEditDialog({
               </div>
             </div>
           </div>
+          {showAssignedHint && (
+            <div className="mt-4 rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
+              이 사용자의 <b>담당 현장</b>은 <b>현장 관리</b> 페이지에서
+              배정하세요.
+              {user.assignedSiteIds.length > 0 ? (
+                <>
+                  {" "}
+                  현재{" "}
+                  <b className="text-foreground">
+                    {user.assignedSiteIds.length}곳
+                  </b>{" "}
+                  배정되어 있습니다.
+                </>
+              ) : (
+                <> 현재 배정된 현장이 없습니다.</>
+              )}
+            </div>
+          )}
           {state?.error && (
             <p className="mt-3 text-sm text-destructive" role="alert">
               {state.error}
             </p>
           )}
           <DialogFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+            >
               취소
             </Button>
             <Button type="submit" disabled={isPending}>
@@ -122,21 +144,7 @@ export function ProfileEditDialog({
             </Button>
           </DialogFooter>
         </form>
-
-        {showAssignedHint && (
-          <div className="mt-4 rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
-            이 사용자의 <b>담당 현장</b>은 <b>현장 관리</b> 페이지에서 배정하세요.
-            {user.assignedSiteIds.length > 0 ? (
-              <>
-                {" "}
-                현재 <b className="text-foreground">{user.assignedSiteIds.length}곳</b> 배정되어 있습니다.
-              </>
-            ) : (
-              <> 현재 배정된 현장이 없습니다.</>
-            )}
-          </div>
-        )}
-      </DialogContent>
+      </ScrollDialogContent>
     </Dialog>
   );
 }

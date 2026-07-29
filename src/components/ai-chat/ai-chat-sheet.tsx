@@ -5,27 +5,24 @@ import { useState } from "react";
 
 import {
   Sheet,
-  SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { WideSheetContent } from "@/components/shared/dialog-shell";
 
 import { ChatPanel } from "./chat-panel";
 
-export function AIChatSheet({
-  trigger,
-}: {
-  trigger: React.ReactNode;
-}) {
+export function AIChatSheet({ trigger }: { trigger: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger render={<button type="button" />}>{trigger}</SheetTrigger>
-      <SheetContent
+      <WideSheetContent
         side="right"
-        className="flex h-full w-full max-w-md flex-col gap-0 p-0 sm:max-w-lg"
+        width="lg"
+        className="flex h-full flex-col gap-0 p-0"
       >
         <SheetHeader className="border-b border-border px-4 py-3">
           <SheetTitle className="flex items-center gap-2 text-base">
@@ -43,7 +40,7 @@ export function AIChatSheet({
         <div className="min-h-0 flex-1">
           <ChatPanel />
         </div>
-      </SheetContent>
+      </WideSheetContent>
     </Sheet>
   );
 }

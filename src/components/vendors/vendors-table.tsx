@@ -12,12 +12,12 @@ import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
-  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ScrollAlertDialogContent } from "@/components/shared/dialog-shell";
 
 type Vendor = {
   id: string;
@@ -38,7 +38,7 @@ export function VendorsTable({ vendors }: { vendors: Vendor[] }) {
   const [editing, setEditing] = useState<Vendor | null>(null);
   const [deleting, setDeleting] = useState<Vendor | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
 
   if (vendors.length === 0) {
     return (
@@ -134,7 +134,8 @@ export function VendorsTable({ vendors }: { vendors: Vendor[] }) {
               </button>
               <button
                 onClick={() => handleToggle(vendor)}
-                className="rounded bg-surface-low px-2.5 py-1 text-xs text-muted-foreground hover:bg-surface-high transition-colors"
+                disabled={isPending}
+                className="rounded bg-surface-low px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-surface-high disabled:opacity-50"
               >
                 {vendor.active ? "비활성" : "활성화"}
               </button>
@@ -169,7 +170,7 @@ export function VendorsTable({ vendors }: { vendors: Vendor[] }) {
           }
         }}
       >
-        <AlertDialogContent>
+        <ScrollAlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>거래처 삭제</AlertDialogTitle>
             <AlertDialogDescription>
@@ -186,11 +187,15 @@ export function VendorsTable({ vendors }: { vendors: Vendor[] }) {
           )}
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleDelete}>
-              삭제
+            <AlertDialogAction
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isPending}
+            >
+              {isPending ? "삭제 중..." : "삭제"}
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </ScrollAlertDialogContent>
       </AlertDialog>
     </>
   );

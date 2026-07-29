@@ -152,6 +152,7 @@ export default async function InventoryPage({
         isAdmin={isAdmin}
         sites={sitesResult.data ?? []}
         availabilityMap={Object.fromEntries(availabilityMap)}
+        isFiltered={hasFilter}
       />
 
       {hasFilter && (

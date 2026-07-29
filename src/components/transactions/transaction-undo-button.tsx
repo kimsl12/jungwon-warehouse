@@ -10,12 +10,12 @@ import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
-  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ScrollAlertDialogContent } from "@/components/shared/dialog-shell";
 
 /**
  * 20분 이내에 본인이 작성한 입출고 트랜잭션을 취소하는 버튼.
@@ -68,7 +68,7 @@ export function TransactionUndoButton({
           }
         }}
       >
-        <AlertDialogContent>
+        <ScrollAlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>처리 취소</AlertDialogTitle>
             <AlertDialogDescription>
@@ -105,7 +105,7 @@ export function TransactionUndoButton({
               {isPending ? "처리 중..." : "취소하기"}
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </ScrollAlertDialogContent>
       </AlertDialog>
     </>
   );

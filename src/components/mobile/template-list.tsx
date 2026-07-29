@@ -9,12 +9,12 @@ import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
-  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ScrollAlertDialogContent } from "@/components/shared/dialog-shell";
 
 type Row = {
   id: string;
@@ -111,7 +111,7 @@ export function TemplateList({ rows }: { rows: Row[] }) {
           }
         }}
       >
-        <AlertDialogContent>
+        <ScrollAlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>템플릿 삭제</AlertDialogTitle>
             <AlertDialogDescription>
@@ -134,7 +134,7 @@ export function TemplateList({ rows }: { rows: Row[] }) {
               {isPending ? "삭제 중..." : "삭제"}
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </ScrollAlertDialogContent>
       </AlertDialog>
     </>
   );

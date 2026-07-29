@@ -9,13 +9,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DialogBody,
+  ScrollDialogContent,
+  dialogFormShell,
+} from "@/components/shared/dialog-shell";
 import { ProductFormFields } from "@/components/inventory/product-form-fields";
 
 export function ProductCreateDialog() {
@@ -46,7 +50,7 @@ export function ProductCreateDialog() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger render={<Button />}>신규 품목</DialogTrigger>
-      <DialogContent className="sm:max-w-xl">
+      <ScrollDialogContent width="xl">
         <DialogHeader>
           <DialogTitle>신규 품목 등록</DialogTitle>
           <DialogDescription>
@@ -54,7 +58,8 @@ export function ProductCreateDialog() {
             추가할 때는 재고 목록에서 해당 품목의 &quot;처리 → 변형 추가&quot;를 이용하세요.
           </DialogDescription>
         </DialogHeader>
-        <form action={handleSubmit}>
+        <form action={handleSubmit} className={dialogFormShell}>
+          <DialogBody>
           <ProductFormFields fieldErrors={state?.fieldErrors} disabled={isPending} />
           <div className="mt-4 border-t pt-4 space-y-1.5">
             <Label htmlFor="aliases">별칭 (검색용)</Label>
@@ -75,7 +80,8 @@ export function ProductCreateDialog() {
               {state.error}
             </p>
           )}
-          <DialogFooter className="mt-6">
+          </DialogBody>
+          <DialogFooter className="mt-4 shrink-0">
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
               취소
             </Button>
@@ -84,7 +90,7 @@ export function ProductCreateDialog() {
             </Button>
           </DialogFooter>
         </form>
-      </DialogContent>
+      </ScrollDialogContent>
     </Dialog>
   );
 }

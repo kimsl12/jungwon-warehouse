@@ -11,12 +11,13 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollDialogContent } from "@/components/shared/dialog-shell";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/shared/number-input";
 import { Label } from "@/components/ui/label";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 
@@ -119,7 +120,7 @@ export function QuickTransactionDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <ScrollDialogContent width="md">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
@@ -210,10 +211,9 @@ export function QuickTransactionDialog({
                   <Label htmlFor="qty">
                     수량 <span className="text-destructive">*</span>
                   </Label>
-                  <Input
+                  <NumberInput
                     id="qty"
                     name="quantity"
-                    type="number"
                     min={1}
                     required
                     disabled={isPending}
@@ -298,7 +298,7 @@ export function QuickTransactionDialog({
             </Button>
           </DialogFooter>
         </form>
-      </DialogContent>
+      </ScrollDialogContent>
     </Dialog>
   );
 }

@@ -10,12 +10,12 @@ import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
-  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ScrollAlertDialogContent } from "@/components/shared/dialog-shell";
 
 /**
  * admin 전용 입출고 삭제 버튼. 시간/소유자 제한 없음.
@@ -62,7 +62,7 @@ export function TransactionAdminDeleteButton({ txId }: { txId: string }) {
           }
         }}
       >
-        <AlertDialogContent>
+        <ScrollAlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>입출고 삭제 (관리자)</AlertDialogTitle>
             <AlertDialogDescription>
@@ -103,7 +103,7 @@ export function TransactionAdminDeleteButton({ txId }: { txId: string }) {
               {isPending ? "처리 중..." : "삭제하기"}
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </ScrollAlertDialogContent>
       </AlertDialog>
     </>
   );

@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { receivePurchaseOrder } from "@/app/(dashboard)/purchase-orders/actions";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/shared/number-input";
 
 type ReceiveItem = {
   id: string;
@@ -111,25 +111,33 @@ export function PurchaseOrderReceiveForm({
                 <p className="font-medium truncate">
                   {it.name}
                   {it.variant && (
-                    <span className="ml-1.5 text-xs font-normal text-muted-foreground">· {it.variant}</span>
+                    <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                      · {it.variant}
+                    </span>
                   )}
                 </p>
-                {it.unit && <p className="text-[10px] text-muted-foreground">단위: {it.unit}</p>}
+                {it.unit && (
+                  <p className="text-[10px] text-muted-foreground">
+                    단위: {it.unit}
+                  </p>
+                )}
               </div>
-              <span className="text-right tabular-nums">{nf.format(it.ordered_quantity)}</span>
+              <span className="text-right tabular-nums">
+                {nf.format(it.ordered_quantity)}
+              </span>
               <span className="text-right tabular-nums text-muted-foreground">
                 {nf.format(it.received_quantity)}
               </span>
               <span className="text-right tabular-nums font-semibold">
                 {nf.format(remaining)}
               </span>
-              <Input
-                type="number"
+              <NumberInput
                 min={0}
                 max={remaining}
                 value={inputs[it.id] ?? ""}
                 onChange={(e) => {
-                  const v = e.target.value === "" ? NaN : Number(e.target.value);
+                  const v =
+                    e.target.value === "" ? NaN : Number(e.target.value);
                   setInputs((prev) => {
                     const next = { ...prev };
                     if (Number.isNaN(v) || v === 0) delete next[it.id];
@@ -147,7 +155,9 @@ export function PurchaseOrderReceiveForm({
       </div>
 
       {error && (
-        <p className="text-sm text-destructive" role="alert">{error}</p>
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
       )}
 
       <div className="flex justify-end">

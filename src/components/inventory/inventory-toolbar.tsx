@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
-import { Download, Search, Upload } from "lucide-react";
+import { Download, Loader2, Search, Upload } from "lucide-react";
 
 import { ProductCreateDialog } from "@/components/inventory/product-create-dialog";
 import { cn } from "@/lib/utils";
@@ -25,7 +25,7 @@ export function InventoryToolbar({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState(initialSearch);
 
   useEffect(() => {
@@ -58,8 +58,14 @@ export function InventoryToolbar({
           placeholder="제품명·별칭 검색"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="h-9 w-full rounded-md border border-input bg-card pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40"
+          className="h-9 w-full rounded-md border border-input bg-card pl-9 pr-9 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40"
         />
+        {isPending && (
+          <Loader2
+            aria-label="검색 중"
+            className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground"
+          />
+        )}
       </div>
 
       <div className="flex flex-wrap items-center gap-1 rounded-md bg-muted p-1">

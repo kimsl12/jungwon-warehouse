@@ -6,13 +6,14 @@ import { createProduct, type ProductFormState } from "@/app/(dashboard)/inventor
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollDialogContent } from "@/components/shared/dialog-shell";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/shared/number-input";
 import { Label } from "@/components/ui/label";
 import type { Database } from "@/lib/database.types";
 
@@ -66,7 +67,7 @@ export function VariantAddDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-xl">
+      <ScrollDialogContent width="md">
         <DialogHeader>
           <DialogTitle>변형 추가</DialogTitle>
           <DialogDescription>
@@ -117,10 +118,9 @@ export function VariantAddDialog({
                 <Label htmlFor="variant-quantity">
                   초기 수량 <span className="text-destructive">*</span>
                 </Label>
-                <Input
+                <NumberInput
                   id="variant-quantity"
                   name="quantity"
-                  type="number"
                   min={0}
                   required
                   defaultValue={0}
@@ -134,10 +134,9 @@ export function VariantAddDialog({
 
               <div className="space-y-1.5">
                 <Label htmlFor="variant-min-quantity">최소 재고</Label>
-                <Input
+                <NumberInput
                   id="variant-min-quantity"
                   name="min_quantity"
-                  type="number"
                   min={0}
                   defaultValue={baseProduct.min_quantity}
                   disabled={isPending}
@@ -175,7 +174,7 @@ export function VariantAddDialog({
             </Button>
           </DialogFooter>
         </form>
-      </DialogContent>
+      </ScrollDialogContent>
     </Dialog>
   );
 }

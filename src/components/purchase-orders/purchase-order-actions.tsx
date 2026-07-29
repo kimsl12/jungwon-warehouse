@@ -14,12 +14,12 @@ import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
-  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ScrollAlertDialogContent } from "@/components/shared/dialog-shell";
 import { Button } from "@/components/ui/button";
 
 export function PurchaseOrderActions({
@@ -162,7 +162,7 @@ export function PurchaseOrderActions({
           }
         }}
       >
-        <AlertDialogContent>
+        <ScrollAlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>발주서 영구 삭제</AlertDialogTitle>
             <AlertDialogDescription>
@@ -186,7 +186,7 @@ export function PurchaseOrderActions({
               {isPending ? "삭제 중..." : "영구 삭제"}
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </ScrollAlertDialogContent>
       </AlertDialog>
     </>
   );

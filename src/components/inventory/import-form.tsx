@@ -2,7 +2,11 @@
 
 import { useState, useTransition } from "react";
 
-import { commitImportAndRedirect, previewImport, type ImportPreview } from "@/app/(dashboard)/inventory/import/actions";
+import {
+  commitImportAndRedirect,
+  previewImport,
+  type ImportPreview,
+} from "@/app/(dashboard)/inventory/import/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -60,7 +64,9 @@ export function ImportForm() {
           disabled={isParsing}
           className="block w-full text-sm file:mr-3 file:rounded-md file:border file:border-input file:bg-background file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-muted"
         />
-        {isParsing && <p className="text-xs text-muted-foreground">파일을 분석하는 중...</p>}
+        {isParsing && (
+          <p className="text-xs text-muted-foreground">파일을 분석하는 중...</p>
+        )}
         {error && (
           <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {error}
@@ -68,7 +74,11 @@ export function ImportForm() {
         )}
 
         {preview && preview.ok && (
-          <PreviewSection preview={preview} csvText={csvText} onReset={handleReset} />
+          <PreviewSection
+            preview={preview}
+            csvText={csvText}
+            onReset={handleReset}
+          />
         )}
       </CardContent>
     </Card>
@@ -88,6 +98,11 @@ function PreviewSection({
   csvText: string;
   onReset: () => void;
 }) {
+  // Bulk upsert of the whole file is the slowest action in the app. Without a
+  // pending state the buttons look untouched and a second click runs the whole
+  // import again — in overwrite mode that is not something we can undo.
+  const [isCommitting, startCommit] = useTransition();
+
   const total = preview.rows.length;
   const existingSet = new Set(preview.existingKeys);
   const existingCount = preview.rows.filter((r) =>
@@ -100,19 +115,24 @@ function PreviewSection({
       <div>
         <h3 className="text-sm font-semibold">2. 미리보기</h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          파싱된 행 {total.toLocaleString("ko-KR")}건 — 신규 {newCount.toLocaleString("ko-KR")}건,
-          기존 제품명 {existingCount.toLocaleString("ko-KR")}건
+          파싱된 행 {total.toLocaleString("ko-KR")}건 — 신규{" "}
+          {newCount.toLocaleString("ko-KR")}건, 기존 제품명{" "}
+          {existingCount.toLocaleString("ko-KR")}건
         </p>
       </div>
 
       {preview.warnings.length > 0 && (
         <div className="rounded-md border border-warning/40 bg-warning-bg p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
-          <p className="mb-1 font-semibold">경고 ({preview.warnings.length}건)</p>
+          <p className="mb-1 font-semibold">
+            경고 ({preview.warnings.length}건)
+          </p>
           <ul className="space-y-0.5">
             {preview.warnings.slice(0, 5).map((w, i) => (
               <li key={i}>• {w}</li>
             ))}
-            {preview.warnings.length > 5 && <li>• 외 {preview.warnings.length - 5}건</li>}
+            {preview.warnings.length > 5 && (
+              <li>• 외 {preview.warnings.length - 5}건</li>
+            )}
           </ul>
         </div>
       )}
@@ -139,18 +159,34 @@ function PreviewSection({
               const isExisting = existingSet.has(productKey(r.name, r.variant));
               return (
                 <tr key={r.lineNumber} className="border-t">
-                  <td className="px-2 py-1 text-muted-foreground">{r.lineNumber}</td>
+                  <td className="px-2 py-1 text-muted-foreground">
+                    {r.lineNumber}
+                  </td>
                   <td className="px-2 py-1 font-medium">{r.name}</td>
-                  <td className="px-2 py-1 text-muted-foreground">{r.category ?? "—"}</td>
-                  <td className="px-2 py-1 text-muted-foreground">{r.subcategory ?? "—"}</td>
-                  <td className="px-2 py-1 text-muted-foreground">{r.variant ?? "—"}</td>
-                  <td className="px-2 py-1 text-muted-foreground">{r.unit ?? "—"}</td>
-                  <td className="px-2 py-1 text-right tabular-nums">{r.quantity}</td>
+                  <td className="px-2 py-1 text-muted-foreground">
+                    {r.category ?? "—"}
+                  </td>
+                  <td className="px-2 py-1 text-muted-foreground">
+                    {r.subcategory ?? "—"}
+                  </td>
+                  <td className="px-2 py-1 text-muted-foreground">
+                    {r.variant ?? "—"}
+                  </td>
+                  <td className="px-2 py-1 text-muted-foreground">
+                    {r.unit ?? "—"}
+                  </td>
+                  <td className="px-2 py-1 text-right tabular-nums">
+                    {r.quantity}
+                  </td>
                   <td className="px-2 py-1 text-right tabular-nums text-muted-foreground">
                     {r.min_quantity}
                   </td>
-                  <td className="px-2 py-1 text-muted-foreground">{r.location ?? "—"}</td>
-                  <td className="px-2 py-1 text-muted-foreground">{r.aliases.length > 0 ? r.aliases.join(", ") : "—"}</td>
+                  <td className="px-2 py-1 text-muted-foreground">
+                    {r.location ?? "—"}
+                  </td>
+                  <td className="px-2 py-1 text-muted-foreground">
+                    {r.aliases.length > 0 ? r.aliases.join(", ") : "—"}
+                  </td>
                   <td className="px-2 py-1">
                     {isExisting ? (
                       <span className="rounded bg-warning-bg px-1.5 py-0.5 text-[10px] font-medium text-warning dark:bg-amber-950 dark:text-amber-300">
@@ -180,21 +216,53 @@ function PreviewSection({
           기존 제품명이 있는 경우의 처리 방식을 선택하세요.
         </p>
 
-        <form action={commitImportAndRedirect} className="flex flex-wrap items-center gap-3">
+        <form
+          action={(formData) =>
+            startCommit(async () => {
+              await commitImportAndRedirect(formData);
+            })
+          }
+          className="flex flex-wrap items-center gap-3"
+        >
           <input type="hidden" name="csv" value={csvText} />
-          <Button type="submit" name="mode" value="skip" variant="outline" size="sm">
+          <Button
+            type="submit"
+            name="mode"
+            value="skip"
+            variant="outline"
+            size="sm"
+            disabled={isCommitting}
+          >
             건너뛰기로 등록
           </Button>
-          <Button type="submit" name="mode" value="overwrite" size="sm">
+          <Button
+            type="submit"
+            name="mode"
+            value="overwrite"
+            size="sm"
+            disabled={isCommitting}
+          >
             덮어쓰기로 등록
           </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={onReset}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onReset}
+            disabled={isCommitting}
+          >
             다시 선택
           </Button>
+          {isCommitting && (
+            <span className="text-xs text-muted-foreground" role="status">
+              {total.toLocaleString("ko-KR")}행 등록 중… 창을 닫지 마세요.
+            </span>
+          )}
         </form>
         <p className="text-[11px] text-muted-foreground">
           • 건너뛰기: 같은 (제품명 + 변형)이 있으면 그 행은 무시합니다.
-          <br />• 덮어쓰기: 같은 (제품명 + 변형)의 분류/단위/위치/최소수량을 업데이트합니다 (수량·변형은 변경 안 함).
+          <br />• 덮어쓰기: 같은 (제품명 + 변형)의 분류/단위/위치/최소수량을
+          업데이트합니다 (수량·변형은 변경 안 함).
         </p>
       </div>
     </div>

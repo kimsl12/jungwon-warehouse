@@ -8,12 +8,16 @@ import { VendorFormFields } from "@/components/vendors/vendor-form-fields";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DialogBody,
+  ScrollDialogContent,
+  dialogFormShell,
+} from "@/components/shared/dialog-shell";
 
 type Vendor = {
   id: string;
@@ -61,12 +65,13 @@ export function VendorEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <ScrollDialogContent width="2xl">
         <DialogHeader>
           <DialogTitle>거래처 수정</DialogTitle>
           <DialogDescription>{vendor.name}</DialogDescription>
         </DialogHeader>
-        <form action={handleSubmit}>
+        <form action={handleSubmit} className={dialogFormShell}>
+          <DialogBody>
           <input type="hidden" name="id" value={vendor.id} />
           <VendorFormFields
             defaults={vendor}
@@ -78,7 +83,8 @@ export function VendorEditDialog({
               {state.error}
             </p>
           )}
-          <DialogFooter className="mt-6">
+          </DialogBody>
+          <DialogFooter className="mt-4 shrink-0">
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
               취소
             </Button>
@@ -87,7 +93,7 @@ export function VendorEditDialog({
             </Button>
           </DialogFooter>
         </form>
-      </DialogContent>
+      </ScrollDialogContent>
     </Dialog>
   );
 }

@@ -11,6 +11,7 @@ import {
 } from "@/app/(dashboard)/purchase-orders/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/shared/number-input";
 import { Label } from "@/components/ui/label";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import {
@@ -442,8 +443,7 @@ export function PurchaseOrderForm({ vendors }: { vendors: VendorOption[] }) {
                     <span className="text-xs text-muted-foreground">
                       {it.unit ?? "—"}
                     </span>
-                    <Input
-                      type="number"
+                    <NumberInput
                       min={1}
                       value={it.ordered_quantity}
                       onChange={(e) =>
@@ -456,8 +456,8 @@ export function PurchaseOrderForm({ vendors }: { vendors: VendorOption[] }) {
                       className="h-8 text-right tabular-nums text-xs"
                       disabled={isPending}
                     />
-                    <Input
-                      type="number"
+                    <NumberInput
+                      decimal
                       min={0}
                       value={it.unit_price}
                       onChange={(e) =>

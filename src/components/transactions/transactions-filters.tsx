@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,13 +35,26 @@ export function TransactionsFilters({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const [state, setState] = useState<Initial>(initial);
 
   function update<K extends keyof Initial>(key: K, value: Initial[K]) {
     const next = { ...state, [key]: value };
     setState(next);
     pushParams({ [key]: value, page: "" });
+  }
+
+  // Typing through a date field emits an onChange per valid intermediate date,
+  // and each one re-runs the transaction query plus all six option queries.
+  // Hold the push until the user stops editing.
+  const dateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  function updateDate(key: "from" | "to", value: string) {
+    setState((prev) => ({ ...prev, [key]: value }));
+    if (dateTimer.current) clearTimeout(dateTimer.current);
+    dateTimer.current = setTimeout(
+      () => pushParams({ [key]: value, page: "" }),
+      500,
+    );
   }
 
   function pushParams(updates: Record<string, string>) {
@@ -56,18 +69,38 @@ export function TransactionsFilters({
   }
 
   function handleReset() {
-    setState({ type: "", product_id: "", user_id: "", category: "", site_id: "", vendor_id: "", from: "", to: "" });
+    setState({
+      type: "",
+      product_id: "",
+      user_id: "",
+      category: "",
+      site_id: "",
+      vendor_id: "",
+      from: "",
+      to: "",
+    });
     startTransition(() => router.push("/transactions"));
   }
 
   const hasFilter =
-    state.type || state.product_id || state.user_id || state.category || state.site_id || state.vendor_id || state.from || state.to;
+    state.type ||
+    state.product_id ||
+    state.user_id ||
+    state.category ||
+    state.site_id ||
+    state.vendor_id ||
+    state.from ||
+    state.to;
 
   const selectClass =
     "h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
   return (
-    <div className="space-y-3 rounded-md border bg-muted/20 p-4">
+    <div
+      className="space-y-3 rounded-md border bg-muted/20 p-4 transition-opacity"
+      style={{ opacity: isPending ? 0.6 : 1 }}
+      aria-busy={isPending}
+    >
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-1.5">
           <Label htmlFor="type">구분</Label>
@@ -175,7 +208,7 @@ export function TransactionsFilters({
             id="from"
             type="date"
             value={state.from}
-            onChange={(e) => update("from", e.target.value)}
+            onChange={(e) => updateDate("from", e.target.value)}
           />
         </div>
 
@@ -185,7 +218,7 @@ export function TransactionsFilters({
             id="to"
             type="date"
             value={state.to}
-            onChange={(e) => update("to", e.target.value)}
+            onChange={(e) => updateDate("to", e.target.value)}
           />
         </div>
       </div>

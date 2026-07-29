@@ -9,6 +9,7 @@ import {
 } from "@/app/(dashboard)/inventory/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/shared/number-input";
 import { Label } from "@/components/ui/label";
 
 /**
@@ -131,9 +132,8 @@ export function StockAdjustSection({
           <Label htmlFor="adjust-new-quantity" className="text-[11px]">
             새 수량 <span className="text-destructive">*</span>
           </Label>
-          <Input
+          <NumberInput
             id="adjust-new-quantity"
-            type="number"
             min={0}
             required
             value={newQuantity}

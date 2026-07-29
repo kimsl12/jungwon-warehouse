@@ -10,12 +10,12 @@ import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
-  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ScrollAlertDialogContent } from "@/components/shared/dialog-shell";
 
 type UserRow = {
   id: string;
@@ -214,7 +214,7 @@ export function UsersTable({
           }
         }}
       >
-        <AlertDialogContent>
+        <ScrollAlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>사용자 삭제</AlertDialogTitle>
             <AlertDialogDescription>
@@ -241,7 +241,7 @@ export function UsersTable({
               {isPending ? "삭제 중..." : "영구 삭제"}
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </ScrollAlertDialogContent>
       </AlertDialog>
 
       <AlertDialog
@@ -253,7 +253,7 @@ export function UsersTable({
           }
         }}
       >
-        <AlertDialogContent>
+        <ScrollAlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>역할 변경</AlertDialogTitle>
             <AlertDialogDescription>
@@ -283,7 +283,7 @@ export function UsersTable({
               {isPending ? "변경 중..." : "변경"}
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </ScrollAlertDialogContent>
       </AlertDialog>
     </>
   );

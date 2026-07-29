@@ -12,11 +12,11 @@ import {
 } from "@/components/requests/template-form";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollDialogContent } from "@/components/shared/dialog-shell";
 
 export type EditTemplate = {
   id: string;
@@ -110,7 +110,7 @@ export function TemplateEditDialog({ template, isAdmin, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(next) => !next && close()}>
-      <DialogContent className="sm:max-w-4xl">
+      <ScrollDialogContent width="4xl">
         <DialogHeader>
           <DialogTitle>템플릿 수정</DialogTitle>
           <DialogDescription>
@@ -138,7 +138,7 @@ export function TemplateEditDialog({ template, isAdmin, onOpenChange }: Props) {
             onSubmit={handleSubmit}
           />
         )}
-      </DialogContent>
+      </ScrollDialogContent>
     </Dialog>
   );
 }

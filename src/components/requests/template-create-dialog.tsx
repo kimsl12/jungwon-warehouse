@@ -12,12 +12,12 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ScrollDialogContent } from "@/components/shared/dialog-shell";
 
 export function TemplateCreateDialog({ isAdmin }: { isAdmin: boolean }) {
   const router = useRouter();
@@ -76,7 +76,7 @@ export function TemplateCreateDialog({ isAdmin }: { isAdmin: boolean }) {
       <DialogTrigger render={<Button />}>
         <Plus className="h-4 w-4" /> 새 템플릿
       </DialogTrigger>
-      <DialogContent className="sm:max-w-4xl">
+      <ScrollDialogContent width="4xl">
         <DialogHeader>
           <DialogTitle>새 자재 신청 템플릿</DialogTitle>
           <DialogDescription>
@@ -97,7 +97,7 @@ export function TemplateCreateDialog({ isAdmin }: { isAdmin: boolean }) {
             onSubmit={handleSubmit}
           />
         )}
-      </DialogContent>
+      </ScrollDialogContent>
     </Dialog>
   );
 }
